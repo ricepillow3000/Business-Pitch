@@ -19,7 +19,7 @@ export function Process() {
 
           {PROCESS.map((p) => (
             <div key={p.n} className="col-span-12 border-t border-beige/25 py-8 sm:col-span-6 lg:col-span-3 lg:pr-6">
-              <div className="font-poster text-[clamp(4rem,7vw,7rem)] leading-none text-signal">{p.n}</div>
+              <div className="font-poster text-[clamp(4rem,7vw,7rem)] leading-none tabular-nums text-signal">{p.n}</div>
               <h3 data-split className="mt-6 font-poster text-h3 text-beige">{p.t}</h3>
               <p className="mt-4 max-w-[34ch] font-body text-base leading-relaxed text-beige/80">{p.d}</p>
             </div>

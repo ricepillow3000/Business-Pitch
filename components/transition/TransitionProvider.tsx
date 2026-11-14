@@ -7,6 +7,7 @@ import { lenisRef } from "@/lib/lenis";
 import { motion } from "@/lib/motion";
 import { PREFETCH_ROUTES, stageFor } from "@/lib/routes";
 import { useStore } from "@/lib/store";
+import { INTRO } from "@/lib/intro";
 
 /**
  * THE LUSION TRANSITION METHOD
@@ -135,7 +136,7 @@ export function TransitionProvider({ children, chrome }: { children: React.React
 
   // Direct load of a non-home route: run the entrance once the loader opens
   useEffect(() => {
-    if (phase === "reveal" && norm(pathname) !== "/" && page.current) enterText(page.current, 0.6);
+    if (phase === "reveal" && norm(pathname) !== "/" && page.current) enterText(page.current, INTRO.SPLIT_AT + 0.1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 

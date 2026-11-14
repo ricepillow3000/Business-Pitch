@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { PLANS } from "@/lib/config";
+import { BRAND, PLANS } from "@/lib/config";
 import { Label } from "@/components/sections/Label";
 import { TransitionLink } from "@/components/transition/TransitionLink";
 
-export const metadata: Metadata = { title: "Pricing — AXON" };
+export const metadata: Metadata = { title: `Pricing — ${BRAND.name}` };
 
 /**
  * On this route the brain swings left and its 5 agent hubs light up (lib/routes.ts),
@@ -51,7 +51,7 @@ export default function PricingPage() {
                 </ul>
               </div>
               <div className="flex flex-col items-start justify-between gap-4 md:items-end">
-                <p className="font-poster text-h2 leading-none">
+                <p className="font-poster text-h2 leading-none tabular-nums">
                   {p.price}
                   <span className="font-label">{p.unit}</span>
                 </p>

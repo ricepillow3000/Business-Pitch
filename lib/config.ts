@@ -3,9 +3,9 @@
  * Swap BRAND.name and the whole site (loader included) follows.
  */
 export const BRAND = {
-  name: "AXON",
+  name: "JIDO",
   tagline: "Autonomous Operations",
-  email: "hello@axon.agency", // TODO: real address
+  email: "hello@jido.agency", // TODO: real address/domain
   cta: "Book a 20-min audit",
 };
 

@@ -5,14 +5,16 @@ import { gsap, useGSAP } from "@/lib/gsap";
 import { motion } from "@/lib/motion";
 import { useStore } from "@/lib/store";
 import { BRAND } from "@/lib/config";
+import { INTRO } from "@/lib/intro";
 
 /**
  * LOADER SEQUENCE
  *  1. Brand name = progress bar. Outline text, beige fill clipped left→right by progress.
- *  2. 100% → the word scales toward the viewer with an expo.in ease (slow, heavy, then rushing).
+ *  2. Tabular digits hit 100% → the word takes a heavy expo.in push toward the lens.
  *  3. A seam flashes down the middle, two stepped glitch-jolts, then the two halves
- *     (each a clip-path'd copy of the whole loader) slam apart like blast doors.
- *  4. WebGL camera intro starts as the doors open.
+ *     (each a clip-path'd copy of the whole loader) part like a curtain / blast doors.
+ *  4. Same frame: the mannequin bust starts its Z approach out of the void; its head
+ *     cracks, then splits open while the website fades in over the identical window.
  */
 export function Preloader() {
   const root = useRef<HTMLDivElement>(null);
@@ -32,36 +34,54 @@ export function Preloader() {
 
   const { contextSafe } = useGSAP({ scope: root });
 
+  /**
+   * MASTER INTRO TIMELINE — the one place the DOM, the curtain and WebGL are synced.
+   * GSAP owns the clock; R3F only reads motion.* every frame (Core.tsx / Mannequin.tsx).
+   */
   const outro = contextSafe(() => {
     const reduced = useStore.getState().reducedMotion;
-    const startIntro = () => {
-      setPhase("reveal");
-      gsap.to(motion, { intro: 1, duration: reduced ? 0.01 : 3, ease: "power3.out" });
-    };
+    // Real elements, not selector strings: useGSAP's `scope` would resolve strings inside the loader only.
+    const UI = [document.getElementById("page"), ...document.querySelectorAll<HTMLElement>("[data-chrome]")];
+
     if (reduced) {
-      startIntro();
+      setPhase("reveal");
+      Object.assign(motion, { intro: 1, approach: 1, crack: 0, split: 1 });
       gsap.to(root.current, { autoAlpha: 0, duration: 0.4, onComplete: () => setPhase("ready") });
       return;
     }
+
+    const { APPROACH, SPLIT_AT, SPLIT_DUR } = INTRO;
     const tl = gsap.timeline({
       onComplete: () => {
         setPhase("ready");
         if (root.current) root.current.style.display = "none";
       },
     });
-    tl.to(".loader-hud", { autoAlpha: 0, duration: 0.35, ease: "power2.out" })
-      .to(".loader-word", { scale: 7.5, duration: 2.5, ease: "expo.in" }, 0.1)
-      .addLabel("split", "-=0.5")
-      .fromTo(".loader-seam", { scaleY: 0, autoAlpha: 1 }, { scaleY: 1, duration: 0.2, ease: "power4.out" }, "split")
-      // glitch-shift: hard, stepped jolts
-      .to(".loader-l", { x: -22, duration: 0.05, ease: "steps(1)" }, "split+=0.2")
+
+    tl.set(UI, { autoAlpha: 0 }) // website hidden behind the curtain
+      // ① 100% → the name takes a heavy push toward the lens
+      .to(".loader-hud", { autoAlpha: 0, duration: 0.3, ease: "power2.out" })
+      .to(".loader-word", { scale: 1.9, duration: 1.0, ease: "expo.in" }, 0.05)
+      // ② seam + stepped glitch
+      .addLabel("curtain", 0.85)
+      .fromTo(".loader-seam", { scaleY: 0, autoAlpha: 1 }, { scaleY: 1, duration: 0.2, ease: "power4.out" }, "curtain")
+      .to(".loader-l", { x: -22, duration: 0.05, ease: "steps(1)" }, "curtain+=0.18")
       .to(".loader-r", { x: 26, y: 6, duration: 0.05, ease: "steps(1)" }, "<")
       .to(".loader-l", { x: 8, y: -4, duration: 0.05, ease: "steps(1)" })
       .to(".loader-r", { x: -10, y: 0, duration: 0.05, ease: "steps(1)" }, "<")
-      .add(startIntro)
-      .to(".loader-l", { xPercent: -102, duration: 1.2, ease: "expo.inOut" })
-      .to(".loader-r", { xPercent: 102, duration: 1.2, ease: "expo.inOut" }, "<")
-      .to(".loader-seam", { autoAlpha: 0, duration: 0.25 }, "<");
+      // ③ OPEN: curtain parts and, on the same frame, the bust starts reaching out of the void
+      .addLabel("open", "curtain+=0.32")
+      .add(() => setPhase("reveal"), "open")
+      .to(".loader-l", { xPercent: -102, duration: 1.3, ease: "expo.inOut" }, "open")
+      .to(".loader-r", { xPercent: 102, duration: 1.3, ease: "expo.inOut" }, "open")
+      .to(".loader-seam", { autoAlpha: 0, duration: 0.3 }, "open+=0.5")
+      .to(motion, { intro: 1, duration: 1.4, ease: "power2.out" }, "open")
+      .to(motion, { approach: 1, duration: APPROACH, ease: "expo.out" }, "open") // Z axis
+      // ④ crack glows along the seam, then the head splits (morph targets) …
+      .to(motion, { crack: 1, duration: 0.5, ease: "power2.in" }, `open+=${SPLIT_AT - 0.5}`)
+      .to(motion, { split: 1, duration: SPLIT_DUR, ease: "power3.inOut" }, `open+=${SPLIT_AT}`)
+      // ⑤ … while the website fades in over the SAME window → fully open == fully visible
+      .to(UI, { autoAlpha: 1, duration: SPLIT_DUR, ease: "power2.inOut" }, `open+=${SPLIT_AT}`);
   });
 
   const maybeFinish = contextSafe(() => {

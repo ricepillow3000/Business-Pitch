@@ -99,7 +99,7 @@ export function Agents() {
 
               <footer className={`mt-6 flex items-end justify-between ${inverted ? "text-flag" : "text-signal/60"}`}>
                 <Barcode code={a.code + a.name} />
-                <span className="font-label">0{i + 1}/05</span>
+                <span className="font-label tabular-nums">0{i + 1}/05</span>
               </footer>
             </article>
           );

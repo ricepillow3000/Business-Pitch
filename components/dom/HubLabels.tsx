@@ -3,7 +3,7 @@
 import { AGENTS } from "@/lib/config";
 import { hubLabelEls } from "@/lib/motion";
 
-/** DOM callouts for the 5 agent hubs. Positioned every frame by Brain.tsx (3D → screen projection). */
+/** DOM callouts for the 5 agent hubs. Positioned every frame by Core.tsx (3D → screen projection). */
 export function HubLabels() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-[6] overflow-hidden">

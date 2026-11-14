@@ -33,7 +33,7 @@
   --text-mega--line-height: 0.78;
   --text-poster: clamp(3.25rem, 10vw, 11.5rem);
   --text-poster--line-height: 0.82;
-  --text-hero: clamp(3rem, 8.4vw, 10.5rem);
+  --text-hero: clamp(2.75rem, 5.6vw, 7.25rem);
   --text-hero--line-height: 0.82;
   --text-h1: clamp(2.5rem, 6vw, 6.5rem);
   --text-h1--line-height: 0.88;
@@ -101,7 +101,13 @@
   padding-inline: clamp(1rem, 3.2vw, 3rem);
 }
 
+/* TYPOGRAPHY RULE — tabular lining numerals everywhere.
+   Every digit occupies the same advance width, so counters (loader 000→100,
+   ROI figures, prices, [[00X]], HUD coords/clock) never jitter while animating
+   and columns of numbers align on a vertical grid. */
 html {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-feature-settings: "tnum" 1, "lnum" 1;
   background: var(--color-void);
   color: var(--color-beige);
   -webkit-font-smoothing: antialiased;

@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "@/lib/gsap";
 import { lenisRef } from "@/lib/lenis";
-import { useStore } from "@/lib/store";
 import { BRAND } from "@/lib/config";
 import { usePathname } from "next/navigation";
 import { TransitionLink } from "@/components/transition/TransitionLink";
@@ -24,13 +23,7 @@ export function Hud() {
   const bar = useRef<HTMLDivElement>(null);
   const [section, setSection] = useState("00 // Signal");
   const [clock, setClock] = useState("--:--:--");
-  const phase = useStore((s) => s.phase);
   const pathname = usePathname();
-
-  useEffect(() => {
-    if (phase === "loading") return;
-    gsap.fromTo(root.current, { autoAlpha: 0 }, { autoAlpha: 1, duration: 1.2, delay: 0.6, ease: "power2.out" });
-  }, [phase]);
 
   useEffect(() => {
     const onMove = (e: PointerEvent) => {
@@ -60,7 +53,7 @@ export function Hud() {
   }, [pathname]);
 
   return (
-    <div ref={root} className="invisible pointer-events-none fixed inset-0 z-50 text-signal opacity-0">
+    <div ref={root} data-chrome className="pointer-events-none fixed inset-0 z-50 text-signal">
       {/* viewport frame */}
       <div className="absolute inset-3 md:inset-5">
         <Bracket className="left-0 top-0 border-l border-t" />

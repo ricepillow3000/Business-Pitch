@@ -51,7 +51,7 @@ export function PageCounter() {
     current.current = i;
     const final = pad(i + 1);
     const scramble = { t: 0 };
-    gsap.killTweensOf(root.current);
+    gsap.killTweensOf(root.current, "clipPath"); // only our own slice — never the intro fade (autoAlpha)
     gsap
       .timeline()
       .to(root.current, { clipPath: "inset(50% 0% 50% 0%)", duration: first ? 0 : 0.28, ease: "expo.in" })
@@ -98,6 +98,7 @@ export function PageCounter() {
   return (
     <div
       ref={root}
+      data-chrome
       aria-hidden
       className="pointer-events-none fixed z-50 select-none"
       style={{ clipPath: "inset(50% 0% 50% 0%)", top: "13vh", left: "4.5vw" }}

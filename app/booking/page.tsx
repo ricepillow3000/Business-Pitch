@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { BRAND } from "@/lib/config";
 import dynamic from "next/dynamic";
 import { Label } from "@/components/sections/Label";
 
-export const metadata: Metadata = { title: "Book an audit — AXON" };
+export const metadata: Metadata = { title: `Book an audit — ${BRAND.name}` };
 
 // Split chunk; pre-warmed by TransitionProvider on idle → instant on navigation.
 const BookingForm = dynamic(() => import("@/components/booking/BookingForm"));

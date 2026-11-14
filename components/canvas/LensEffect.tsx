@@ -47,7 +47,7 @@ class LensImpl extends Effect {
     super("LensEffect", frag, {
       attributes: EffectAttribute.CONVOLUTION,
       uniforms: new Map<string, Uniform>([
-        ["uMouse", new Uniform(new Vector2(0.5, 0.5))],
+        ["uMouse", new Uniform(new Vector2(-1, -1))],
         ["uAspect", new Uniform(1)],
         ["uStrength", new Uniform(1)],
         ["uVel", new Uniform(0)],
@@ -64,7 +64,9 @@ export function LensEffect({ dim }: { dim: { current: number } }) {
   useFrame(() => {
     const u = effect.uniforms;
     const m = u.get("uMouse")!.value as Vector2;
-    // damped follow for the lens itself (the DOM ring has its own spring)
+    // damped follow for the lens itself (the DOM ring has its own spring);
+    // snap on the first entry so the light doesn't streak in from off-screen
+    if (Math.abs(motion.pointerUv.x - m.x) > 0.6) m.set(motion.pointerUv.x, motion.pointerUv.y);
     m.x += (motion.pointerUv.x - m.x) * 0.18;
     m.y += (motion.pointerUv.y - m.y) * 0.18;
     u.get("uAspect")!.value = size.width / size.height;

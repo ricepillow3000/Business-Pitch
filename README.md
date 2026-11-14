@@ -1,4 +1,4 @@
-# AXON — AI agents for local business
+# JIDO — AI agents for local business
 
 Immersive agency site: Marathon-poster art direction, Lusion-style WebGL.
 Full design + engineering blueprint: **[docs/BLUEPRINT.md](docs/BLUEPRINT.md)**.

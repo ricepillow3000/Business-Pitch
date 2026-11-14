@@ -5,6 +5,7 @@ import { useRef } from "react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
 import { motion } from "@/lib/motion";
 import { useStore } from "@/lib/store";
+import { INTRO } from "@/lib/intro";
 
 /**
  * HERO — a 340vh scroll track with a sticky viewport (the reference behaviour).
@@ -46,9 +47,10 @@ export function Hero() {
       if (phase === "loading") return;
       const lines = SplitText.create(".hero-title", { type: "lines", mask: "lines", linesClass: "split-line" }).lines;
       gsap
-        .timeline({ delay: 0.55 })
+        // phase "reveal" fires at the curtain "open" label → land the lines as the head splits
+        .timeline({ delay: INTRO.SPLIT_AT + 0.1 })
         .from(lines, { yPercent: 120, duration: 1.4, stagger: 0.1, ease: "expo.out" })
-        .from(".hero-side > *", { autoAlpha: 0, x: 40, duration: 1, stagger: 0.08, ease: "expo.out" }, 0.3)
+        .from(".hero-side > *", { autoAlpha: 0, y: 24, duration: 1, stagger: 0.08, ease: "expo.out" }, 0.3)
         .from(".hero-cue", { autoAlpha: 0, duration: 0.8 }, 0.9);
     },
     { scope: root, dependencies: [phase] },
@@ -58,11 +60,10 @@ export function Hero() {
     <section ref={root} id="hero" data-section="00 // Signal" className="relative h-[340vh]">
       <div className="sticky top-0 h-svh overflow-hidden">
         {/* COPY A */}
-        <div className="hero-a poster-grid absolute inset-0 content-end pb-[11vh] md:pb-[12vh]">
-          <h1
-            className="hero-title col-span-12 font-poster text-hero text-signal md:col-span-8"
-            data-warp
-          >
+        {/* Editorial layout: the sculpture owns the right; all copy stacks in the left column, never over it */}
+        <div className="hero-a poster-grid absolute inset-0 content-end pb-[10vh] md:pb-[11vh]">
+          <div className="col-span-12 md:col-span-7 lg:col-span-6">
+          <h1 className="hero-title font-poster text-hero text-signal" data-warp>
             We build
             <br />
             agents that
@@ -71,20 +72,14 @@ export function Hero() {
             <br />
             <span className="text-beige">busywork</span>
           </h1>
-          <div className="hero-side col-span-12 mt-6 flex flex-col items-start gap-5 md:col-span-4 md:mt-0 md:items-end md:self-end md:text-right">
-            <p className="font-accent text-h3 text-beige">
-              Answer · Book · Invoice ·
-              <br />
-              Follow up — while you
-              <br />
-              run the business.
-            </p>
-            <p className="max-w-[34ch] font-body text-base text-beige/70">
-              AI agents for local businesses. Clinics, trades, salons, law offices, restaurants.
+          <div className="hero-side mt-8 flex flex-col items-start gap-5 md:mt-10">
+            <p className="max-w-[40ch] font-body text-lead text-beige/80">
+              <span className="font-accent text-beige">Answer · book · invoice · follow up</span> — AI agents for clinics, trades, salons, law offices and restaurants, working while you run the business.
             </p>
             <TransitionLink href="/booking" data-magnetic data-cursor-label="GO" className="chamfer pointer-events-auto bg-beige px-5 py-3.5 font-label font-bold text-flag">
               Book a 20-min audit →
             </TransitionLink>
+          </div>
           </div>
         </div>
 

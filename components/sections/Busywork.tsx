@@ -17,7 +17,7 @@ export function Busywork() {
         <ul className="col-span-12 border-t border-signal/25 md:col-span-9">
           {BUSYWORK.map((t, i) => (
             <li key={t} data-strike className="relative flex items-baseline gap-5 border-b border-signal/25 py-4 md:gap-8 md:py-5">
-              <span className="font-label text-signal">{String(i + 1).padStart(2, "0")}</span>
+              <span className="font-label tabular-nums text-signal">{String(i + 1).padStart(2, "0")}</span>
               <span className="strike-text relative font-poster text-[clamp(1.35rem,3.4vw,3.25rem)] leading-[0.95] text-beige">
                 {t}
                 <span className="strike-bar absolute left-0 right-0 top-1/2 h-[0.14em] origin-left -translate-y-1/2 bg-beige" style={{ transform: "scaleX(0)" }} />

@@ -15,6 +15,8 @@ export function SmoothScroll() {
   const phase = useStore((s) => s.phase);
 
   useEffect(() => {
+    // dev-only handle for inspecting/scrubbing the choreography from the console or tests
+    if (process.env.NODE_ENV !== "production") (window as unknown as { __motion: typeof motion }).__motion = motion;
     history.scrollRestoration = "manual";
     window.scrollTo(0, 0);
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
