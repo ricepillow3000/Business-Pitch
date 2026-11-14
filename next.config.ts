@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "export",
   reactStrictMode: true,
+  devIndicators: false, // the floating "N" badge would sit on top of the HUD pagination
 };
 
 export default nextConfig;

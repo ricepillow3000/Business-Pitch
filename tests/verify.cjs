@@ -99,6 +99,8 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   const pull = await page.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector("[data-magnetic]")).transform));
   check("CTA button is magnetic (pulled toward cursor)", pull.e > 3 && pull.f > 3, `moved x=${pull.e.toFixed(1)} y=${pull.f.toFixed(1)}`);
   check("CTA opens an email to start the conversation", (await btn.getAttribute("href")).startsWith("mailto:"));
+  check("Contact: phone number is a tap-to-call link", await page.isVisible('#initiation a[href="tel:+17702659930"]'));
+  check("Contact: email is a click-to-email link", await page.isVisible('#initiation a[href="mailto:john7000.nguyen@gmail.com"]'));
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/4-initiation.png` });
 
   // 6. Every section: pagination + reveals
@@ -126,8 +128,10 @@ const wait = (p, ms) => p.waitForTimeout(ms);
       check("Automation: all 6 wires drawn + data packets flowing", g.drawn && g.packets === 6, JSON.stringify(g));
     }
   }
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await wait(page, 1500);
   const scr = await page.textContent("[data-scroll]");
-  check("HUD scroll readout updates", parseInt(scr) > 90, `SCR ${scr}%`);
+  check("HUD scroll readout reaches 100% at the bottom", parseInt(scr) === 100, `SCR ${scr}%`);
   check("No JavaScript errors (desktop)", errors.length === 0, errors.join(" | "));
 
   /* ── PHONE ───────────────────────────────────────────────── */

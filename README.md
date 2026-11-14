@@ -15,6 +15,21 @@ npm run dev
 
 Open http://localhost:3000
 
+### On Windows (PowerShell)
+
+PowerShell blocks `npm` by default ("running scripts is disabled on this system").
+Type `npm.cmd` instead of `npm`. It does the same thing and is never blocked:
+
+```powershell
+npm.cmd install
+```
+
+```powershell
+npm.cmd run dev
+```
+
+Run these inside the project folder, not in `C:\WINDOWS\System32`. The easy way to get there is to open the folder in File Explorer, click the address bar, type `powershell` and press Enter.
+
 ## Prove it works
 
 With the dev server running (needs Playwright: `npm i -D playwright && npx playwright install chromium`):

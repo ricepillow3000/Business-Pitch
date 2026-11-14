@@ -7,7 +7,8 @@ import { WorkflowGraph } from "@/components/WorkflowGraph";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 import { onReveal } from "@/lib/intro";
 
-const EMAIL = "hello@jido.agency"; // TODO: confirm the real address before launch
+const EMAIL = "john7000.nguyen@gmail.com";
+const PHONE = { label: "(770) 265-9930", href: "tel:+17702659930" };
 const TASKS = ["Re-typing form entries", "Chasing unpaid invoices", "Booking and rebooking", "Updating the CRM"];
 const WORKFLOWS = [
   { name: "Invoicing", line: "Completed jobs become invoices. Payments are matched to them." },
@@ -209,6 +210,18 @@ export default function Home() {
           </span>
         </a>
 
+        {/* direct lines */}
+        <dl data-reveal className="mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 gap-y-4 md:mt-14">
+          <dt className="self-center font-hud text-flag">Phone</dt>
+          <dd>
+            <a href={PHONE.href} className="text-lead text-beige">{PHONE.label}</a>
+          </dd>
+          <dt className="self-center font-hud text-flag">Email</dt>
+          <dd>
+            <a href={`mailto:${EMAIL}`} className="text-lead break-all text-beige">{EMAIL}</a>
+          </dd>
+        </dl>
+
         <footer className="mt-auto grid gap-y-6 pt-32 font-hud text-flag md:grid-cols-4">
           <div className="col-span-full mb-4 flex justify-between text-flag/70">
             {Array.from({ length: 5 }, (_, i) => <Plus key={i} />)}
@@ -218,7 +231,7 @@ export default function Home() {
             <span>© 2026 JIDO</span>
           </span>
           <a href={`mailto:${EMAIL}`} className="w-fit normal-case tracking-wider">{EMAIL}</a>
-          <span>SYS.STATUS // ONLINE</span>
+          <a href={PHONE.href} className="w-fit">{PHONE.label}</a>
           <a href="#top" className="w-fit md:justify-self-end">Back to top ↑</a>
         </footer>
       </section>
