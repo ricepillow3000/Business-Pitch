@@ -1,7 +1,11 @@
 /**
  * Builds public/models/mannequin.glb from the procedural sculpt.
  *
- *   npx tsx scripts/build-mannequin.ts
+ *   npm run build:model   (export → gltfpack meshopt compression → public/models/mannequin.glb)
+ *
+ *   npx tsx scripts/build-mannequin.ts [out.glb] [--float-normals]
+ *     --float-normals  write full-precision normals (input for gltfpack, so it quantizes once)
+ *     default          int16 normals via KHR_mesh_quantization (usable without gltfpack)
  *
  * Output: glTF 2.0 binary with two nodes the site expects:
  *   "Bust" — face below the cut + neck + shoulders
@@ -13,6 +17,10 @@ import * as THREE from "three";
 import { CUT, createMannequinParts } from "../components/canvas/mannequinGeometry";
 
 type Prim = { name: string; geo: THREE.BufferGeometry; translation: [number, number, number] };
+
+const args = process.argv.slice(2);
+const FLOAT_NORMALS = args.includes("--float-normals");
+const OUT = args.find((a) => !a.startsWith("--")) ?? "public/models/mannequin.glb";
 
 function writeGlb(prims: Prim[], file: string) {
   const chunks: Buffer[] = [];
@@ -41,14 +49,19 @@ function writeGlb(prims: Prim[], file: string) {
     const big = count > 65535;
     const idxBuf = big ? Buffer.from(new Uint32Array(idx).buffer) : Buffer.from(new Uint16Array(idx).buffer);
     const vPos = push(Buffer.from(new Float32Array(pos).buffer), 34962);
-    // KHR_mesh_quantization: normals as normalized int16 (×4 smaller error than 8-bit; no visible faceting)
-    const q = new Int16Array(count * 4); // VEC3 padded to 4 for 4-byte vertex stride alignment
-    for (let i = 0; i < count; i++) for (let k = 0; k < 3; k++) q[i * 4 + k] = Math.round(Math.max(-1, Math.min(1, nrm[i * 3 + k])) * 32767);
-    const vNrm = push(Buffer.from(q.buffer), 34962);
-    (bufferViews[vNrm] as { byteStride?: number }).byteStride = 8;
+    let vNrm: number;
+    if (FLOAT_NORMALS) {
+      vNrm = push(Buffer.from(new Float32Array(nrm).buffer), 34962);
+    } else {
+      // KHR_mesh_quantization: normals as normalized int16 (no visible faceting)
+      const q = new Int16Array(count * 4); // VEC3 padded to 4 for 4-byte vertex stride alignment
+      for (let i = 0; i < count; i++) for (let k = 0; k < 3; k++) q[i * 4 + k] = Math.round(Math.max(-1, Math.min(1, nrm[i * 3 + k])) * 32767);
+      vNrm = push(Buffer.from(q.buffer), 34962);
+      (bufferViews[vNrm] as { byteStride?: number }).byteStride = 8;
+    }
     const vIdx = push(idxBuf, 34963);
     accessors.push({ bufferView: vPos, componentType: 5126, count, type: "VEC3", min, max });
-    accessors.push({ bufferView: vNrm, componentType: 5122, normalized: true, count, type: "VEC3" });
+    accessors.push(FLOAT_NORMALS ? { bufferView: vNrm, componentType: 5126, count, type: "VEC3" } : { bufferView: vNrm, componentType: 5122, normalized: true, count, type: "VEC3" });
     accessors.push({ bufferView: vIdx, componentType: big ? 5125 : 5123, count: idx.length, type: "SCALAR" });
     const a = accessors.length;
     return { name, primitives: [{ attributes: { POSITION: a - 3, NORMAL: a - 2 }, indices: a - 1, mode: 4 }] };
@@ -57,8 +70,7 @@ function writeGlb(prims: Prim[], file: string) {
   const bin = Buffer.concat(chunks);
   const json = {
     asset: { version: "2.0", generator: "jido build-mannequin" },
-    extensionsUsed: ["KHR_mesh_quantization"],
-    extensionsRequired: ["KHR_mesh_quantization"],
+    ...(FLOAT_NORMALS ? {} : { extensionsUsed: ["KHR_mesh_quantization"], extensionsRequired: ["KHR_mesh_quantization"] }),
     scene: 0,
     scenes: [{ name: "Mannequin", nodes: prims.map((_, i) => i) }],
     nodes: prims.map((p, i) => ({ name: p.name, mesh: i, translation: p.translation })),
@@ -89,6 +101,6 @@ const bytes = writeGlb(
     { name: "Bust", geo: bust, translation: [0, 0, 0] },
     { name: "Dome", geo: dome, translation: [0, CUT, 0] },
   ],
-  "public/models/mannequin.glb",
+  OUT,
 );
 console.log(`mannequin.glb written: ${(bytes / 1024).toFixed(0)} KB · bust ${bust.attributes.position.count} verts · dome ${dome.attributes.position.count} verts`);

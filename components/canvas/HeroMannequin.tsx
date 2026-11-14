@@ -95,7 +95,9 @@ type Props = {
  * here that value becomes the Dome node's Y translation (+ a small tilt).
  */
 export function HeroMannequin({ coreRef, hover, hoverAmt, traces }: Props) {
-  const { nodes } = useGLTF(MODEL_URL, false, false) as unknown as MannequinGLTF;
+  // (url, useDraco = false, useMeshopt = true): the GLB is meshopt-compressed by gltfpack;
+  // three ships the decoder (WASM inlined), so nothing is fetched from a CDN.
+  const { nodes } = useGLTF(MODEL_URL, false, true) as unknown as MannequinGLTF;
   const dome = useRef<THREE.Mesh>(null);
   const beigeLight = useRef<THREE.PointLight>(null);
   const blueLight = useRef<THREE.PointLight>(null);
@@ -144,4 +146,4 @@ export function HeroMannequin({ coreRef, hover, hoverAmt, traces }: Props) {
   );
 }
 
-useGLTF.preload(MODEL_URL, false, false);
+useGLTF.preload(MODEL_URL, false, true);

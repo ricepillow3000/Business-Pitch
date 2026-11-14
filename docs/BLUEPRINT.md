@@ -68,9 +68,8 @@ scripts/
 ### Performance budget
 
 - `dpr` 1.5 desktop / 1 mobile; `PerformanceMonitor.onDecline` drops to dpr 1, no DOF, no MSAA.
-- One 1.8 MB GLB (1.1 MB gzipped), loaded behind the loader. The loader's 100% genuinely waits for it.
+- One **428 KB GLB (214 KB gzipped)**, meshopt-compressed by `gltfpack`. It loads behind the loader, and the loader's 100% genuinely waits for it. The decoder ships with three.js, so there's no CDN fetch.
 - Strings, vias and the ball are 3 draw calls in total; exit traces are 1.
-- Optional: meshopt-compress the GLB with `gltfpack` for roughly 3–4× smaller. The decoder ships with three.js. The tool wasn't run here because it needs your OK to download and run.
 - No React state in the frame loop. Labels, HUD numbers and cursor are written straight to DOM nodes.
 
 ---
@@ -232,11 +231,11 @@ The head glows faintly from within while it approaches. The interior is lit by *
 - 192 segments around, about 70 rows per unit of height, spline-smoothed shoulder profile.
 - Seamless normals: the θ = 0/2π seam down the nose is averaged, and the crown and chin poles get exact axial normals. Zero faceting.
 
-**GLTF nodes:** `public/models/mannequin.glb` (1.8 MB, 1.1 MB gzipped) has two nodes:
+**GLTF nodes:** `public/models/mannequin.glb` (428 KB, 214 KB gzipped) has two nodes:
 - `Bust`: face below the cut, neck and shoulders.
 - `Dome`: node origin on the cut plane, so the lift is a pure `position.y`.
 
-Normals ship as int16 via `KHR_mesh_quantization`. Regenerate with `npm run build:model`. A Blender export with the same node names (+Z face, +Y up) is a drop-in replacement.
+`npm run build:model` exports full-precision geometry, then runs `gltfpack -cc -vpf -vn 12 -kn`: EXT_meshopt_compression, float positions (node transforms untouched), 12-bit normals (no visible banding; checked side-by-side) and named nodes kept. The loader uses `useGLTF(url, false, true)` (meshopt on). A Blender export with the same node names (+Z face, +Y up) is a drop-in replacement.
 
 ### 3.6 Studio lighting & render pipeline: the "designer" look
 

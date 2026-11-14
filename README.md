@@ -28,6 +28,7 @@ Outputs a fully static site to `out/`. Not deployed anywhere yet.
 - Brand + all copy: `lib/config.ts`
 - Colours / type scale: `app/globals.css`
 - Route → camera poses: `lib/routes.ts`
-- 3D brain: `components/canvas/`
+- 3D hero (mannequin + AI core): `components/canvas/`
+- Rebuild the 3D model: `npm run build:model` (procedural sculpt → gltfpack-compressed GLB)
 - Loader, cursor, HUD, page counter: `components/dom/`
 - Page transitions: `components/transition/`
