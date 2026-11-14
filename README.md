@@ -1,7 +1,7 @@
-# JIDO — AI agents for local business
+# JIDO — Intelligent workflows for local businesses
 
-Immersive agency site: Marathon-poster art direction, Lusion-style WebGL.
-Full design + engineering blueprint: **[docs/BLUEPRINT.md](docs/BLUEPRINT.md)**.
+One-page agency site. Marathon-style HUD art direction, Lusion-style motion.
+Next.js 16 (static export) · GSAP 3 (ScrollTrigger, SplitText, CustomEase, ScrambleText) · Lenis · Tailwind v4.
 
 ## Run locally
 
@@ -13,7 +13,32 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Add `?q=low` to force the lightweight tier (weak GPUs).
+Open http://localhost:3000
+
+### On Windows (PowerShell)
+
+PowerShell blocks `npm` by default ("running scripts is disabled on this system").
+Type `npm.cmd` instead of `npm`. It does the same thing and is never blocked:
+
+```powershell
+npm.cmd install
+```
+
+```powershell
+npm.cmd run dev
+```
+
+Run these inside the project folder, not in `C:\WINDOWS\System32`. The easy way to get there is to open the folder in File Explorer, click the address bar, type `powershell` and press Enter.
+
+## Prove it works
+
+With the dev server running (needs Playwright: `npm i -D playwright && npx playwright install chromium`):
+
+```bash
+node tests/verify.cjs http://localhost:3000
+```
+
+30 checks: loader choreography, HUD pagination, cursor brackets, magnetic button, in-page navigation without reloads, every section's reveals, phone layout, reduced motion, zero JS errors.
 
 ## Build (static)
 
@@ -21,15 +46,19 @@ Open http://localhost:3000. Add `?q=low` to force the lightweight tier (weak GPU
 npm run build
 ```
 
-Outputs a fully static site to `out/`. Not deployed anywhere yet.
+Outputs plain files to `out/`, deployable to any CDN.
 
 ## Where things live
 
-- Brand + all copy: `lib/config.ts`
-- Colours / type scale: `app/globals.css`
-- Route → camera poses: `lib/routes.ts`
-- 3D hero (moon valley, orb, beam, dust, cyclone): `components/canvas/moon/` (+ the orb's nebula in `components/canvas/ParticleCore.tsx`)
-- Info-panel copy for the clickable orb / storm: `lib/config.ts → INFO`
-- Loader, cursor, HUD, page counter, hotspots, info panel: `components/dom/`
-- Visual / interaction tests (Playwright, run against `npm run dev`): `tests/visual/` — e.g. `node tests/visual/interact.cjs <outdir>`
-- Page transitions: `components/transition/`
+| File | What |
+|---|---|
+| `app/globals.css` | Palette + type tokens (Tailwind v4 config lives here, in `@theme`) |
+| `lib/gsap.ts` | Plugin registration + the two custom eases (`reach` / `split`) |
+| `lib/intro.ts` | The one-shot "curtain split" signal everything else waits for |
+| `components/Loader.tsx` | JIDO intro: count → reach → split |
+| `components/HUD.tsx` | Crosshairs, edge micro-data, `[[00X]]` slot-machine pagination |
+| `components/Cursor.tsx` | Fluid blend-mode node → Flag Blue `[ ]` brackets, magnetic targets |
+| `components/SmoothScroll.tsx` | Lenis on GSAP's ticker; `#anchor` links scroll smoothly |
+| `components/WorkflowGraph.tsx` | [[003]] SVG automation map |
+| `components/Logo.tsx`, `app/icon.svg` | Logo mark + wordmark, favicon |
+| `app/page.tsx` | The four sections + their scroll reveals |

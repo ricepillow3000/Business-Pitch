@@ -1,3 +1,4 @@
 import type Lenis from "lenis";
-/** Module singleton so any component can start/stop/scrollTo. */
-export const lenisRef: { current: Lenis | null } = { current: null };
+
+/** The running Lenis instance (set by SmoothScroll), for components that need to scroll the page. */
+export const smooth: { lenis: Lenis | null } = { lenis: null };
