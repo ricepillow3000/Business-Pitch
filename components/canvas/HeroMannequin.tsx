@@ -87,6 +87,8 @@ type Props = {
   hover: THREE.Vector3;
   hoverAmt: { current: number };
   traces: ReturnType<typeof createTraces>;
+  /** particle texture size: 512 → 262,144 particles; 256 → 65,536 */
+  particles?: number;
 };
 
 /**
@@ -94,7 +96,7 @@ type Props = {
  * The split: GSAP (Preloader master timeline) tweens motion.split 0→1 with its ease;
  * here that value becomes the Dome node's Y translation (+ a small tilt).
  */
-export function HeroMannequin({ coreRef, hover, hoverAmt, traces }: Props) {
+export function HeroMannequin({ coreRef, hover, hoverAmt, traces, particles = 512 }: Props) {
   // (url, useDraco = false, useMeshopt = true): the GLB is meshopt-compressed by gltfpack;
   // three ships the decoder (WASM inlined), so nothing is fetched from a CDN.
   const { nodes } = useGLTF(MODEL_URL, false, true) as unknown as MannequinGLTF;
@@ -138,7 +140,7 @@ export function HeroMannequin({ coreRef, hover, hoverAmt, traces }: Props) {
       <mesh geometry={nodes.Bust.geometry} material={bustMat} position={nodes.Bust.position} />
       <mesh ref={dome} geometry={nodes.Dome.geometry} material={domeMat} position={nodes.Dome.position} />
       <group position={[0, CORE_Y, 0]}>
-        <AICore ref={coreRef} hover={hover} hoverAmt={hoverAmt} traces={traces} />
+        <AICore ref={coreRef} hover={hover} hoverAmt={hoverAmt} traces={traces} particles={particles} />
         <pointLight ref={beigeLight} color={COLORS.beige} intensity={0} distance={3} decay={2} position={[0, 0.05, 0.1]} />
         <pointLight ref={blueLight} color={COLORS.signal} intensity={0} distance={2.6} decay={2} position={[0, -0.05, -0.2]} />
       </group>

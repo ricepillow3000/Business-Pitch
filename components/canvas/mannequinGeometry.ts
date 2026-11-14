@@ -156,8 +156,9 @@ function cutLip(cols: number, facing: 1 | -1) {
 /** Neck + shoulders (static): lathe, widened to real shoulder width, neck leaning forward. */
 function bust() {
   const profile = [
-    [1.05, -3.7], [1.18, -3.1], [1.2, -2.75], [1.1, -2.45], [0.85, -2.2], [0.6, -2.0],
-    [0.47, -1.75], [0.43, -1.3], [0.44, -0.85], [0.46, -0.5], [0.0, -0.45],
+    [1.05, -3.7], [1.18, -3.1], [1.2, -2.75], [1.1, -2.45], [0.85, -2.2], [0.56, -2.0],
+    // slender neck: ~8.5 cm across at its narrowest (was ~10 cm and read as enlarged)
+    [0.42, -1.78], [0.37, -1.35], [0.37, -0.9], [0.39, -0.5], [0.0, -0.45],
   ].map(([r, y]) => new THREE.Vector2(r, y)); // bottom → top = outward-facing faces
   // spline-smooth the silhouette (no straight-segment facets on the shoulder curve)
   const cap = profile.pop()!;

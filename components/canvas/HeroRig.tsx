@@ -144,7 +144,7 @@ export function HeroRig({ quality }: { quality: "high" | "low" }) {
     <group ref={stage}>
       <group ref={approach}>
         <group ref={orient}>
-          <HeroMannequin coreRef={coreRef} hover={hoverLocal} hoverAmt={hoverAmt} traces={traces} />
+          <HeroMannequin coreRef={coreRef} hover={hoverLocal} hoverAmt={hoverAmt} traces={traces} particles={quality === "high" ? 512 : 256} />
           {/* invisible hover proxy over the cavity */}
           <mesh position={[0, CORE_Y, 0]} onPointerMove={onMove} onPointerOut={() => (hoverTarget.current = 0)}>
             <sphereGeometry args={[0.7, 16, 12]} />

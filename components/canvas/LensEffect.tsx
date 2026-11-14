@@ -28,9 +28,9 @@ const frag = /* glsl */ `
     float radius = 0.16 + uVel * 0.05;
     float m = smoothstep(radius, 0.0, r);
     vec2 dir = r > 1e-4 ? d / r : vec2(0.0);
-    vec2 off = dir * m * m * uStrength * 0.05;
+    vec2 off = dir * m * m * uStrength * 0.03;
     off.x /= uAspect;
-    vec2 ca = dir * (0.0015 + uVel * 0.012) * m;
+    vec2 ca = dir * (0.0004 + uVel * 0.0025) * m; // a whisper of dispersion, never a rainbow ring
     ca.x /= uAspect;
     vec2 suv = uv - off;
     vec3 col;

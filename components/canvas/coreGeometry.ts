@@ -71,8 +71,14 @@ function routedArc(phi0: number, phi1: number, scale: number, steps: number): V2
 
 type Trace = THREE.Vector3[];
 
-function toSegments(traces: Trace[], rand: () => number, kindSeed = 0) {
-  const pos: number[] = [], prog: number[] = [], seed: number[] = [];
+/**
+ * radialReveal=true  → aRadial = distance from the core (normalised): strings grow outward from the nebula.
+ * radialReveal=false → aRadial = arc-length progress (exit traces already start at the core).
+ */
+function toSegments(traces: Trace[], rand: () => number, kindSeed = 0, radialReveal = true) {
+  const pos: number[] = [], prog: number[] = [], seed: number[] = [], radial: number[] = [];
+  let maxR = 0;
+  traces.forEach((t) => t.forEach((p) => (maxR = Math.max(maxR, p.length()))));
   traces.forEach((t) => {
     let total = 0;
     const acc = [0];
@@ -83,6 +89,7 @@ function toSegments(traces: Trace[], rand: () => number, kindSeed = 0) {
         pos.push(t[k].x, t[k].y, t[k].z);
         prog.push(total > 0 ? acc[k] / total : 0);
         seed.push(s);
+        radial.push(radialReveal ? t[k].length() / maxR : total > 0 ? acc[k] / total : 0);
       }
     }
   });
@@ -90,6 +97,7 @@ function toSegments(traces: Trace[], rand: () => number, kindSeed = 0) {
   g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
   g.setAttribute("aProgress", new THREE.Float32BufferAttribute(prog, 1));
   g.setAttribute("aSeed", new THREE.Float32BufferAttribute(seed, 1));
+  g.setAttribute("aRadial", new THREE.Float32BufferAttribute(radial, 1));
   return g;
 }
 
@@ -98,7 +106,7 @@ export function createTraces() {
   const traces: Trace[] = [];
   const vias: THREE.Vector3[] = [];
   const layers = [-0.34, -0.22, -0.1, 0.1, 0.22, 0.34];
-  const BALL = 0.11;
+  const BALL = 0.17; // spokes start INSIDE the particle nebula, so strings emerge from the turbulence
 
   layers.forEach((x) => {
     const sx = Math.sqrt(1 - (x / 0.42) ** 2);
@@ -106,7 +114,7 @@ export function createTraces() {
     // outer contour (closed loop)
     traces.push(lift(routedArc(-Math.PI, Math.PI, sx, 44)));
     // inner gyri arcs
-    for (const sc of [0.74, 0.52]) {
+    for (const sc of [0.74]) {
       for (let k = 0; k < 2; k++) {
         const p0 = -Math.PI + rand() * Math.PI * 2;
         const len = 1.1 + rand() * 1.6;
@@ -115,9 +123,9 @@ export function createTraces() {
         vias.push(arc[0], arc[arc.length - 1]);
       }
     }
-    // spokes: from the ball of light out to the contour
-    for (let k = 0; k < 3; k++) {
-      const phi = -Math.PI + ((k + rand() * 0.6) / 3) * Math.PI * 2;
+    // spokes: from inside the nebula out to the contour
+    for (let k = 0; k < 4; k++) {
+      const phi = -Math.PI + ((k + rand() * 0.6) / 4) * Math.PI * 2;
       const start = { z: snap(Math.cos(phi) * BALL), y: snap(Math.sin(phi) * BALL) };
       const endRaw = silhouette(phi, sx * 0.97);
       const end = { z: snap(endRaw.z), y: snap(endRaw.y) };
@@ -178,7 +186,7 @@ export function createExitTraces(count = 8) {
     pts.push({ z: side * 14, y: cur.y }); // run off-screen
     traces.push(pts.map((p) => new THREE.Vector3(p.z, p.y, -0.25)));
   }
-  return toSegments(traces, rand, 0.5);
+  return toSegments(traces, rand, 0.5, false);
 }
 
 /** Ambient "nebula" around the brain; collapses into a vertical beam on scroll (ref video). */

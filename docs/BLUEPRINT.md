@@ -69,7 +69,7 @@ scripts/
 
 - `dpr` 1.5 desktop / 1 mobile; `PerformanceMonitor.onDecline` drops to dpr 1, no DOF, no MSAA.
 - One **428 KB GLB (214 KB gzipped)**, meshopt-compressed by `gltfpack`. It loads behind the loader, and the loader's 100% genuinely waits for it. The decoder ships with three.js, so there's no CDN fetch.
-- Strings, vias and the ball are 3 draw calls in total; exit traces are 1.
+- The nebula simulation runs entirely on the GPU: 2 FBO passes plus 1 points draw call. Strings and vias are 2 more draw calls; exit traces are 1.
 - No React state in the frame loop. Labels, HUD numbers and cursor are written straight to DOM nodes.
 
 ---
@@ -127,16 +127,18 @@ Fluid scale (375px → 1920px):
 
 ## 3. Motion design & the WebGL experience
 
-The hero is a **featureless white porcelain bust** in 3/4 profile. It reaches out of the void as the curtain opens. Its skull splits horizontally just above the nose, and the dome lifts to reveal the **AI core**: a contained ball of light wrapped in circuit-routed strings of light. The narrative: the human "shell" (repetitive manual labour) opens to show the automation inside.
+The hero is a **featureless white porcelain bust** in 3/4 profile. It reaches out of the void as the curtain opens. Its skull splits horizontally just above the nose, and the dome lifts to reveal the **AI core**: a swirling GPGPU particle nebula with circuit-routed strings of light growing out of it. The narrative: the human "shell" (repetitive manual labour) opens to show the automation inside.
 
 | File | Role |
 |---|---|
 | `components/canvas/HeroMannequin.tsx` | `<HeroMannequin/>`: GLTF nodes, porcelain material, dome lift, core lights |
-| `components/canvas/AICore.tsx` | `<AICore/>` (ball of light + strings + vias) and `<ExitTraces/>` |
+| `components/canvas/AICore.tsx` | `<AICore/>` (particle nebula + strings + vias) and `<ExitTraces/>` |
+| `components/canvas/ParticleCore.tsx` | GPGPU particle nebula (FBO simulation + render) |
 | `components/canvas/HeroRig.tsx` | Group hierarchy: route pose → Z approach → profile/head-turn |
 | `components/canvas/mannequinGeometry.ts` | Procedural sculpt; source of the GLB |
 | `components/canvas/coreGeometry.ts` | Octilinear circuit-trace generator |
-| `components/canvas/shaders.ts` | Volumetric core shader, string material patch, backdrop, nebula/beam |
+| `components/canvas/shaders.ts` | String material patch, backdrop, dust/beam |
+| `components/canvas/nebulaShaders.ts` | Curl-noise simulation + particle shaders |
 | `components/canvas/Scene.tsx` | Studio lighting + render pipeline |
 | `components/dom/Preloader.tsx` | **Master intro timeline** (the sync) |
 | `lib/intro.ts` | Intro timing constants shared by all of the above |
@@ -171,34 +173,51 @@ html {
 - A hairline of light leaks along the cut just before it opens (`motion.crack`).
 - The head is fully open at exactly the moment the website is fully visible (see 3.7).
 
-### 3.4 The AI core (the payload)
+### 3.4 The AI core: GPGPU particle nebula (the payload)
 
-**Not an anatomical brain. Not chaotic fibres.**
+Modelled on the particle cloud in the Lusion reference: a sprawling, wispy nebula with a bright, *textured* heart, streaming arms and a few large soft motes. It is **not** an anatomical brain, **not** chaotic fibres and **not** a solid ball. The turbulent nebula is the AI "brain". The rigid circuit strings that grow out of it are its structured outputs.
 
-**Ball of light:** a raymarched volume on a bounding sphere (`volumeFrag`). Each pixel marches 28 steps through a Gaussian density modulated by animated fbm. Emission runs from beige-hot at the centre to a Flag Blue edge. It's soft and contained, with an HDR centre around 1.7× beige, so it reads as an energy source, not a laser.
+| File | Role |
+|---|---|
+| `components/canvas/ParticleCore.tsx` | `<ParticleCore/>`: FBO setup, simulation step, render |
+| `components/canvas/nebulaShaders.ts` | Simplex + curl noise, velocity/position passes, particle shaders |
 
-**Strings of light:** meticulously organised circuit traces (`createTraces`):
-- 6 sagittal layers, none at x = 0, which leaves the longitudinal fissure, so two hemispheres read in pure line-work.
-- Each layer has the brain contour plus inner gyri arcs, snapped to a 2.8 cm grid and routed **octilinearly (0°/45°/90° only)**, like PCB traces.
-- Spokes route power from the ball out to the contour, and lateral buses bridge the hemispheres.
-- Solder-pad vias sit at the trace ends. 5 of them are the agent hubs that carry the DOM labels on `/pricing`.
+**GPGPU simulation (no CPU work per frame):**
+- `GPUComputationRenderer` ping-pongs two float FBOs: `texturePosition` (xyz, life) and `textureVelocity` (xyz, seed). One texel is one particle.
+- **512² = 262,144 particles** on desktop; 256² = 65,536 on the low tier. Brightness is normalised so both tiers look the same.
+- Float render targets where the GPU supports `EXT_color_buffer_float`, half float otherwise.
+- Particles age and respawn inside the core, with staggered lives so there are no respawn waves.
 
-**Exit traces:** long octilinear runs leave the head and cross the page in screen space, ready to continue as DOM/SVG circuitry in later sections. They draw on as the dome lifts, then snake further out as the hero scrolls.
+**Velocity pass forces:**
+1. **Curl noise** in two octaves (large arms + fine wisps). It is divergence-free, so the flow is fluid with no sinks.
+2. **Containment:** a soft spring with a stiff wall. The radius grows from **0.28** sealed in the skull to **0.95** once released, and stretches vertically into a plume, plus buoyancy, so the nebula rises out of the cut around the lifted dome.
+3. **Three orbiting attractors** that pull from afar and repel up close, so clumps form, stream and disperse.
+4. **Central breathing:** a weak repulsion at the very centre.
+5. Exponential damping gives inertia and fluid lag.
 
-Strings use **`THREE.LineBasicMaterial`**, patched with `onBeforeCompile` (`patchStringMaterial`):
+**Interactive:**
+- The cursor is projected onto a plane through the core facing the camera (raycaster → core-local). Nearby particles are pushed aside and spun into a **vortex**, scaled by pointer speed.
+- **Click** anywhere that isn't a control and a radial **shockwave** runs through the nebula.
+- Hover and scroll speed also raise the turbulence (`uActivity`).
 
-```ts
-const m = new THREE.LineBasicMaterial({
-  transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-  toneMapped: false, // author in HDR; ACES runs later in the composer
-});
-// + aProgress (arc-length 0→1) / aSeed attributes:
-//   drawn  = 1 - smoothstep(uReveal - .015, uReveal, vProgress)   → strings grow out of the core
-//   pulse  = travelling data packets, speed × uActivity             → the agents "working"
-//   spark  = white-hot tip on the growing edge
-```
+**Rendering:**
+- One `THREE.Points` draw call; each vertex fetches its own texel.
+- **`THREE.AdditiveBlending`**, `depthWrite: false`, `toneMapped: false`. Hundreds of tiny contributions overlap at the heart and sum past 1.0 into a bright core that fades to wisps. The outskirts get a brightness boost so the arms stay visible.
+- About **1 in 6 particles glints** briefly, giving granular flecks over the smoke. About 3% are large soft "bokeh" motes.
+- **Colour:** Flag Blue (slow/old particles) ↔ Beige (fast/young), mixed by velocity + lifetime.
 
-**Colours (linear HDR, before tone mapping):** Flag Blue × 10 and Beige × 0.9 for string bodies (luminance ≈ 0.3–0.6, so a thin halo); pulses and the ball centre exceed 1.0. ACES then rolls those off to white-hot cores with coloured fringes, which is how real neon and fibre-optics photograph.
+**Strings of light:**
+- Octilinear circuit traces form the brain silhouette in 6 sagittal layers, with a gap at the midline fissure.
+- Spokes start *inside* the nebula (r = 0.17), so the wires emerge from the turbulence.
+- They **draw on radially** (`aRadial` = distance from the core) as the dome lifts, then carry travelling data pulses outward.
+- String bodies are deliberately quiet (`uBase 0.3`), so the nebula is the star and the strings are the structure.
+- Exit traces leave the head and run out across the page. They draw on as the dome lifts, then extend further as the hero scrolls.
+
+Strings use **`THREE.LineBasicMaterial`**, patched with `onBeforeCompile` (`patchStringMaterial`): attributes `aProgress` (pulses), `aRadial` (draw-on) and `aSeed`, with HDR colour authored before ACES.
+
+**Bloom and DOF** (`Scene.tsx`):
+- `<Selection>` + `<Select enabled>` wrap **only** the particles, strings and vias. `<SelectiveBloom mipmapBlur luminanceThreshold={0.32} luminanceSmoothing={0.28} intensity={0.9} radius={0.55} levels={7} />` with `ignoreBackground`. The porcelain and backdrop never bloom.
+- `<DepthOfField worldFocusRange={2.4} bokehScale={2.6} />` has its target re-locked to the core every frame. Stray particles that drift toward or away from the camera melt into bokeh, which blends the digital particles into the ceramic cavity.
 
 ### 3.5 Material & shader specs: unglazed porcelain
 
@@ -225,7 +244,7 @@ float trans = pow(clamp(dot(V, -Ht), 0., 1.), 2.5);
 totalEmissiveRadiance += uCoreColor * trans * falloff * uSSS; // uSSS 0.12 → 0.62
 ```
 
-The head glows faintly from within while it approaches. The interior is lit by **real light**: two point lights at the core (beige 6, blue 4, decay 2) that bounce off the matte white inner wall and the dome's underside.
+The head glows faintly from within while it approaches. The interior is lit by **real light**: two point lights at the nebula's heart (beige 6, blue 4, decay 2) that bounce off the matte white inner wall and the dome's underside.
 
 **Geometry quality:**
 - 192 segments around, about 70 rows per unit of height, spline-smoothed shoulder profile.
