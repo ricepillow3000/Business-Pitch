@@ -1,0 +1,131 @@
+@import "@fontsource-variable/archivo/wdth.css";
+@import "@fontsource-variable/archivo/wdth-italic.css";
+@import "@fontsource-variable/jetbrains-mono";
+@import "tailwindcss";
+
+/* ════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS — "Marathon poster" system
+   Void  = Dark Slate Gray family (background)
+   Signal/Flag = blue (type, HUD, data-viz)
+   Beige = logo, colour-blocking, interaction highlights
+   ════════════════════════════════════════════════════════════════════ */
+@theme {
+  /* Background family — Dark Slate Gray (#2F4F4F) pushed deeper for the void */
+  --color-void: #152626;        /* page background, deepest */
+  --color-slate: #2f4f4f;       /* true Dark Slate Gray: glows, surfaces, rules */
+  --color-slate-deep: #1d3434;  /* cards / raised panels */
+
+  /* Blues. Real Flag Blue is 1.45:1 on slate → illegible as text.
+     Flag = colour-blocks + text on beige.  Signal = same hue lifted, for type on dark (5.7:1). */
+  --color-flag: #0a3161;
+  --color-signal: #6e9bf0;
+  --color-signal-dim: #3d6bc4;
+
+  /* Beige */
+  --color-beige: #f5f5dc;
+  --color-beige-dim: #cfc9a8;
+
+  --font-display: "Archivo Variable", "Arial Black", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", monospace;
+
+  /* Fluid type scale (min @ 375px → max @ 1920px) */
+  --text-mega: clamp(4.5rem, 17vw, 20rem);
+  --text-mega--line-height: 0.78;
+  --text-poster: clamp(3.25rem, 10vw, 11.5rem);
+  --text-poster--line-height: 0.82;
+  --text-hero: clamp(3rem, 8.4vw, 10.5rem);
+  --text-hero--line-height: 0.82;
+  --text-h1: clamp(2.5rem, 6vw, 6.5rem);
+  --text-h1--line-height: 0.88;
+  --text-h2: clamp(2rem, 4.2vw, 4.25rem);
+  --text-h2--line-height: 0.92;
+  --text-h3: clamp(1.25rem, 2vw, 2rem);
+  --text-h3--line-height: 1.05;
+  --text-lead: clamp(1.125rem, 1.45vw, 1.5rem);
+  --text-lead--line-height: 1.45;
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.2;
+
+  --ease-heavy: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Display = ultra-expanded, black weight, tight tracking. Poster headlines ONLY. */
+@utility font-poster {
+  font-family: var(--font-display);
+  font-stretch: 125%;
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+/* Readable body for business owners: normal width, 400, generous leading. */
+@utility font-body {
+  font-family: var(--font-display);
+  font-stretch: 100%;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+/* Condensed italic accent (the "CRAFTING UNIQUE" voice from the reference). */
+@utility font-accent {
+  font-family: var(--font-display);
+  font-stretch: 75%;
+  font-style: italic;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+/* HUD / data labels */
+@utility font-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+@utility text-outline {
+  -webkit-text-stroke: 1.5px currentColor;
+  -webkit-text-fill-color: transparent;
+}
+/* Marathon-style chamfered corner */
+@utility chamfer {
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+@utility hazard {
+  background-image: repeating-linear-gradient(-45deg, currentColor 0 6px, transparent 6px 14px);
+}
+
+/* ── Layout rules ─────────────────────────────────────────────────── */
+@utility poster-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: clamp(1rem, 1.6vw, 1.5rem);
+  padding-inline: clamp(1rem, 3.2vw, 3rem);
+}
+
+html {
+  background: var(--color-void);
+  color: var(--color-beige);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  background: var(--color-void);
+  font-family: var(--font-display);
+  overflow-x: hidden;
+}
+::selection { background: var(--color-beige); color: var(--color-flag); }
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* Custom cursor only for fine pointers */
+@media (pointer: fine) {
+  html.has-cursor, html.has-cursor * { cursor: none !important; }
+}
+
+/* Masked line reveals (SplitText) */
+.split-line { overflow: clip; padding-bottom: 0.04em; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
