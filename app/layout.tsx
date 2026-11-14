@@ -1,20 +1,35 @@
 import type { Metadata, Viewport } from "next";
+import { Cursor } from "@/components/Cursor";
+import { HUD } from "@/components/HUD";
+import { Loader } from "@/components/Loader";
+import { SmoothScroll } from "@/components/SmoothScroll";
 import "./globals.css";
-import { BRAND } from "@/lib/config";
-import { Shell } from "@/components/Shell";
 
 export const metadata: Metadata = {
-  title: `${BRAND.name} — AI agents that do the busywork`,
-  description: "AI automation agency for local businesses. Agents that answer, book, invoice and follow up — while you run the business.",
+  title: "JIDO — Intelligent workflows for local businesses",
+  description:
+    "We build intelligent workflows for local businesses. Automate the repetitive, focus on the essential.",
 };
 
 export const viewport: Viewport = { themeColor: "#14181b" };
 
+/**
+ * Persistent shell. Mounted once; nothing here ever re-mounts.
+ *
+ *   z-[200]  Cursor        (fixed, pointer-events-none)
+ *   z-[100]  Loader        (first paint only, removes itself)
+ *   z-50     HUD           (fixed frame, pointer-events-none)
+ *   z-0      {children}    (the page)
+ */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
       <body>
-        <Shell>{children}</Shell>
+        <SmoothScroll />
+        {children}
+        <HUD />
+        <Loader />
+        <Cursor />
       </body>
     </html>
   );
