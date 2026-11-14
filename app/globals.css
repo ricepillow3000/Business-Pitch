@@ -72,13 +72,26 @@ html {
 body {
   font-family: var(--font-display);
   overflow-x: clip;
-  /* faint tactical dot grid (Marathon), fixed behind everything */
+  /* subtle blueprint grid, fixed behind everything (96px cells) */
   background:
-    radial-gradient(circle, rgb(110 155 240 / 0.09) 1px, transparent 1.2px) 0 0 / 28px 28px fixed,
+    linear-gradient(to right, rgb(110 155 240 / 0.055) 1px, transparent 1px) center / 96px 96px fixed,
+    linear-gradient(to bottom, rgb(110 155 240 / 0.055) 1px, transparent 1px) center / 96px 96px fixed,
     var(--color-slate);
 }
 ::selection { background: var(--color-beige); color: var(--color-flag-deep); }
 :focus-visible { outline: 1px solid var(--color-flag); outline-offset: 6px; }
+
+/* Text sits on a soft pool of background, so the grid fades out around the words
+   (lines stay crisp in the open space, quieter where you read). */
+.quiet { position: relative; isolation: isolate; }
+.quiet::before {
+  content: "";
+  position: absolute;
+  inset: -2.5rem calc(-1 * min(3rem, 4vw)); /* sideways: always inside the page gutter */
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(farthest-side, rgb(20 24 27 / 0.85) 50%, rgb(20 24 27 / 0) 100%);
+}
 
 /* Lenis */
 html.lenis, html.lenis body { height: auto; }

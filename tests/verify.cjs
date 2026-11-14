@@ -25,7 +25,8 @@ const wait = (p, ms) => p.waitForTimeout(ms);
 
   // 1. Loader
   check("Loader: JIDO fades in on a slate screen", await page.waitForSelector("[data-loader] [data-word]", { state: "visible", timeout: 2000 }).then(() => true, () => false));
-  check("Scroll locked while loading", await page.evaluate(() => document.documentElement.classList.contains("lenis-stopped")));
+  // dev mode can take a moment to start the page's code; the loader covers the screen meanwhile
+  check("Scroll locked while loading", await page.waitForFunction(() => document.documentElement.classList.contains("lenis-stopped"), null, { timeout: 3000 }).then(() => true, () => false));
   const seen = new Set();
   for (let i = 0; i < 30; i++) {
     seen.add(await page.textContent("[data-count]"));
@@ -53,6 +54,17 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   // 2. HUD
   check("HUD: 4 corner crosshairs", (await page.$$("[data-corner]")).length === 4);
   check("HUD: rotated micro-data present", (await page.textContent("body")).includes("SYS.LOC //"));
+  const blocks = await page.evaluate(() =>
+    [...document.querySelectorAll('a[href="#top"] [data-block]')].map((b) => ({
+      op: +getComputedStyle(b).opacity,
+      t: b.getAttribute("transform") || "",
+    })),
+  );
+  check(
+    "Logo: 12 blocks snap into alignment to form the J",
+    blocks.length === 12 && blocks.every((b) => b.op === 1 && !/[1-9]/.test(b.t.replace(/matrix\(1,0,0,1,0,0\)/, ""))),
+    `${blocks.length} blocks, ${blocks.filter((b) => b.op === 1).length} settled`,
+  );
   const pager = () =>
     page.evaluate(() => {
       const digits = [...document.querySelectorAll("[data-reel]")].map((r) => {
@@ -98,9 +110,22 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   await wait(page, 700);
   const pull = await page.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector("[data-magnetic]")).transform));
   check("CTA button is magnetic (pulled toward cursor)", pull.e > 3 && pull.f > 3, `moved x=${pull.e.toFixed(1)} y=${pull.f.toFixed(1)}`);
-  check("CTA opens an email to start the conversation", (await btn.getAttribute("href")).startsWith("mailto:"));
-  check("Contact: phone number is a tap-to-call link", await page.isVisible('#initiation a[href="tel:+17702659930"]'));
-  check("Contact: email is a click-to-email link", await page.isVisible('#initiation a[href="mailto:john7000.nguyen@gmail.com"]'));
+  const menu = "#contact-options";
+  check("Email menu is hidden until the button is clicked", !(await page.isVisible(menu)));
+  await btn.click();
+  await wait(page, 1400);
+  const menuBottom = await page.evaluate((m) => document.querySelector(m).getBoundingClientRect().bottom - innerHeight, menu);
+  check("Email menu is scrolled fully into view when opened", menuBottom <= 0, `${Math.round(-menuBottom)}px above the bottom edge`);
+  const gmail = await page.getAttribute(`${menu} a[target="_blank"]`, "href");
+  check("Clicking 'Start the conversation' offers Gmail / email app / copy", (await page.isVisible(menu)) && (await page.$$(`${menu} a, ${menu} button`)).length === 3);
+  check("Gmail option opens a new Gmail email to the right address", gmail.startsWith("https://mail.google.com/mail/") && gmail.includes("to=john7000.nguyen%40gmail.com"), gmail);
+  check("Email-app option uses mailto:", (await page.getAttribute(`${menu} a[href^="mailto:"]`, "href")).startsWith("mailto:john7000.nguyen@gmail.com"));
+  if (SHOTS) await page.screenshot({ path: `${SHOTS}/4b-email-menu.png` });
+  await page.keyboard.press("Escape");
+  await wait(page, 700);
+  check("Escape closes the email menu", !(await page.isVisible(menu)));
+  check("Contact: email address shown as a link", await page.isVisible('#initiation dl a[href="mailto:john7000.nguyen@gmail.com"]'));
+  check("Phone number removed from the site", !(await page.textContent("body")).includes("265-9930") && !(await page.$('a[href^="tel:"]')));
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/4-initiation.png` });
 
   // 6. Every section: pagination + reveals

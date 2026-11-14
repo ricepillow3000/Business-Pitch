@@ -4,6 +4,7 @@ import Lenis from "lenis";
 import { useEffect } from "react";
 import { gsap, ScrollTrigger } from "@/lib/gsap";
 import { onReveal } from "@/lib/intro";
+import { smooth } from "@/lib/lenis";
 
 /**
  * Lenis momentum scroll, driven by GSAP's ticker so Lenis, GSAP and
@@ -13,6 +14,7 @@ import { onReveal } from "@/lib/intro";
 export function SmoothScroll() {
   useEffect(() => {
     const lenis = new Lenis({ lerp: 0.085, wheelMultiplier: 0.9, anchors: true, autoRaf: false });
+    smooth.lenis = lenis;
     lenis.stop(); // locked while the loader plays
 
     const raf = (time: number) => lenis.raf(time * 1000);
@@ -27,6 +29,7 @@ export function SmoothScroll() {
       off();
       gsap.ticker.remove(raf);
       lenis.destroy();
+      smooth.lenis = null;
     };
   }, []);
 

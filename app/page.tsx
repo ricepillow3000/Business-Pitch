@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { ContactMenu } from "@/components/ContactMenu";
 import { Logo } from "@/components/Logo";
 import { Plus } from "@/components/Plus";
 import { WorkflowGraph } from "@/components/WorkflowGraph";
@@ -8,7 +9,6 @@ import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 import { onReveal } from "@/lib/intro";
 
 const EMAIL = "john7000.nguyen@gmail.com";
-const PHONE = { label: "(770) 265-9930", href: "tel:+17702659930" };
 const TASKS = ["Re-typing form entries", "Chasing unpaid invoices", "Booking and rebooking", "Updating the CRM"];
 const WORKFLOWS = [
   { name: "Invoicing", line: "Completed jobs become invoices. Payments are matched to them." },
@@ -123,13 +123,13 @@ export default function Home() {
       <section id="top" data-section data-label="OVERVIEW" className="gutter relative flex min-h-svh flex-col justify-end overflow-hidden pt-28 pb-20 md:pb-24">
         <div data-hero className="flex flex-col gap-10 md:gap-14">
           <p data-hero-fade className="font-hud text-flag">[ AI automation // local business ]</p>
-          <h1 className="font-wide text-mega text-beige">
+          <h1 className="quiet font-wide text-mega text-beige">
             <Line>Intelligent</Line>
             <Line className="md:pl-[12vw]">workflows.</Line>
           </h1>
           <PlusRow />
           <div className="grid items-end gap-10 md:grid-cols-12">
-            <p data-hero-fade className="max-w-[36ch] text-lead text-flag md:col-span-6">
+            <p data-hero-fade className="quiet max-w-[36ch] text-lead text-flag md:col-span-6">
               We build intelligent workflows for local businesses. Automate the repetitive, focus on the essential.
             </p>
             <a href="#friction" data-hero-fade className="w-fit font-hud text-flag md:col-span-2 md:col-start-11 md:justify-self-end">
@@ -142,11 +142,11 @@ export default function Home() {
       {/* ── [[002]] THE FRICTION ─────────────────────────────────── */}
       <section id="friction" data-section data-label="FRICTION" className="gutter relative py-32 md:py-48">
         <Tag n="002">The friction</Tag>
-        <h2 data-words className="mt-16 max-w-[17ch] font-wide text-display text-beige md:mt-24">
+        <h2 data-words className="quiet mt-16 max-w-[17ch] font-wide text-display text-beige md:mt-24">
           The average business loses hours a week to manual tasks.
         </h2>
         <div className="mt-20 grid gap-14 md:mt-32 md:grid-cols-12">
-          <ul data-strikes className="space-y-4 font-hud text-flag md:col-span-4">
+          <ul data-strikes className="quiet space-y-4 font-hud text-flag md:col-span-4">
             {TASKS.map((t) => (
               <li key={t} className="relative w-fit">
                 <span data-task>{t}</span>
@@ -154,7 +154,7 @@ export default function Home() {
               </li>
             ))}
           </ul>
-          <p data-lines className="font-wide text-[clamp(1.5rem,2.6vw,2.75rem)] leading-[1.05] text-beige md:col-span-7 md:col-start-6 md:text-right">
+          <p data-lines className="quiet font-wide text-[clamp(1.5rem,2.6vw,2.75rem)] leading-[1.05] text-beige md:col-span-7 md:col-start-6 md:text-right">
             We implement systems to reclaim that time.
           </p>
         </div>
@@ -163,9 +163,9 @@ export default function Home() {
       {/* ── [[003]] THE AUTOMATION ───────────────────────────────── */}
       <section id="automation" data-section data-label="AUTOMATION" className="gutter relative py-32 md:py-48">
         <Tag n="003">The automation</Tag>
-        <h2 data-lines className="mt-16 font-wide text-display text-beige md:mt-24">Connected, quietly.</h2>
+        <h2 data-lines className="quiet mt-16 w-fit font-wide text-display text-beige md:mt-24">Connected, quietly.</h2>
         <div className="mt-12 grid items-center gap-20 md:mt-16 md:grid-cols-12">
-          <div className="md:col-span-5">
+          <div className="quiet md:col-span-5">
             <p data-reveal className="mt-8 max-w-[38ch] text-lead text-flag">
               We connect the tools you already use. Routine work moves between them on its own.
             </p>
@@ -188,34 +188,17 @@ export default function Home() {
       {/* ── [[004]] THE INITIATION ───────────────────────────────── */}
       <section id="initiation" data-section data-label="INITIATION" className="gutter relative flex min-h-svh flex-col pt-32 pb-24 md:pt-48">
         <Tag n="004">The initiation</Tag>
-        <h2 data-lines className="mt-16 max-w-[18ch] font-wide text-display text-beige md:mt-24">
+        <h2 data-lines className="quiet mt-16 max-w-[18ch] font-wide text-display text-beige md:mt-24">
           Let systems handle the mechanical.
         </h2>
-        <p data-reveal className="mt-8 text-lead text-flag">Focus on what you do best.</p>
+        <p data-reveal className="quiet mt-8 w-fit text-lead text-flag">Focus on what you do best.</p>
 
-        <a
-          href={`mailto:${EMAIL}`}
-          data-magnetic
-          data-reveal
-          className="group chamfer mt-16 inline-flex w-fit items-center gap-8 bg-beige py-6 pr-6 pl-8 text-flag-deep md:mt-20 md:py-8 md:pr-8 md:pl-10"
-        >
-          <span className="relative block overflow-hidden font-wide text-sm md:text-base">
-            <span className="block transition-transform duration-700 ease-expo group-hover:-translate-y-full">Start the conversation</span>
-            <span aria-hidden className="absolute inset-0 translate-y-full transition-transform duration-700 ease-expo group-hover:translate-y-0">
-              Start the conversation
-            </span>
-          </span>
-          <span aria-hidden className="grid h-9 w-9 place-items-center bg-flag-deep text-beige">
-            <span className="transition-transform duration-700 ease-expo group-hover:rotate-45">↗</span>
-          </span>
-        </a>
+        {/* z-20: the reveal transform makes this a stacking context; keep the open menu above what follows */}
+        <div data-reveal className="relative z-20 mt-16 md:mt-20">
+          <ContactMenu email={EMAIL} />
+        </div>
 
-        {/* direct lines */}
-        <dl data-reveal className="mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 gap-y-4 md:mt-14">
-          <dt className="self-center font-hud text-flag">Phone</dt>
-          <dd>
-            <a href={PHONE.href} className="text-lead text-beige">{PHONE.label}</a>
-          </dd>
+        <dl data-reveal className="quiet mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 md:mt-14">
           <dt className="self-center font-hud text-flag">Email</dt>
           <dd>
             <a href={`mailto:${EMAIL}`} className="text-lead break-all text-beige">{EMAIL}</a>
@@ -231,7 +214,7 @@ export default function Home() {
             <span>© 2026 JIDO</span>
           </span>
           <a href={`mailto:${EMAIL}`} className="w-fit normal-case tracking-wider">{EMAIL}</a>
-          <a href={PHONE.href} className="w-fit">{PHONE.label}</a>
+          <span>SYS.STATUS // ONLINE</span>
           <a href="#top" className="w-fit md:justify-self-end">Back to top ↑</a>
         </footer>
       </section>

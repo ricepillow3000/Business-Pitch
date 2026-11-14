@@ -1,25 +1,44 @@
 /**
- * JIDO logo, redrawn as a vector from the brand mark: a blocky "J" glyph
- * with a circuit trace ending in a node, beside a spaced monospace wordmark.
+ * JIDO mark: square blocks aligned on a grid to build the letter J,
+ * with a circuit trace running out of the stem to a node.
+ * Each block carries [data-block] so the HUD can assemble them on reveal.
  * Everything uses currentColor (beige by default, per the palette).
  */
+
+// The J on a 5 × 6 grid (col, row)
+const J: [number, number][] = [
+  [1, 0], [2, 0], [3, 0], [4, 0], // top bar
+  [3, 1], [3, 2], [3, 3],         // stem
+  [0, 3], [0, 4], [3, 4],         // hook sides
+  [1, 5], [2, 5],                 // base
+];
+const SIZE = 5;
+const STEP = 6.2; // block + gap
+const O = 2; // offset inside the viewBox
+
+export const MARK_BLOCKS = J.length;
+
 export function Mark({ className = "h-7 w-7 text-beige", ...pos }: { className?: string } & React.SVGProps<SVGSVGElement>) {
+  const stemRight = O + 3 * STEP + SIZE;
+  const traceY = O + 2 * STEP + SIZE / 2;
   return (
     <svg viewBox="0 0 40 40" className={className} fill="currentColor" aria-hidden {...pos}>
-      {/* tab */}
-      <rect x="7.5" y="3.5" width="7" height="5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-      {/* top bar + stem */}
-      <rect x="4" y="10" width="20" height="4.5" />
-      <rect x="13" y="10" width="5.5" height="23" />
-      {/* hook of the J */}
-      <rect x="5" y="28.5" width="8" height="4.5" />
-      <rect x="5" y="24" width="4" height="4.5" />
-      {/* notches */}
-      <rect x="20" y="17" width="2.5" height="2.5" />
-      <rect x="9.5" y="17" width="2" height="5" />
+      {J.map(([c, r]) => (
+        <rect
+          key={`${c}-${r}`}
+          data-block
+          x={O + c * STEP}
+          y={O + r * STEP}
+          width={SIZE}
+          height={SIZE}
+          style={{ transformBox: "fill-box", transformOrigin: "center" }}
+        />
+      ))}
       {/* circuit trace → node */}
-      <path d="M18.5 22.5 H27 L32 27.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
-      <circle cx="33.6" cy="29" r="2.2" fill="none" stroke="currentColor" strokeWidth="1.4" />
+      <g data-trace fill="none" stroke="currentColor" strokeWidth="1.3">
+        <path d={`M${stemRight} ${traceY} H31 L35 ${traceY + 4}`} />
+        <circle cx="35.6" cy={traceY + 6.4} r="2" />
+      </g>
     </svg>
   );
 }
