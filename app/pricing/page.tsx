@@ -6,8 +6,8 @@ import { TransitionLink } from "@/components/transition/TransitionLink";
 export const metadata: Metadata = { title: `Pricing — ${BRAND.name}` };
 
 /**
- * On this route the brain swings left and its 5 agent hubs light up (lib/routes.ts),
- * so the plans read as "how much of the brain you're switching on".
+ * On this route the moon scene slides left (lib/routes.ts) so the plans have clean air,
+ * with the orb still burning beside them.
  */
 export default function PricingPage() {
   return (

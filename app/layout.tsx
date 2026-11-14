@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: "AI automation agency for local businesses. Agents that answer, book, invoice and follow up — while you run the business.",
 };
 
-export const viewport: Viewport = { themeColor: "#152626" };
+export const viewport: Viewport = { themeColor: "#14181b" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

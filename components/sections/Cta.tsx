@@ -6,7 +6,7 @@ import { ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { motion } from "@/lib/motion";
 import { BRAND } from "@/lib/config";
 
-/** 07 — The camera flies back to the brain; the closing line wraps around it. */
+/** 07 — The camera flies back down to the orb; the closing line wraps around it. */
 export function Cta() {
   const root = useRef<HTMLElement>(null);
   useGSAP(

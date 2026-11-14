@@ -12,11 +12,11 @@ Everything in this document is implemented in this repo: each section points at 
 |---|---|---|
 | 1 | Tech stack & architecture | §1 |
 | 2 | Art direction & typography (incl. tabular numerals) | §2, §3.1 |
-| 3 | Loader animation logic | §3.2, §3.7 |
-| 4 | WebGL spec: `<HeroMannequin/>`, AI core, materials, lighting, pipeline | §3.3–3.6 |
+| 3 | Loader animation logic | §3.2 |
+| 4 | WebGL spec: the moon scene (terrain, orb, beam, dust, cyclone), lighting, pipeline | §3.3–3.6 |
 | 5 | Homepage wireframe | §4 |
 | 6 | Seamless routing, persistent canvas, page counter | §5 |
-| 7 | GSAP + R3F sync of Z approach, split and DOM fade | §3.7 |
+| 7 | GSAP + R3F sync of the scene reveal and the DOM fade; clickable orb + storm | §3.2, §3.7 |
 
 ---
 
@@ -26,12 +26,12 @@ Everything in this document is implemented in this repo: each section points at 
 |---|---|---|
 | Framework | **Next.js 16 (App Router)**, `output: "export"` | Static HTML/JS, deployable to any CDN. Route-level code splitting + prefetch for free. |
 | UI runtime | **React 19** | Required by R3F v9. |
-| 3D | **three r180 + @react-three/fiber 9 + @react-three/drei 10** | Declarative scene graph, `useFrame` loop, `useGLTF`, `Lightformer` studio HDRI, `PerformanceMonitor`. |
+| 3D | **three r180 + @react-three/fiber 9 + @react-three/drei 10** | Declarative scene graph, `useFrame` loop, `Lightformer` env, `PerformanceMonitor`; GPGPU via `GPUComputationRenderer`. |
 | Post FX | **@react-three/postprocessing 3 / postprocessing 6** | DOF → custom Lens → SelectiveBloom → ACES ToneMapping → Noise → Vignette (auto-split into passes where convolutions conflict). |
-| Shaders | Custom GLSL as TS template strings (`components/canvas/shaders.ts`) | No bundler loader config; shaders tree-shake with their component. |
+| Shaders | Custom GLSL as TS template strings (`components/canvas/moon/moonShaders.ts`, `nebulaShaders.ts`) | No bundler loader config; shaders tree-shake with their component. |
 | Timeline / scroll | **GSAP 3.15** (ScrollTrigger, SplitText, `@gsap/react`) | SplitText is now free; `mask: "lines"` gives the poster line-reveals. |
 | Smooth scroll | **Lenis 1.3** driven by `gsap.ticker` | One RAF for Lenis + GSAP + ScrollTrigger. No double loops, no jitter. |
-| State | **zustand** (low-frequency: loader phase) + **a plain mutable object** (`lib/motion.ts`, per-frame) | React never re-renders at 60fps. The DOM writes `motion.*` and WebGL reads it in `useFrame`. |
+| State | **zustand** (low-frequency: loader phase, open info panel) + **a plain mutable object** (`lib/motion.ts`, per-frame) | React never re-renders at 60fps. The DOM writes `motion.*` and WebGL reads it in `useFrame`. |
 | Styling | **Tailwind v4** `@theme` tokens (`app/globals.css`) | Design tokens are the CSS variables; utilities are generated from them. |
 | Fonts | Self-hosted via `@fontsource-variable` (Archivo w/ width axis, JetBrains Mono) | No FOUT on the loader, no third-party font requests. |
 
@@ -48,29 +48,36 @@ app/
   globals.css           ← design tokens + typography utilities
 components/
   Shell.tsx             ← the persistent layer stack
-  canvas/               ← Scene, HeroRig, HeroMannequin, AICore, geometry, shaders, LensEffect (WebGL only)
-  dom/                  ← Preloader, Cursor, Hud, PageCounter, Reveals, WarpFilter, SmoothScroll, HubLabels
+  canvas/               ← Scene, ParticleCore (orb nebula), LensEffect, shaders (WebGL only)
+    moon/               ← MoonScene, Terrain, Orb, LightBeam, GroundDust, Cyclone, Sky, moonShaders
+  dom/                  ← Preloader, Cursor, Hud, PageCounter, Reveals, WarpFilter, SmoothScroll,
+                          Hotspots, InfoPanel, HintToast
   transition/           ← TransitionProvider (route choreography) + TransitionLink
   sections/             ← poster sections (Hero, Busywork, Agents, Process, Calculator, …)
   booking/BookingForm   ← split chunk, pre-warmed on idle
 lib/
   motion.ts             ← per-frame bridge DOM ⇄ WebGL
-  routes.ts             ← route → camera / bust pose table
-  config.ts             ← brand + all copy
+  routes.ts             ← route → camera / scene pose table
+  config.ts             ← brand + all copy (incl. INFO panel copy)
+  useGpgpu.ts           ← shared GPGPU particle setup (orb + dust)
+  random.ts             ← seeded PRNG
   spring.ts             ← under-damped spring integrator
   intro.ts              ← intro sync constants
-public/models/
-  mannequin.glb         ← "Bust" + "Dome" nodes (npm run build:model)
-scripts/
-  build-mannequin.ts    ← procedural sculpt → GLB
+tests/visual/          ← Playwright scripts (intro sync, interaction, nav, journey, uniforms, contrast)
 ```
 
 ### Performance budget
 
-- `dpr` 1.5 desktop / 1 mobile; `PerformanceMonitor.onDecline` drops to dpr 1, no DOF, no MSAA.
-- One **428 KB GLB (214 KB gzipped)**, meshopt-compressed by `gltfpack`. It loads behind the loader, and the loader's 100% genuinely waits for it. The decoder ships with three.js, so there's no CDN fetch.
-- The nebula simulation runs entirely on the GPU: 2 FBO passes plus 1 points draw call. Strings and vias are 2 more draw calls; exit traces are 1.
-- No React state in the frame loop. Labels, HUD numbers and cursor are written straight to DOM nodes.
+- `dpr` 1.5 desktop / 1 mobile; `PerformanceMonitor.onDecline` (or `?q=low`, or ≤768px) drops to the low tier.
+
+| Tier | Orb | Dust | Cyclone | Terrain | Post |
+|---|---|---|---|---|---|
+| High | 512² (262k) | 256² (65k) | 40k | 384² segments | DOF + MSAA 4× |
+| Low | 256² (65k) | 128² (16k) | 15k | 192² segments | no DOF / MSAA |
+
+- **Zero downloads for 3D**: terrain, sky, rocks and particles are procedural; the env map is baked from `Lightformer`s. The loader's 100% waits for the first three rendered frames.
+- Both simulations run entirely on the GPU (2 FBO passes + 1 points draw each). The cyclone has no simulation at all (pure vertex shader). Total ≈ 12 draw calls for the scene.
+- No React state in the frame loop. Hotspot positions, HUD numbers and the cursor are written straight to DOM nodes.
 
 ---
 
@@ -80,14 +87,14 @@ scripts/
 
 | Token | Hex | Role |
 |---|---|---|
-| `void` | `#152626` | Page background: Dark Slate Gray pushed to near-black |
-| `slate` | `#2F4F4F` | True Dark Slate Gray: the radial glow behind the bust, rules, struck-through text |
-| `slate-deep` | `#1D3434` | Raised cards |
+| `void` | `#14181B` | Page background: neutral dark slate **gray** (no green cast) |
+| `slate` | `#2B3237` | Surfaces, rules, the night sky's horizon haze |
+| `slate-deep` | `#1E2428` | Raised cards, the info panel |
 | `flag` | `#0A3161` | **Flag Blue**: colour-blocks (Process section), plan chips, text *on beige* |
 | `signal` | `#6E9BF0` | Flag Blue's hue lifted for legibility: headers, HUD, data-viz on dark |
 | `beige` | `#F5F5DC` | Logo, colour-blocking, CTAs, interaction highlights |
 
-**Accessibility decision:** real Flag Blue on Dark Slate Gray is **1.45:1** (needs 4.5:1), so it is invisible as text. The system keeps Flag Blue for what it does best (big flat blocks, and text on beige at 11.7:1) and introduces `signal` for type on dark (5.7:1 on void). Beige on void is 14.2:1.
+**Accessibility decision:** real Flag Blue on the dark grays is **1.38:1** (needs 4.5:1), so it is invisible as text. The system keeps Flag Blue for what it does best (big flat blocks, and text on beige at 11.7:1) and uses `signal` for type on dark: **6.47:1 on void, 5.69:1 on slate-deep, 4.71:1 on slate**. Beige on void is 16.1:1. Re-check with `node tests/visual/contrast.cjs`.
 
 ### Type system
 
@@ -125,234 +132,87 @@ Fluid scale (375px → 1920px):
 
 ---
 
-## 3. Motion design & the WebGL experience
+## 3. Motion design & the WebGL experience: the moon scene
 
-The hero is a **featureless white porcelain bust** in 3/4 profile. It reaches out of the void as the curtain opens. Its skull splits horizontally just above the nose, and the dome lifts to reveal the **AI core**: a swirling GPGPU particle nebula with circuit-routed strings of light growing out of it. The narrative: the human "shell" (repetitive manual labour) opens to show the automation inside.
+The hero is a **dark slate-gray moon / exoplanet valley at night** (modelled on the Lusion "About" hero). A bright particle orb hangs dead centre and shines a beam of light onto the valley floor; the ground reacts as if a gust of wind blasts outward from the impact and the dust spreads apart; an ethereal cyclone spins under the orb. The orb and the cyclone are clickable and open info panels. Everything is procedural: nothing is downloaded.
 
-| File | Role |
+| File | Responsibility |
 |---|---|
-| `components/canvas/HeroMannequin.tsx` | `<HeroMannequin/>`: GLTF nodes, porcelain material, dome lift, core lights |
-| `components/canvas/AICore.tsx` | `<AICore/>` (particle nebula + strings + vias) and `<ExitTraces/>` |
-| `components/canvas/ParticleCore.tsx` | GPGPU particle nebula (FBO simulation + render) |
-| `components/canvas/HeroRig.tsx` | Group hierarchy: route pose → Z approach → profile/head-turn |
-| `components/canvas/mannequinGeometry.ts` | Procedural sculpt; source of the GLB |
-| `components/canvas/coreGeometry.ts` | Octilinear circuit-trace generator |
-| `components/canvas/shaders.ts` | String material patch, backdrop, dust/beam |
-| `components/canvas/nebulaShaders.ts` | Curl-noise simulation + particle shaders |
-| `components/canvas/Scene.tsx` | Studio lighting + render pipeline |
-| `components/dom/Preloader.tsx` | **Master intro timeline** (the sync) |
-| `lib/intro.ts` | Intro timing constants shared by all of the above |
-| `scripts/build-mannequin.ts` | Writes `public/models/mannequin.glb` |
+| `components/canvas/Scene.tsx` | `<Canvas>`, camera rig (scroll + route + panel focus), moonlight, env, post pipeline, quality tier |
+| `components/canvas/moon/MoonScene.tsx` | Composes the scene in a `world` group (route pose), hover springs, 3D click proxies, projects the DOM hotspots, DOF focus, `sceneReady` |
+| `components/canvas/moon/moonShaders.ts` | Shared GLSL: **`terrainHeight(xz)`** (single source of truth for ground + dust), fbm, craters, beam, dust, cyclone, sky |
+| `components/canvas/moon/Terrain.tsx` | 170×170 plane (384² / 192² segments) displaced on the GPU; `MeshStandardMaterial` patched via `onBeforeCompile` |
+| `components/canvas/moon/Orb.tsx` | `<ParticleCore/>` + white-hot heart + faint haze + **PointLight** |
+| `components/canvas/moon/LightBeam.tsx` | Beam cone, impact flare, upright glint, **SpotLight** down the beam |
+| `components/canvas/moon/GroundDust.tsx` | GPGPU wind-blown dust (256² / 128²) |
+| `components/canvas/moon/Cyclone.tsx` | Analytic vertex-shader vortex (40k / 15k) + 5 helical ribbons |
+| `components/canvas/moon/Sky.tsx` | Night sky dome (zenith → horizon haze, a few faint stars) + drifting rock fragments |
+| `components/canvas/ParticleCore.tsx` + `nebulaShaders.ts` | The orb's GPGPU curl-noise nebula |
+| `lib/useGpgpu.ts` | Shared `GPUComputationRenderer` setup (position/velocity FBOs, spawn texture, disposal) used by the orb and the dust |
+| `components/dom/Hotspots.tsx`, `InfoPanel.tsx`, `HintToast.tsx` | "This is clickable" cues + the panels |
 
 ### 3.1 Typography rule: tabular numerals
 
-Every digit on the site uses tabular lining figures, so animated numbers never jitter and columns align on a grid:
-
 ```css
-/* app/globals.css */
 html {
   font-variant-numeric: tabular-nums lining-nums;
   font-feature-settings: "tnum" 1, "lnum" 1;
 }
 ```
 
-`tabular-nums` is also set explicitly on the loader counter, ROI figures, prices, `[[00X]]`, process numerals, card indices and HUD coordinates/clock. **Verified in browser:** "111", "000" and "888" measure exactly the same width in both Archivo (poster) and JetBrains Mono.
+Every digit has the same advance width, so the loader's `000→100`, the ROI figure, prices, `[[00X]]` and the HUD clock never jitter while animating.
 
-### 3.2 Pre-loader → spatial transition
+### 3.2 Loader → reveal (the curtain)
 
-1. The brand name *is* the progress bar: an outline word with a beige fill clipped by progress, plus a tabular `000→100%` counter.
-2. At 100%, the word takes a heavy `expo.in` push toward the lens (1.0s).
-3. A seam flashes and two stepped glitch jolts follow. Then the **curtain** (two clip-path halves of the loader) parts.
-4. **On the same frame** the bust starts its Z approach from `z = −38` in the fogged void, leaning in as if reaching through the screen.
+1. The brand name *is* the progress bar (outline text, beige fill clipped by progress; tabular `000%`).
+2. At 100% the word **rushes at the viewer** (`scale 1 → 5.5`, `expo.in`), as if reaching through the screen.
+3. A seam flashes down the centre, two stepped glitch-jolts, then the two halves (each a clip-path'd copy of the whole loader) **part like a curtain**.
+4. On the same frame (`open` label) **`motion.reveal` tweens 0 → 1** — and the website (`#page` + every `[data-chrome]`) fades in with the **same position, duration (2.2 s) and ease (`power2.inOut`)**. The scene reveal *is* the site fade. Verified by `tests/visual/intro2.cjs`: max |reveal − UI opacity| = 0.000.
 
-### 3.3 The hero animation: the head split
+What `reveal` drives: the orb ignites (nebula radius + intensity), the beam strikes down from the orb (`uStrike`, 0.12→0.42), hits the ground with a flash, a **shock ring** races out over the terrain while the dust gets a big gust, the cyclone **builds from the ground up**, and the camera settles back 3.2 units.
 
-- The cut is **horizontal, across the cranium, just above the nose** (`CUT = 0.26` head units).
-- The skull is a closed porcelain solid: outer wall, inner wall (~3–4.5 cm) and a flat lip on the cut. You see real thickness when it opens.
-- The separated **Dome** node lifts **straight up the Y axis** (0.95 units), drifting slightly back with a 0.12 rad tilt.
-- A hairline of light leaks along the cut just before it opens (`motion.crack`).
-- The head is fully open at exactly the moment the website is fully visible (see 3.7).
+Reduced motion: no rush, no curtain; `reveal = 1` immediately and the GPGPU simulations settle for 90 frames, then hold still.
 
-### 3.4 The AI core: GPGPU particle nebula (the payload)
+### 3.3 The ground: `terrainHeight(xz)`
 
-Modelled on the particle cloud in the Lusion reference: a sprawling, wispy nebula with a bright, *textured* heart, streaming arms and a few large soft motes. It is **not** an anatomical brain, **not** chaotic fibres and **not** a solid ball. The turbulent nebula is the AI "brain". The rigid circuit strings that grow out of it are its structured outputs.
+- **Valley floor** around the impact: near-flat within r≈1.5, fbm undulation growing outward; pale albedo, scattered dark pebbles.
+- **Side ridges**: rise on `|x|` along a meandering axis, ridged fbm (rugged, striated like the reference) plus a taller outer range.
+- **Back wall** far down −z, **craters** (bowl + raised rim) on a jittered 7-unit grid, none near the beam.
+- The mesh is displaced in the vertex shader; **normals are per-pixel finite differences** in the fragment shader (epsilon grows with distance → no shimmer), so lighting has detail the mesh can't carry.
+- Emissive patch: **impact glow**, the reveal **shock ring**, and **radial wind streaks** scrolling outward from the beam.
+- `GroundDust` calls the same function, so the dust hugs exactly the surface you see.
 
-| File | Role |
-|---|---|
-| `components/canvas/ParticleCore.tsx` | `<ParticleCore/>`: FBO setup, simulation step, render |
-| `components/canvas/nebulaShaders.ts` | Simplex + curl noise, velocity/position passes, particle shaders |
+### 3.4 The orb (GPGPU nebula)
 
-**GPGPU simulation (no CPU work per frame):**
-- `GPUComputationRenderer` ping-pongs two float FBOs: `texturePosition` (xyz, life) and `textureVelocity` (xyz, seed). One texel is one particle.
-- **512² = 262,144 particles** on desktop; 256² = 65,536 on the low tier. Brightness is normalised so both tiers look the same.
-- Float render targets where the GPU supports `EXT_color_buffer_float`, half float otherwise.
-- Particles age and respawn inside the core, with staggered lives so there are no respawn waves.
+`ParticleCore` (512² = 262,144 particles high, 256² low). Velocity pass: two octaves of curl noise + containment spring with a stiff wall at `uRadius` (a round orb with wispy arms) + three orbiting attract/repel attractors (clumps form, stream, disperse) + central breathing. Additive points: a tiny per-particle intensity (calibrated × `262144 / count`) sums to a bright, textured heart. A small HDR billboard adds the white-hot centre. Cursor pushes and swirls particles; a click sends a shockwave. **Hover → brighter and more turbulent** (activity, radius +12%, light +50%).
 
-**Velocity pass forces:**
-1. **Curl noise** in two octaves (large arms + fine wisps). It is divergence-free, so the flow is fluid with no sinks.
-2. **Containment:** a soft spring with a stiff wall. The radius grows from **0.28** sealed in the skull to **0.95** once released, and stretches vertically into a plume, plus buoyancy, so the nebula rises out of the cut around the lifted dome.
-3. **Three orbiting attractors** that pull from afar and repel up close, so clumps form, stream and disperse.
-4. **Central breathing:** a weak repulsion at the very centre.
-5. Exponential damping gives inertia and fluid lag.
+### 3.5 Beam, dust, cyclone
 
-**Interactive:**
-- The cursor is projected onto a plane through the core facing the camera (raycaster → core-local). Nearby particles are pushed aside and spun into a **vortex**, scaled by pointer speed.
-- **Click** anywhere that isn't a control and a radial **shockwave** runs through the nebula.
-- Hover and scroll speed also raise the turbulence (`uActivity`).
+- **Beam**: open cone orb → ground, view-dependent core (`|N·V|^2.2`), scrolling noise flow, travelling "head" while it strikes. Impact flare disc on the ground + a small upright glint. A **SpotLight** down the beam makes the real light pool on the regolith.
+- **Ground dust** (GPGPU, 256² / 128²): radial outflow (`3/(1+0.22r)`), **gust waves** travelling outward, a swirl near the beam that feeds the cyclone, lift near the impact and settling farther out, curl-noise eddies. Particles are clamped to `terrainHeight`, respawn near the impact (55%) or across the valley (45%). Lit by the orb (inverse square) + the beam pool.
+- **Cyclone**: every particle rides a helix that is a pure function of time — it rises over its own period while orbiting with `ω ∝ 1/r` (tight core spins fastest). `θ = θ0 + age·ω(r) + uPhase` keeps it smooth forever; hover integrates extra `uPhase` (spin-up). Funnel widens toward the orb, with a debris skirt at the ground. Flag Blue ↔ Beige, additive, bloomed. Five faint helical ribbons with travelling glints wrap it.
 
-**Rendering:**
-- One `THREE.Points` draw call; each vertex fetches its own texel.
-- **`THREE.AdditiveBlending`**, `depthWrite: false`, `toneMapped: false`. Hundreds of tiny contributions overlap at the heart and sum past 1.0 into a bright core that fades to wisps. The outskirts get a brightness boost so the arms stay visible.
-- About **1 in 6 particles glints** briefly, giving granular flecks over the smoke. About 3% are large soft "bokeh" motes.
-- **Colour:** Flag Blue (slow/old particles) ↔ Beige (fast/young), mixed by velocity + lifetime.
+### 3.6 Lighting & render pipeline
 
-**Strings of light:**
-- Octilinear circuit traces form the brain silhouette in 6 sagittal layers, with a gap at the midline fissure.
-- Spokes start *inside* the nebula (r = 0.17), so the wires emerge from the turbulence.
-- They **draw on radially** (`aRadial` = distance from the core) as the dome lifts, then carry travelling data pulses outward.
-- String bodies are deliberately quiet (`uBase 0.3`), so the nebula is the star and the strings are the structure.
-- Exit traces leave the head and run out across the page. They draw on as the dome lifts, then extend further as the hero scrolls.
+- **No ambient light.** The orb's PointLight and the beam's SpotLight carry the scene; a faint cool directional **moonlight** from behind-left rims the ridges. A baked monochrome `Lightformer` env at **0.12** keeps shadow sides from going dead.
+- **Sky**: dome following the camera; dark slate zenith → hazy horizon band (= fog colour, so ridges melt into the night); a few faint stars (no starfield-demo clichés).
+- **Bloom is selective**: only the orb, beam, impact flare and cyclone are inside `<Select enabled>`.
+- Pipeline: **DOF** (high tier; focus locked on the orb via `focusPoint`) → **cursor lens** (a whisper of dispersion, never rainbow) → **SelectiveBloom** (`ignoreBackground`) → **ACES Filmic** → grain → vignette.
 
-Strings use **`THREE.LineBasicMaterial`**, patched with `onBeforeCompile` (`patchStringMaterial`): attributes `aProgress` (pulses), `aRadial` (draw-on) and `aSeed`, with HDR colour authored before ACES.
+### 3.7 Interaction + discoverability
 
-**Bloom and DOF** (`Scene.tsx`):
-- `<Selection>` + `<Select enabled>` wrap **only** the particles, strings and vias. `<SelectiveBloom mipmapBlur luminanceThreshold={0.32} luminanceSmoothing={0.28} intensity={0.9} radius={0.55} levels={7} />` with `ignoreBackground`. The porcelain and backdrop never bloom.
-- `<DepthOfField worldFocusRange={2.4} bokehScale={2.6} />` has its target re-locked to the core every frame. Stray particles that drift toward or away from the camera melt into bokeh, which blends the digital particles into the ceramic cavity.
+- **Hotspots** (`components/dom/Hotspots.tsx`): two real `<button>`s pinned every frame to the orb and the cyclone (3D → screen projection in `MoonScene`): a sonar-pinging dot, a leader line and a label `◉ THE CORE · CLICK` / `◉ THE ENGINE · CLICK`. Keyboard-focusable, aria-labelled, touch-friendly; hover/focus also lights up the 3D object. They fade out as soon as the hero scrolls.
+- **3D click proxies**: invisible sphere (orb) and cylinder (cyclone) raycast targets, so clicking the visuals works too. Hovering one turns the cursor ring into **"OPEN"**.
+- **Hint toast**: after the intro, "Click (Tap) the orb or the storm to explore". It disappears after the first panel opens and remembers that in `localStorage` (wrapped in try/catch).
+- **Info panel** (`InfoPanel.tsx`): Marathon sheet slicing in from the right (clip-path) with code, title, body, 3 bullets and a "Book an audit" CTA. Esc / ✕ / outside click closes; focus is trapped and restored; Lenis stops; the camera eases toward the clicked object (`motion.focus`) while the hero copy steps back. Copy lives in `lib/config.ts → INFO`.
 
-### 3.5 Material & shader specs: unglazed porcelain
+### 3.8 Hero scroll (the reference's zoom-out)
 
-```ts
-new THREE.MeshPhysicalMaterial({
-  color: "#f3f2ee",          // neutral porcelain white (no pink)
-  roughness: 0.58,           // bisque-matte: broad, soft highlights
-  metalness: 0,
-  ior: 1.5,                  // dielectric → physically correct Fresnel at grazing angles
-  specularIntensity: 0.55,
-  clearcoat: 0.06,           // the faintest satin film; never glossy
-  clearcoatRoughness: 0.45,
-  sheen: 0.3, sheenRoughness: 0.85, sheenColor: "#ffffff", // unglazed micro-fuzz catching the rim
-  envMapIntensity: 0.9,
-  side: THREE.FrontSide,     // closed solid: no back-face tricks
-});
-```
+`motion.hero` 0 → 1 over the 340vh sticky track: the camera dollies back (z 9.5 → 36) and up (y 1.7 → 11) with a slight FOV widen, until the orb + beam + storm are a small lit point in a vast moonscape; the scene dims and the statement copy reveals word by word. The CTA section (`motion.cta`) flies the camera back down to the orb.
 
-**Subsurface scattering:** three.js has no built-in SSS, so the shell uses a fast Barré-Brisebois translucency term in `onBeforeCompile`. Core light is transmitted *through* the thin wall toward the eye:
+### 3.9 Spring physics
 
-```glsl
-vec3 Ht = normalize(Lc + Nw * 0.45);                     // Lc: direction to the core
-float trans = pow(clamp(dot(V, -Ht), 0., 1.), 2.5);
-totalEmissiveRadiance += uCoreColor * trans * falloff * uSSS; // uSSS 0.12 → 0.62
-```
-
-The head glows faintly from within while it approaches. The interior is lit by **real light**: two point lights at the nebula's heart (beige 6, blue 4, decay 2) that bounce off the matte white inner wall and the dome's underside.
-
-**Geometry quality:**
-- 192 segments around, about 70 rows per unit of height, spline-smoothed shoulder profile.
-- Seamless normals: the θ = 0/2π seam down the nose is averaged, and the crown and chin poles get exact axial normals. Zero faceting.
-
-**GLTF nodes:** `public/models/mannequin.glb` (428 KB, 214 KB gzipped) has two nodes:
-- `Bust`: face below the cut, neck and shoulders.
-- `Dome`: node origin on the cut plane, so the lift is a pure `position.y`.
-
-`npm run build:model` exports full-precision geometry, then runs `gltfpack -cc -vpf -vn 12 -kn`: EXT_meshopt_compression, float positions (node transforms untouched), 12-bit normals (no visible banding; checked side-by-side) and named nodes kept. The loader uses `useGLTF(url, false, true)` (meshopt on). A Blender export with the same node names (+Z face, +Y up) is a drop-in replacement.
-
-### 3.6 Studio lighting & render pipeline: the "designer" look
-
-**No ambient light.** All lighting is in `Scene.tsx`:
-
-```tsx
-<Environment resolution={512} frames={1} environmentIntensity={0.85}>   {/* monochrome studio HDRI, baked once */}
-  <Lightformer form="rect" intensity={2.2} color="#ffffff" position={[0, 6, 1]}  scale={[10, 6, 1]} rotation-x={Math.PI / 2} /> {/* overhead softbox */}
-  <Lightformer form="rect" intensity={1.4} color="#f4f4f2" position={[-6, 1, 3]} scale={[2, 9, 1]} />  {/* tall strip, left  */}
-  <Lightformer form="rect" intensity={0.5} color="#e9ebee" position={[6, 0, 2]}  scale={[2, 7, 1]} />  {/* weak strip, right */}
-  <Lightformer form="rect" intensity={1.6} color="#ffffff" position={[0, 2, -7]} scale={[12, 2, 1]} /> {/* back edge strip   */}
-  <Lightformer form="rect" intensity={0.15} color="#d9dcdc" position={[0, -6, 0]} scale={[10, 10, 1]} /> {/* floor bounce */}
-</Environment>
-<directionalLight position={[-4, 5, 6]}   intensity={1.35} color="#fffaf3" />  {/* soft key            */}
-<directionalLight position={[4.5, 3.5, -6]} intensity={3.2} color="#e6eef7" />  {/* cool rim: silhouette */}
-```
-
-The brand colour comes **only** from the core's own light.
-
-**EffectComposer, in this order:**
-
-```tsx
-<Canvas gl={{ antialias: true }} …>
-  <Selection>                                             {/* only <Select enabled> objects bloom */}
-    <EffectComposer multisampling={4}>                    {/* MSAA on the HDR targets */}
-      <DepthOfField target={focus} worldFocusRange={2.4} bokehScale={2.6} /> {/* focus locked on face/split every frame */}
-      <LensEffect />                                     {/* cursor lens */}
-      <SelectiveBloom mipmapBlur luminanceThreshold={0.32} luminanceSmoothing={0.28}
-                      intensity={0.9} radius={0.55} levels={7} />  {/* tight fibre-optic halo, ignoreBackground */}
-      <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />  {/* AFTER bloom → neon rolls off to white */}
-      <Noise premultiply blendFunction={BlendFunction.ADD} opacity={0.12} /> {/* subtle grain */}
-      <Vignette offset={0.3} darkness={0.55} />
-    </EffectComposer>
-  </Selection>
-</Canvas>
-```
-
-**Why it doesn't look like a game:**
-- **Selective bloom:** the porcelain, backdrop and type never bloom.
-- **A threshold above the string bodies:** only pulses and the core flare.
-- **Tone mapping after bloom:** no clipped RGB.
-- **DOF:** the shoulders and dust fall into soft bokeh.
-- **Monochrome lighting:** the shell stays white, not tinted.
-
-Low tier (`?q=low`, mobile or `PerformanceMonitor` decline) drops DOF and MSAA.
-
-### 3.7 Deliverable: the sync (GSAP timeline + R3F)
-
-One clock. GSAP owns all easing and writes plain numbers to `motion.*`. R3F reads them every frame. The DOM fade and the head split share **the same timeline position and duration**, so "fully open" and "fully visible" are the same instant.
-
-```ts
-// lib/intro.ts
-export const INTRO = { APPROACH: 3.4, SPLIT_AT: 1.5, SPLIT_DUR: 1.8, Z_START: -38 };
-```
-
-```ts
-// components/dom/Preloader.tsx: master timeline (after the curtain glitch)
-const UI = [document.getElementById("page"), ...document.querySelectorAll("[data-chrome]")];
-tl.addLabel("open", "curtain+=0.32")
-  .add(() => setPhase("reveal"), "open")
-  .to(".loader-l", { xPercent: -102, duration: 1.3, ease: "expo.inOut" }, "open")   // curtain
-  .to(".loader-r", { xPercent: 102,  duration: 1.3, ease: "expo.inOut" }, "open")
-  .to(motion, { approach: 1, duration: APPROACH, ease: "expo.out" }, "open")       // ① Z axis
-  .to(motion, { crack: 1, duration: 0.5, ease: "power2.in" }, `open+=${SPLIT_AT - 0.5}`)
-  .to(motion, { split: 1, duration: SPLIT_DUR, ease: "power3.inOut" }, `open+=${SPLIT_AT}`) // ② dome lift
-  .to(UI, { autoAlpha: 1, duration: SPLIT_DUR, ease: "power2.inOut" }, `open+=${SPLIT_AT}`); // ③ DOM fade
-```
-
-```tsx
-// components/canvas/HeroRig.tsx: ① Z approach (eased value mapped linearly)
-approach.position.set(0, -0.5 * (1 - a), INTRO.Z_START * (1 - a));
-approach.rotation.x = 0.3 * (1 - a); // leaning in, "reaching" out of the screen
-
-// components/canvas/HeroMannequin.tsx: ② the split on the GLTF Dome node
-const { nodes } = useGLTF("/models/mannequin.glb");
-useFrame(() => {
-  const s = motion.split;
-  dome.current.position.set(nodes.Dome.position.x, nodes.Dome.position.y + LIFT * s, nodes.Dome.position.z - 0.08 * s);
-  dome.current.rotation.x = TILT * s;
-});
-```
-
-**Measured in a real browser:** split and UI fade start on the same frame and end on the same frame (e.g. 1.60s → 3.08s after the curtain opens).
-
-> **Why the dome is a node transform and not a morph target:** an earlier iteration hinged the head open like doors, which needed 3 shape keys to stay on the arc. A straight Y-lift is a rigid transform, so animating the separated `Dome` node is exact, cheaper and clearer. If a future model deforms (e.g. a sculpted crack), its morph targets plug into the same `motion.split` value.
-
-### 3.8 Spring physics
-
-`lib/spring.ts` is a semi-implicit Euler spring with 120Hz sub-stepping, deliberately under-damped so it overshoots and settles:
-- **Head-turn:** heavy springs (k 40, c 9) follow the cursor slowly and slightly uncannily, nudged by scroll velocity.
-- **Core wobble:** an under-damped spring kicked by scroll speed.
-- **Traces:** orbit the ball slowly.
-
-### 3.9 Nebula → beam (the reference's zoom-out)
-
-Sparse dust motes carry a cloud position and a beam position. As the hero scrolls, the camera dollies back, the motes pour into a vertical light shaft through the opened skull, and the scene dims for the statement copy. Depth of field turns the dust into soft bokeh.
-
-> **Implementation note:** all `ShaderMaterial`s are built with `new THREE.ShaderMaterial({ uniforms })` in a `useMemo`. Passing `uniforms` as a JSX prop to `<shaderMaterial>` left numeric uniforms frozen at their first value in this R3F version, which was verified and fixed.
+`lib/spring.ts`: semi-implicit Euler, sub-stepped at 120 Hz, deliberately under-damped (overshoot + settle). Used for the cursor ring and the orb / storm hover response.
 
 ---
 
@@ -362,17 +222,17 @@ Every block is a `[data-section]` and counts as a "page" for the `[[00X]]` count
 
 | Page | Counter | Section | Poster move | Conversion job |
 |---|---|---|---|---|
-| 001 | top-left | **HERO** (340vh sticky track) | Porcelain bust (right) splits open to reveal the AI core; headline + copy stacked left, never over the sculpture. Scroll = camera dolly-out, dust pours into a beam through the open skull, statement reveals word by word. | Primary CTA "Book a 20-min audit" |
+| 001 | top-left | **HERO** (340vh sticky track) | Moon valley at night: the orb dead centre beams onto the ground, wind-blown dust, a cyclone under the orb; **orb + storm are clickable** (pulsing hotspots, info panels). Headline bottom-left, body copy + CTA bottom-right, dot grid top-right, "+" marks around the frame. Scroll = camera dollies back and up until the scene is a lit point in a vast moonscape; statement reveals word by word. | Primary CTA "Book a 20-min audit" |
 | 002 | bottom-left | **01 · The busywork tax** | "YOUR TEAM IS DOING A ROBOT'S JOB." Six repetitive tasks, each **struck through by a beige bar** as you scroll. Flag Blue rule-of-thumb card. | Recognition: "that's my week" |
 | 003 | top-right | **02 · The units** | Pinned horizontal track. 5 chamfered spec cards (INPUT / ACTION / OUTPUT, barcode, ONLINE), with beige colour-block cards on beats 2 and 4. | Product understanding |
 | 004 | bottom-right | **03 · The protocol** | Full-bleed **Flag Blue block** constructed by a centre-out mask. "FOUR STEPS. ZERO CHAOS." scales up. Hazard stripe. 01–04 numerals. | De-risking |
 | 005 | top-centre | **04 · Price your busywork** | Sliders, then a beige result block with a mega dollar figure counting up. | High-intent self-qualification |
 | 006 | upper-right | **05 · Field reports** | Dashed "case file" cards. **Placeholders: replace with real results before launch.** | Social proof |
 | 007 | bottom-centre | **06 · Questions owners ask** | Big-type accordion. | Objection handling |
-| 008 | upper-left | **07 · Hand it off** | Camera flies back to the open bust. "HAND IT OFF." in mega type over it. | Final CTA → /booking |
+| 008 | upper-left | **07 · Hand it off** | Camera flies back down to the orb. "HAND IT OFF." in mega type over it. | Final CTA → /booking |
 | 009 | top-left | **Footer** | Beige block, cropped mega wordmark, hazard stripe. | Contact |
 
-Routes: `/pricing` (bust left, the 5 agent hubs on the core labelled, plans on the right) and `/booking` (bust retreats far up-right and dims, form gets the stage).
+Routes: `/pricing` (the moon scene slides left, plans on the right) and `/booking` (camera far and high; the orb is a dim beacon behind the form).
 
 ---
 
@@ -381,13 +241,13 @@ Routes: `/pricing` (bust left, the 5 agent hubs on the core labelled, plans on t
 ### 5.1 The frame bridge
 
 ```
- Lenis ──velocity──┐                         ┌── useFrame (HeroRig, CameraRig, Lens)
+ Lenis ──velocity──┐                         ┌── useFrame (MoonScene, CameraRig, Lens)
  ScrollTrigger ────┼──► lib/motion.ts ───────┤
- Pointer events ───┤   (mutable, no React)   └── DOM writers (HUD, labels, cursor)
+ Pointer events ───┤   (mutable, no React)   └── DOM writers (HUD, hotspots, cursor)
  Router/GSAP ──────┘
 ```
 
-One clock: `gsap.ticker` drives Lenis (`lenis.raf`), ScrollTrigger reads Lenis, and R3F's loop reads `motion.*`. Scroll *is* the timeline. Every camera value is a pure function of `motion.hero`, `motion.cta`, `motion.intro` and `motion.stage`, then damped with `1 - exp(-dt·3.2)`, so it's frame-rate independent.
+One clock: `gsap.ticker` drives Lenis (`lenis.raf`), ScrollTrigger reads Lenis, and R3F's loop reads `motion.*`. Scroll *is* the timeline. Every camera value is a pure function of `motion.hero`, `motion.cta`, `motion.reveal`, `motion.focus` and `motion.stage`, then damped with `1 - exp(-dt·3.2)`, so it's frame-rate independent.
 
 ### 5.2 Seamless page routing (the Lusion transition method)
 
@@ -401,12 +261,13 @@ The site never hard-reloads, never flashes white, and never tears down WebGL. Mo
 // components/Shell.tsx (mounted once)
 <SmoothScroll />  <WarpFilter />
 <CanvasRoot />                 // R3F <Canvas>: context, geometry, compiled shaders persist
-<Cursor />  <HubLabels />
+<Cursor />  <Hotspots />  <HintToast />
 <TransitionProvider chrome={<><Hud /><PageCounter /></>}>
   <Reveals />
   {children}                   // ← the ONLY thing that changes per route
   <Footer />
 </TransitionProvider>
+<InfoPanel />
 <Preloader />                  // plays once, then display:none forever
 ```
 
@@ -416,23 +277,23 @@ The site never hard-reloads, never flashes white, and never tears down WebGL. Mo
 
 #### b) Route-driven 3D choreography
 
-`lib/routes.ts` maps each route to a **stage**: camera position, FOV, look target, and the bust's position, rotation, scale, dim, label visibility and activity.
+`lib/routes.ts` maps each route to a **stage**: camera position, FOV, look target, and the moon scene's position, rotation, scale, dim and activity.
 
 ```ts
-"/pricing": { camZ: 11.5, brainX: -3.4, brainRot: -0.9, labels: 1, dim: .85, … }, // bust swings left, hubs light up
-"/booking": { camZ: 18,  brainX: 6.6, brainY: 3.4, dim: .5, … },                  // retreats up-right, dims
+"/pricing": { camZ: 12.5, subjectX: -3.6, subjectRot: 0.35, dim: .8, … }, // scene slides left
+"/booking": { camY: 7.5, camZ: 30, subjectX: 4.5, dim: .5, … },            // far and high, a dim beacon
 ```
 
 On navigation, GSAP tweens `motion.stage` to the new pose (`expo.inOut`, 1.8s) and tweens `motion.homeWeight` (1 on home, 0 elsewhere). `CameraRig` blends **home scroll choreography ↔ route pose** by `homeWeight`, so even leaving the homepage mid-scroll glides continuously.
 
-The bust sits in nested groups, each owning one kind of motion: **stage** (route pose, tweened) → **approach** (intro Z travel) → **orient** (profile + spring head-turn). Route moves, the intro and pointer physics never fight. (`brainX/brainY/…` are legacy key names for the stage pose.)
+The whole scene sits in one `world` group that owns the route pose; the camera owns the scroll, intro settle and panel focus, so route moves, the intro and interaction never fight.
 
 #### c) DOM masking: slice shut, slice open
 
 `components/transition/TransitionProvider.tsx` + `TransitionLink.tsx` (a drop-in `<Link>`).
 
 ```
-t=0.00  click ─┬─ choreograph(target): camera + bust start moving THIS frame
+t=0.00  click ─┬─ choreograph(target): camera + scene start moving THIS frame
                └─ #page clip-path → inset(50% 0 50% 0)   (0.7s expo.in: page slices shut)
 t=0.30         beige seam scales across the centre + "ROUTING ▸ /PRICING" + stepped glitch
 t=0.70         router.push(target)   (already prefetched: no network wait)
@@ -479,13 +340,15 @@ It sits on a small chamfered void plate so it stays legible over any content, an
 | Construct masks | `[data-mask="up|left|center"]` | Scrubbed clip-path expansion |
 | Poster scaling | `[data-scale]` | Scrubbed `scale .62→1` + letter-spacing tracking in |
 | Strike-through | `[data-strike]` | Scrubbed beige bar `scaleX 0→1`, text fades to slate |
-| Brain hover | canvas | Raycast point → pathway + shell hotspot, activity spike |
+| Orb / storm hover | canvas + hotspots | Raycast proxy or hotspot button → object brightens / spins up, cursor ring reads "OPEN" |
+| Orb / storm click | canvas + hotspots | Opens the info panel; camera eases toward the object; Esc / ✕ / outside click closes |
 
 ## 7. Accessibility & fallbacks
 
-- `prefers-reduced-motion`: Lenis lerp 1, no loader zoom or glitch, no warp, no pinned horizontal track, no scrubbed reveals.
+- `prefers-reduced-motion`: Lenis lerp 1, no loader zoom or glitch, static scene reveal (simulations settle, then hold still), no warp, no pinned horizontal track, no scrubbed reveals, no hotspot pings.
+- Hotspots are real `<button>`s (Tab-reachable, `aria-haspopup="dialog"`); the info panel is `role="dialog"` + `aria-modal` with a focus trap and focus restore.
 - Touch devices: native cursor, no warp, no magnet. Agents section stacks vertically under 768px.
-- All copy is real DOM text (SEO + screen readers). The canvas is decorative.
+- All copy is real DOM text (SEO + screen readers). The canvas is decorative; everything clickable in it has a DOM button twin.
 - The loader has `role="status"` and a 9s failsafe.
 
 ## 8. Before launch (TODO)

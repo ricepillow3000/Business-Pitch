@@ -9,7 +9,7 @@ export const BRAND = {
   cta: "Book a 20-min audit",
 };
 
-/** The five agent "units" — also mapped to the five hub nodes inside the brain. */
+/** The five agent "units". */
 export const AGENTS = [
   {
     code: "U-01",
@@ -83,3 +83,24 @@ export const PLANS = [
   { code: "P-02", name: "Squad", price: "$—", unit: "/mo", units: 3, featured: true, blurb: "Three agents sharing one memory. Calls become bookings become invoices.", features: ["3 agents, shared memory", "Unlimited tool connections", "Priority human escalation", "Fortnightly strategy call"] },
   { code: "P-03", name: "Full Brain", price: "$—", unit: "/mo", units: 5, blurb: "The whole back office, automated. For multi-location and high-volume teams.", features: ["All 5 agents", "Custom workflows", "Dedicated engineer", "Same-day changes"] },
 ] as const;
+
+/**
+ * INFO PANELS — opened by clicking the orb ("core") or the storm ("engine") in the hero.
+ * Drafted copy; edit freely.
+ */
+export const INFO = {
+  core: {
+    code: "SYS-01",
+    title: "The JIDO Core",
+    hotspot: "The core",
+    body: "One AI brain shared by every agent you hire. It learns your business, your tone and your rules, so every call, booking and invoice sounds like you.",
+    bullets: ["Trained on how you actually talk to customers", "One memory shared by every agent", "You approve the rules before anything goes live"],
+  },
+  engine: {
+    code: "SYS-02",
+    title: "The Workflow Engine",
+    hotspot: "The engine",
+    body: "Calls, bookings, invoices and follow-ups get pulled in, handled and sent back out, around the clock. You only see what needs a human.",
+    bullets: ["Runs 24/7, no breaks, no missed calls", "Plugs into the tools you already pay for", "Anything uncertain goes straight to you"],
+  },
+} as const;

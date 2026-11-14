@@ -12,7 +12,7 @@ import { INTRO } from "@/lib/intro";
 /**
  * THE LUSION TRANSITION METHOD
  *
- *  click ─┬─► camera/brain choreography starts IMMEDIATELY (WebGL never waits)
+ *  click ─┬─► camera/scene choreography starts IMMEDIATELY (WebGL never waits)
  *         └─► outgoing DOM slices shut to a beige seam (0.7s)
  *                 └─► router.push (route already prefetched → no network wait)
  *                         └─► pathname commits → scroll reset under the seam
@@ -136,7 +136,7 @@ export function TransitionProvider({ children, chrome }: { children: React.React
 
   // Direct load of a non-home route: run the entrance once the loader opens
   useEffect(() => {
-    if (phase === "reveal" && norm(pathname) !== "/" && page.current) enterText(page.current, INTRO.SPLIT_AT + 0.1);
+    if (phase === "reveal" && norm(pathname) !== "/" && page.current) enterText(page.current, INTRO.REVEAL_AT + 0.5);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase]);
 

@@ -9,9 +9,10 @@ import { INTRO } from "@/lib/intro";
 
 /**
  * HERO — a 340vh scroll track with a sticky viewport (the reference behaviour).
- * Scroll progress → motion.hero → camera dolly-out, nebula → beam, scene dims.
- * Copy A sits while the camera pulls back; copy B (the statement) reveals
- * word-by-word once we're out in the void.
+ * Scroll progress → motion.hero → the camera dollies back and up until the orb,
+ * beam and storm are a small lit point in a vast moonscape; the scene dims.
+ * Copy A (headline bottom-left, body bottom-right — the whiteboard layout) sits
+ * while the camera pulls back; copy B (the statement) reveals word-by-word.
  */
 export function Hero() {
   const root = useRef<HTMLElement>(null);
@@ -47,8 +48,8 @@ export function Hero() {
       if (phase === "loading") return;
       const lines = SplitText.create(".hero-title", { type: "lines", mask: "lines", linesClass: "split-line" }).lines;
       gsap
-        // phase "reveal" fires at the curtain "open" label → land the lines as the head splits
-        .timeline({ delay: INTRO.SPLIT_AT + 0.1 })
+        // phase "reveal" fires at the curtain "open" label → land the lines during the shared fade-in
+        .timeline({ delay: INTRO.REVEAL_AT + 0.45 })
         .from(lines, { yPercent: 120, duration: 1.4, stagger: 0.1, ease: "expo.out" })
         .from(".hero-side > *", { autoAlpha: 0, y: 24, duration: 1, stagger: 0.08, ease: "expo.out" }, 0.3)
         .from(".hero-cue", { autoAlpha: 0, duration: 0.8 }, 0.9);
@@ -59,11 +60,9 @@ export function Hero() {
   return (
     <section ref={root} id="hero" data-section="00 // Signal" className="relative h-[340vh]">
       <div className="sticky top-0 h-svh overflow-hidden">
-        {/* COPY A */}
-        {/* Editorial layout: the sculpture owns the right; all copy stacks in the left column, never over it */}
-        <div className="hero-a poster-grid absolute inset-0 content-end pb-[10vh] md:pb-[11vh]">
-          <div className="col-span-12 md:col-span-7 lg:col-span-6">
-          <h1 className="hero-title font-poster text-hero text-signal" data-warp>
+        {/* COPY A — headline bottom-left, body bottom-right; the orb owns the centre */}
+        <div className="hero-a poster-grid absolute inset-0 content-end items-end gap-y-8 pb-[10vh] md:pb-[11vh]">
+          <h1 className="hero-title col-span-12 font-poster text-hero text-signal md:col-span-7 lg:col-span-6" data-warp>
             We build
             <br />
             agents that
@@ -72,22 +71,21 @@ export function Hero() {
             <br />
             <span className="text-beige">busywork</span>
           </h1>
-          <div className="hero-side mt-8 flex flex-col items-start gap-5 md:mt-10">
-            <p className="max-w-[40ch] font-body text-lead text-beige/80">
+          <div className="hero-side col-span-12 flex flex-col items-start gap-5 md:col-span-5 md:items-end md:justify-self-end md:text-right lg:col-span-4 lg:col-start-9">
+            <p className="max-w-[34ch] font-body text-lead text-beige/80">
               <span className="font-accent text-beige">Answer · book · invoice · follow up</span> — AI agents for clinics, trades, salons, law offices and restaurants, working while you run the business.
             </p>
             <TransitionLink href="/booking" data-magnetic data-cursor-label="GO" className="chamfer pointer-events-auto bg-beige px-5 py-3.5 font-label font-bold text-flag">
               Book a 20-min audit →
             </TransitionLink>
           </div>
-          </div>
         </div>
 
-        <div className="hero-cue absolute bottom-[4.5vh] left-1/2 -translate-x-1/2 font-label text-signal">
+        <div className="hero-cue absolute bottom-[9vh] left-1/2 -translate-x-1/2 font-label text-signal">
           Scroll to descend ↓
         </div>
 
-        {/* COPY B — appears in the void after the zoom-out */}
+        {/* COPY B — appears over the vast moonscape after the dolly-out */}
         <div className="hero-b poster-grid invisible absolute inset-0 content-between pb-[14vh] pt-[30vh]">
           <p className="hero-statement col-span-12 max-w-[22ch] font-accent text-h2 text-beige md:col-span-7">
             Every missed call. Every copy-paste. Every &ldquo;I&rsquo;ll get back to you.&rdquo; Handed to an agent that never clocks out.

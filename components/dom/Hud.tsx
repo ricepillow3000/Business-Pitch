@@ -62,14 +62,28 @@ export function Hud() {
         <Bracket className="bottom-0 right-0 border-b border-r" />
       </div>
 
-      {/* registration marks (the "+" field from the reference) */}
+      {/* registration marks — the "+" field from the whiteboard sketch + a row across the horizon (Lusion) */}
       {[
-        [25, 30], [75, 30], [25, 70], [75, 70], [50, 50],
+        [6, 14], [94, 14], [6, 86], [94, 86],
+        [6, 52], [27, 52], [73, 52], [94, 52],
       ].map(([x, y]) => (
-        <span key={`${x}-${y}`} className="absolute font-mono text-xs text-signal/35" style={{ left: `${x}%`, top: `${y}%` }} aria-hidden>
+        <span key={`${x}-${y}`} className="absolute -translate-x-1/2 -translate-y-1/2 font-mono text-sm text-beige/35" style={{ left: `${x}%`, top: `${y}%` }} aria-hidden>
           +
         </span>
       ))}
+
+      {/* dot grid, top-right (whiteboard sketch) — staggered like a halftone */}
+      <div aria-hidden className="absolute hidden md:block" style={{ top: "19vh", right: "clamp(2.5rem,6vw,6rem)" }}>
+        <div className="grid grid-cols-7 gap-x-3.5 gap-y-3">
+          {Array.from({ length: 21 }, (_, i) => (
+            <span
+              key={i}
+              className="block h-[3px] w-[3px] rounded-full bg-signal"
+              style={{ opacity: 0.25 + ((i * 37) % 11) / 20, transform: `translateX(${Math.floor(i / 7) % 2 ? 7 : 0}px)` }}
+            />
+          ))}
+        </div>
+      </div>
 
       {/* top bar */}
       <header className="pointer-events-auto absolute left-0 right-0 top-0 flex items-center justify-between px-6 py-5 md:px-10 md:py-7">

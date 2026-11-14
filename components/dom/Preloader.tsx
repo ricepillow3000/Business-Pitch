@@ -10,11 +10,13 @@ import { INTRO } from "@/lib/intro";
 /**
  * LOADER SEQUENCE
  *  1. Brand name = progress bar. Outline text, beige fill clipped left→right by progress.
- *  2. Tabular digits hit 100% → the word takes a heavy expo.in push toward the lens.
+ *  2. Tabular digits hit 100% → the word rushes at the viewer (scale ≈ 5.5, expo.in),
+ *     as if reaching through the screen.
  *  3. A seam flashes down the middle, two stepped glitch-jolts, then the two halves
- *     (each a clip-path'd copy of the whole loader) part like a curtain / blast doors.
- *  4. Same frame: the mannequin bust starts its Z approach out of the void; its head
- *     cracks, then splits open while the website fades in over the identical window.
+ *     (each a clip-path'd copy of the whole loader) part like a curtain.
+ *  4. Same frame: motion.reveal 0 → 1 (orb ignites, beam strikes, dust blasts outward,
+ *     the storm spins up, the camera settles) with the SAME position, duration and
+ *     ease as the website's fade-in.
  */
 export function Preloader() {
   const root = useRef<HTMLDivElement>(null);
@@ -36,7 +38,7 @@ export function Preloader() {
 
   /**
    * MASTER INTRO TIMELINE — the one place the DOM, the curtain and WebGL are synced.
-   * GSAP owns the clock; R3F only reads motion.* every frame (Core.tsx / Mannequin.tsx).
+   * GSAP owns the clock; R3F only reads motion.* every frame (canvas/moon/*).
    */
   const outro = contextSafe(() => {
     const reduced = useStore.getState().reducedMotion;
@@ -45,12 +47,12 @@ export function Preloader() {
 
     if (reduced) {
       setPhase("reveal");
-      Object.assign(motion, { intro: 1, approach: 1, crack: 0, split: 1 });
+      motion.reveal = 1; // static reveal: no rush, no curtain, simulations settle then hold
       gsap.to(root.current, { autoAlpha: 0, duration: 0.4, onComplete: () => setPhase("ready") });
       return;
     }
 
-    const { APPROACH, SPLIT_AT, SPLIT_DUR } = INTRO;
+    const { RUSH_SCALE, REVEAL_AT, REVEAL_DUR, REVEAL_EASE } = INTRO;
     const tl = gsap.timeline({
       onComplete: () => {
         setPhase("ready");
@@ -59,9 +61,9 @@ export function Preloader() {
     });
 
     tl.set(UI, { autoAlpha: 0 }) // website hidden behind the curtain
-      // ① 100% → the name takes a heavy push toward the lens
+      // ① 100% → the name rushes at the viewer, as if reaching through the screen
       .to(".loader-hud", { autoAlpha: 0, duration: 0.3, ease: "power2.out" })
-      .to(".loader-word", { scale: 1.9, duration: 1.0, ease: "expo.in" }, 0.05)
+      .to(".loader-word", { scale: RUSH_SCALE, duration: 1.0, ease: "expo.in" }, 0.05)
       // ② seam + stepped glitch
       .addLabel("curtain", 0.85)
       .fromTo(".loader-seam", { scaleY: 0, autoAlpha: 1 }, { scaleY: 1, duration: 0.2, ease: "power4.out" }, "curtain")
@@ -69,19 +71,15 @@ export function Preloader() {
       .to(".loader-r", { x: 26, y: 6, duration: 0.05, ease: "steps(1)" }, "<")
       .to(".loader-l", { x: 8, y: -4, duration: 0.05, ease: "steps(1)" })
       .to(".loader-r", { x: -10, y: 0, duration: 0.05, ease: "steps(1)" }, "<")
-      // ③ OPEN: curtain parts and, on the same frame, the bust starts reaching out of the void
+      // ③ OPEN: the curtain parts …
       .addLabel("open", "curtain+=0.32")
       .add(() => setPhase("reveal"), "open")
       .to(".loader-l", { xPercent: -102, duration: 1.3, ease: "expo.inOut" }, "open")
       .to(".loader-r", { xPercent: 102, duration: 1.3, ease: "expo.inOut" }, "open")
       .to(".loader-seam", { autoAlpha: 0, duration: 0.3 }, "open+=0.5")
-      .to(motion, { intro: 1, duration: 1.4, ease: "power2.out" }, "open")
-      .to(motion, { approach: 1, duration: APPROACH, ease: "expo.out" }, "open") // Z axis
-      // ④ crack glows along the seam, then the head splits (morph targets) …
-      .to(motion, { crack: 1, duration: 0.5, ease: "power2.in" }, `open+=${SPLIT_AT - 0.5}`)
-      .to(motion, { split: 1, duration: SPLIT_DUR, ease: "power3.inOut" }, `open+=${SPLIT_AT}`)
-      // ⑤ … while the website fades in over the SAME window → fully open == fully visible
-      .to(UI, { autoAlpha: 1, duration: SPLIT_DUR, ease: "power2.inOut" }, `open+=${SPLIT_AT}`);
+      // ④ … and the scene reveal + the website fade share ONE window and ONE ease
+      .fromTo(motion, { reveal: 0 }, { reveal: 1, duration: REVEAL_DUR, ease: REVEAL_EASE }, `open+=${REVEAL_AT}`)
+      .to(UI, { autoAlpha: 1, duration: REVEAL_DUR, ease: REVEAL_EASE }, `open+=${REVEAL_AT}`);
   });
 
   const maybeFinish = contextSafe(() => {
@@ -132,7 +130,7 @@ export function Preloader() {
       aria-hidden={side === "r"}
     >
       {/* faint slate glow so the void isn't flat */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_55%,#2f4f4f_0%,transparent_65%)] opacity-60" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_55%,#2b3237_0%,transparent_65%)] opacity-60" />
       <div className="absolute inset-0 grid place-items-center">
         <div className="loader-word relative font-poster text-mega leading-none will-change-transform">
           <span className="text-outline text-beige/40">{BRAND.name}</span>
@@ -145,7 +143,7 @@ export function Preloader() {
         <div className="absolute left-[4vw] top-[5vh] font-label">
           SYS//BOOT <span className="text-beige">{BRAND.tagline}</span>
         </div>
-        <div className="absolute right-[4vw] top-[5vh] font-label">BUILD 0.1 · NEURAL MESH</div>
+        <div className="absolute right-[4vw] top-[5vh] font-label">BUILD 0.2 · ORBITAL LINK</div>
         <div className="absolute bottom-[6vh] left-[4vw] right-[4vw] flex items-end justify-between gap-6">
           <div className="font-label">
             INITIALISING AGENTS

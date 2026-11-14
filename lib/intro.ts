@@ -1,22 +1,21 @@
 /**
  * INTRO SYNC CONSTANTS — single source of truth for the loader → hero handoff.
- * Every timing below is measured from the "open" label (the moment the curtain doors part).
- * The Preloader's master GSAP timeline, the R3F mannequin and the DOM fade all read these,
+ * Every timing below is measured from the "open" label (the moment the curtain halves part).
+ * The Preloader's master GSAP timeline, the R3F moon scene and the DOM fade all read these,
  * so changing one number re-times everything together.
  *
+ *  100% ─ loader word rushes at the viewer (scale → RUSH_SCALE, expo.in)
  *  open ─┬─ curtain halves slide out ............ 0.00 → 1.30
- *        ├─ mannequin Z approach (expo.out) ..... 0.00 → APPROACH
- *        ├─ seam crack glows .................... SPLIT_AT-0.5 → SPLIT_AT
- *        ├─ head split (morph targets) .......... SPLIT_AT → SPLIT_AT+SPLIT_DUR
- *        └─ DOM UI opacity 0 → 1 ................ SPLIT_AT → SPLIT_AT+SPLIT_DUR   ← same window
+ *        ├─ motion.reveal 0 → 1 (scene) ......... REVEAL_AT → REVEAL_AT+REVEAL_DUR   ┐ identical
+ *        └─ DOM UI opacity 0 → 1 ................ REVEAL_AT → REVEAL_AT+REVEAL_DUR   ┘ window + ease
  */
 export const INTRO = {
-  /** seconds the bust takes to travel from the void to its hero mark */
-  APPROACH: 3.4,
-  /** when the head starts to open (and the UI starts fading in) */
-  SPLIT_AT: 1.5,
-  /** how long the split + UI fade take; head is fully open exactly when the UI is fully visible */
-  SPLIT_DUR: 1.8,
-  /** where the bust starts on Z (deep in the void) */
-  Z_START: -38,
+  /** how big the loader word gets as it "reaches through the screen" */
+  RUSH_SCALE: 5.5,
+  /** offset from "open" where the scene reveal + UI fade both start */
+  REVEAL_AT: 0,
+  /** duration shared by the scene reveal and the UI fade */
+  REVEAL_DUR: 2.2,
+  /** shared ease, so both curves are the same shape, not just the same window */
+  REVEAL_EASE: "power2.inOut",
 };

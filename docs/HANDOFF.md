@@ -2,6 +2,12 @@
 
 > Written at the end of a long session so a fresh session can continue without its history.
 > **Read this whole file before touching code.** The approved plan is §3.
+>
+> **STATUS (2026-11-14): the plan in §3 is IMPLEMENTED** on `claude/vigilant-mendel-r6zlq8` (moon scene in
+> `components/canvas/moon/`, hotspots / info panel / hint toast in `components/dom/`). `docs/BLUEPRINT.md` §3 is the
+> up-to-date spec. All §6 checks pass; see `tests/visual/` (`intro2`, `interact`, `nav`, `dbg2`, `shoot`, `neb`, `contrast`).
+> Intro-sync timing is measured with the R3F frame loop paused (`__r3f.setFrameloop('never')`) because SwiftShader
+> renders at ~2 fps; the moon-scene world group is named `moon-world` for tests.
 
 ---
 

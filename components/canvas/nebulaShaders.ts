@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   AI CORE — GPGPU PARTICLE NEBULA
+   THE ORB — GPGPU PARTICLE NEBULA
    Two float textures, ping-ponged on the GPU by GPUComputationRenderer:
      texturePosition  rgb = position (core-local),  a = life 1 → 0
      textureVelocity  rgb = velocity,               a = per-particle seed
@@ -7,7 +7,7 @@
    ════════════════════════════════════════════════════════════════════ */
 
 /* 3D simplex noise — Ashima Arts / Stefan Gustavson (MIT) */
-const SIMPLEX = /* glsl */ `
+export const SIMPLEX = /* glsl */ `
 vec3 mod289(vec3 x){return x-floor(x*(1.0/289.0))*289.0;}
 vec4 mod289(vec4 x){return x-floor(x*(1.0/289.0))*289.0;}
 vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
@@ -62,7 +62,7 @@ uniform float uTime;
 uniform float uDt;
 uniform float uRadius;
 uniform float uActivity;
-uniform float uOpen;            // 0 closed skull → 1 released (radius grows, plume rises)
+uniform float uOpen;            // 0 dormant → 1 ignited (radius grows to the full orb)
 uniform vec3 uPointer;          // cursor projected into core-local space
 uniform float uPointerStrength;
 uniform float uBurst;           // click shockwave, decays on the CPU
@@ -80,12 +80,11 @@ void main() {
   vec3 force = curlNoise(pos * 1.7 + vec3(0.0, uTime * 0.09, uTime * 0.04)) * (0.7 + uActivity * 0.6);
   force += curlNoise(pos * 6.5 - vec3(uTime * 0.18)) * 0.28;
 
-  // containment: soft spring, stiff wall at uRadius. Released → taller (plume rises out of the skull)
-  vec3 c = vec3(0.0, 0.12 * uOpen, 0.0);
-  vec3 q = (pos - c) * vec3(1.0, mix(1.0, 0.62, uOpen), 1.0);
+  // containment: soft spring, stiff wall at uRadius → a round orb with wispy arms
+  vec3 q = pos;
   float rq = length(q);
-  force -= q * (0.7 + smoothstep(uRadius * 0.8, uRadius * 1.1, rq) * 16.0);
-  force.y += 0.22 * uOpen * (0.4 + seed);                                          // buoyancy: the plume rises
+  force -= q * (1.5 + smoothstep(uRadius * 0.75, uRadius * 1.05, rq) * 18.0);
+  force.y -= 0.05 * uOpen * (0.4 + seed);                                          // a faint drip toward the beam
 
   // INTERACTION — cursor pushes particles away and spins them into a vortex
   vec3 dp = pos - uPointer;

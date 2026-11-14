@@ -13,7 +13,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. Add `?q=low` to force the lightweight glass (weak GPUs).
+Open http://localhost:3000. Add `?q=low` to force the lightweight tier (weak GPUs).
 
 ## Build (static)
 
@@ -28,7 +28,8 @@ Outputs a fully static site to `out/`. Not deployed anywhere yet.
 - Brand + all copy: `lib/config.ts`
 - Colours / type scale: `app/globals.css`
 - Route → camera poses: `lib/routes.ts`
-- 3D hero (mannequin + AI core): `components/canvas/`
-- Rebuild the 3D model: `npm run build:model` (procedural sculpt → gltfpack-compressed GLB)
-- Loader, cursor, HUD, page counter: `components/dom/`
+- 3D hero (moon valley, orb, beam, dust, cyclone): `components/canvas/moon/` (+ the orb's nebula in `components/canvas/ParticleCore.tsx`)
+- Info-panel copy for the clickable orb / storm: `lib/config.ts → INFO`
+- Loader, cursor, HUD, page counter, hotspots, info panel: `components/dom/`
+- Visual / interaction tests (Playwright, run against `npm run dev`): `tests/visual/` — e.g. `node tests/visual/interact.cjs <outdir>`
 - Page transitions: `components/transition/`

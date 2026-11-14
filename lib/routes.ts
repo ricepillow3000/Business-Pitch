@@ -2,25 +2,25 @@ import type { Stage } from "./motion";
 
 /**
  * ROUTE → 3D CHOREOGRAPHY
- * Each route owns a camera + brain pose. On navigation GSAP tweens motion.stage
+ * Each route owns a camera + subject pose. On navigation GSAP tweens motion.stage
  * from the current pose to the next one, in lock-step with the DOM transition.
  * The home route additionally layers scroll choreography on top (homeWeight = 1).
  */
 export const STAGES: Record<string, Stage> = {
+  // Home: low camera in the valley, orb dead centre, the storm and impact below it.
   "/": {
-    camX: 0, camY: 0.1, camZ: 6.4, fov: 34, lookX: 0, lookY: 0.1,
-    brainX: 0, brainY: 0, brainRot: 0, brainScale: 1, dim: 1, labels: 0, activity: 0,
+    camX: 0, camY: 1.7, camZ: 9.5, fov: 34, lookX: 0, lookY: 1.8,
+    subjectX: 0, subjectY: 0, subjectRot: 0, subjectScale: 1, dim: 1, activity: 0,
   },
-  // Pricing: brain swings to the left and turns in profile; the 5 agent hubs light up
-  // so the plans on the right read as "which parts of the brain you're buying".
+  // Pricing: the scene slides left so the plans on the right have clean air.
   "/pricing": {
-    camX: 0.2, camY: 0.3, camZ: 11.5, fov: 32, lookX: 0, lookY: 0.2,
-    brainX: -3.4, brainY: -0.1, brainRot: -0.9, brainScale: 1.08, dim: 0.85, labels: 1, activity: 0.6,
+    camX: 0, camY: 2.2, camZ: 12.5, fov: 32, lookX: 0, lookY: 1.9,
+    subjectX: -3.6, subjectY: 0, subjectRot: 0.35, subjectScale: 1, dim: 0.8, activity: 0.5,
   },
-  // Booking: brain retreats far up-right and dims, a quiet beacon behind the form.
+  // Booking: far and high, dim — a quiet beacon in the valley behind the form.
   "/booking": {
-    camX: 0, camY: 0.4, camZ: 18, fov: 30, lookX: 0, lookY: 0.4,
-    brainX: 6.6, brainY: 3.4, brainRot: 0.6, brainScale: 0.85, dim: 0.5, labels: 0, activity: 0.25,
+    camX: 0, camY: 7.5, camZ: 30, fov: 30, lookX: 0, lookY: 1.5,
+    subjectX: 4.5, subjectY: 0, subjectRot: -0.3, subjectScale: 1, dim: 0.5, activity: 0.2,
   },
 };
 

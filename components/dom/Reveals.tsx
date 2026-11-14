@@ -74,7 +74,7 @@ export function Reveals() {
         gsap
           .timeline({ scrollTrigger: { trigger: el, start: "top 70%", end: "top 45%", scrub: 0.5 } })
           .fromTo(bar, { scaleX: 0 }, { scaleX: 1, ease: "none" })
-          .to(el.querySelector(".strike-text"), { color: "#2f4f4f", ease: "none" }, 0);
+          .to(el.querySelector(".strike-text"), { color: "#4a535a", ease: "none" }, 0);
       });
 
       ScrollTrigger.refresh();

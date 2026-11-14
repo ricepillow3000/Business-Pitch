@@ -65,6 +65,12 @@ export function Cursor() {
         gsap.set(magnet, { x: (mouse.x - cx) * 0.22, y: (mouse.y - cy) * 0.3 });
       } else if (magnet) {
         tw = th = 64;
+      } else if (motion.hover !== "none") {
+        tw = th = 64; // over the orb / storm in 3D → "this is clickable"
+      }
+      if (label.current && !magnet) {
+        const want = motion.hover !== "none" ? "OPEN" : "";
+        if (label.current.textContent !== want) label.current.textContent = want;
       }
       const x = sx.step(tx, dt), y = sy.step(ty, dt);
       const w = sw.step(tw, dt), h = sh.step(th, dt);

@@ -8,38 +8,44 @@ import { Vector3 } from "three";
 export type Stage = {
   camX: number; camY: number; camZ: number; fov: number;
   lookX: number; lookY: number;
-  brainX: number; brainY: number; brainRot: number; brainScale: number;
-  dim: number;    // 0..1 scene brightness
-  labels: number; // 0..1 agent hub callouts
-  activity: number;
+  /** where the whole moon scene (orb + beam + storm + terrain) sits for this route */
+  subjectX: number; subjectY: number; subjectRot: number; subjectScale: number;
+  dim: number;      // 0..1 scene brightness
+  activity: number; // 0..1 extra turbulence in the orb / storm
 };
+
+/** Which clickable object the pointer is over (3D raycast OR its DOM hotspot). */
+export type HoverTarget = "none" | "core" | "engine";
 
 export const motion = {
   /** 0 → 1 while the home hero track scrolls (camera dolly-out) */
   hero: 0,
   /** 0 → 1 while the home CTA approaches (camera returns) */
   cta: 0,
-  /** 0 → 1 scene brightness fade-in after the curtain opens */
-  intro: 0,
-  /** 0 → 1 mannequin travels from INTRO.Z_START to its mark (GSAP applies the ease) */
-  approach: 0,
-  /** 0 → 1 glowing crack along the head seam, just before it opens */
-  crack: 0,
-  /** 0 → 1 head split; drives the morph-target (shape key) weights */
-  split: 0,
+  /**
+   * 0 → 1 the moon scene reveal after the curtain opens: orb ignites, beam strikes,
+   * dust bursts outward, the storm spins up, the camera settles. Tweened by the
+   * Preloader with the SAME position/duration/ease as the website fade-in.
+   */
+  reveal: 0,
   /** 1 on the home route (scroll choreography drives the camera), 0 elsewhere (route preset drives it). Tweened. */
   homeWeight: 1,
-  /** Route-driven camera/brain pose. Tweened by GSAP on navigation — see lib/routes.ts */
+  /** Route-driven camera/subject pose. Tweened by GSAP on navigation — see lib/routes.ts */
   stage: {
-    camX: 0, camY: 0, camZ: 4.6, fov: 34, lookX: 0, lookY: 0,
-    brainX: 0, brainY: 0, brainRot: 0, brainScale: 1, dim: 1, labels: 0, activity: 0,
+    camX: 0, camY: 1.7, camZ: 9.5, fov: 34, lookX: 0, lookY: 1.8,
+    subjectX: 0, subjectY: 0, subjectRot: 0, subjectScale: 1, dim: 1, activity: 0,
   } as Stage,
+  /** 0 → 1 camera eases toward the object whose info panel is open (tweened by InfoPanel) */
+  focus: 0,
+  /** which object the camera eases toward while a panel is open */
+  focusTarget: "core" as Exclude<HoverTarget, "none">,
+  /** hovered clickable object (written by the 3D proxies and the DOM hotspots) */
+  hover: "none" as HoverTarget,
   /** lenis velocity, smoothed */
   velocity: 0,
   /** normalized pointer, -1..1 */
   pointer: { x: 0, y: 0 },
-  /** pointer in uv space 0..1 (y up) for the lens shader. Starts off-screen so the
-   *  cursor light never parks behind the mannequin before the user moves the mouse. */
+  /** pointer in uv space 0..1 (y up) for the lens shader. Starts off-screen. */
   pointerUv: { x: -1, y: -1 },
   /** pointer speed (px/frame, smoothed) */
   pointerSpeed: 0,
@@ -47,8 +53,8 @@ export const motion = {
   hoverBoost: 0,
 };
 
-/** World-space point the depth of field focuses on (the face / split). Written by HeroRig. */
-export const focusPoint = new Vector3(0, 0.5, 0);
+/** World-space point the depth of field focuses on (the orb). Written by MoonScene. */
+export const focusPoint = new Vector3(0, 2.4, 0);
 
-/** DOM nodes for the 5 hub callouts; the WebGL layer projects + positions them each frame. */
-export const hubLabelEls: (HTMLDivElement | null)[] = [];
+/** DOM hotspot buttons; MoonScene projects the orb / storm to screen space and moves them each frame. */
+export const hotspotEls: { core: HTMLElement | null; engine: HTMLElement | null } = { core: null, engine: null };
