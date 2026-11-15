@@ -76,6 +76,16 @@ Status: **all 5 workflows are inactive drafts. None are published.**
 
 The AI agent itself was switched off during this test so no AI call (and no charge) could happen. It was switched back on afterwards.
 
+### 1 - Main Chat Agent, usage tracking (added 2026-11-15): 3 of 3 passed
+
+| Scenario | Expected | Result |
+|---|---|---|
+| Message where the AI used 2 tools (save_lead, check_availability) | Reply sent unchanged; 3 AI requests, 2 tool calls, 2 sub-workflow runs, 0 billable executions (test run); token and cost estimates above zero; client ID and conversation ID correct; **no customer name, email or message in the usage row** | Pass (estimated 6,376 input and 73 output tokens for this message) |
+| Simple "Hello" with no tools | 1 AI request, 0 tool calls; reply sent | Pass |
+| Usage Log step fails (Google not connected) | Customer still gets the reply | Pass |
+
+The first try of the privacy check failed because the made-up conversation ID I used contained the word "maria". Real conversation IDs are random codes. I re-ran it with a random-style ID and it passed.
+
 ## Not tested yet (needs real accounts)
 
 - Real Google Sheets reads and writes (sheet must exist with the right column headings).
@@ -87,7 +97,7 @@ The AI agent itself was switched off during this test so no AI call (and no char
 ## Errors and limitations found
 
 1. **Error Logger not linked yet.** n8n refused to link it as the "error workflow" because the Error Logger is not published. Linking needs approval to publish workflow 5 first. Nothing changed when this was refused.
-2. **AI model credential auto-attached.** On creation, n8n automatically attached a "Gateway credits" credential to the AI Model node. Gateway credits are n8n's usage-based (paid) AI billing. Nothing has been run with it. It needs a decision: keep it, or replace it with a free Google Gemini key.
+2. **AI model credential auto-attached.** n8n automatically attaches its "Gateway credits" login (pay-per-use AI billing) to the AI Model node whenever no other login is chosen, and the connector cannot choose a different one. **Fix (2026-11-15):** the AI Model node is switched **off** as a safety lock. Nothing has run with Gateway credits. Once a free Gemini key credential exists, select it in the node and switch the node back on.
 3. **Simple Memory** forgets conversations if n8n restarts. Fine for a demo. A database memory would be needed for production.
 4. The customer gets **no automatic confirmation email**. This is on purpose (no messages to customers without approval). Only the owner is emailed.
 5. Changing or cancelling an existing appointment goes to a human. There is no reschedule tool yet.
@@ -95,12 +105,13 @@ The AI agent itself was switched off during this test so no AI call (and no char
 
 ## Setup still needed
 
-1. Create a Google Sheet with two tabs:
+1. Create a Google Sheet with three tabs:
    - `Leads` with headings: `Email, Name, Phone, Reason, Status, Qualification Notes, Conversation Summary, First Contact, Last Updated, Appointment Start, Appointment End, Calendar Event ID`
+   - `Usage Log` with headings in this order (columns A to O): `Time, Client ID, Conversation ID, Turn, Execution ID, Run Type, AI Model, AI Requests, Tool Calls, Tools Used, Est Input Tokens, Est Output Tokens, Est Cost If Paid (USD), Billable n8n Executions, Sub-workflow Executions`
    - `Error Log` with headings: `Time, Workflow, Failed Step, Error, Execution Link`
 2. In workflow 1, **Business Settings**: paste the sheet link and the owner email.
 3. In workflow 5, **Error Log Settings**: paste the same sheet link and the owner email.
 4. In n8n, connect Google Sheets, Google Calendar and Gmail (sign in with Google) and pick them on each Google step in workflows 2, 3, 4 and 5.
-5. Decide on the AI model credential (see limitation 2).
+5. Create a free Gemini API key (Google AI Studio, project with no billing), add it in n8n as a Google Gemini credential, select it in `AI Model (swap here)` and switch that node back on (see limitation 2).
 6. Approve publishing workflow 5 so it can be linked as the error workflow.
 7. Approve a live test using a test Google account and a fictional customer.
