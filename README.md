@@ -44,6 +44,22 @@ node tests/verify.cjs http://localhost:3000
 
 145 checks: loader choreography, HUD bars + section label, cursor brackets, magnetic button, in-page navigation without reloads, phone layout, reduced motion, zero JS errors, **the 20 UX & animation principles**, **the 20 design terms**, **the no-AI-slop scan**, **the 20 ways to unslop**, **the legal pages** and **the Services / Pricing / Book / Contact pages** below.
 
+### Every way to reach out
+
+```bash
+node tests/contact-journeys.cjs http://localhost:3000
+```
+
+22 journeys, clicked like a visitor:
+- each of the 6 suggested tasks, a task in the visitor's own words, and no task
+- the Contact page directly
+- server-side field errors
+- the Gmail fallback when sending fails or n8n is unreachable
+- the booking request
+- every email link (all Gmail compose, no mailto)
+
+The form's request is intercepted, so nothing is sent.
+
 ## Launch settings (`lib/site.ts`)
 
 | Setting | Now | What it does |

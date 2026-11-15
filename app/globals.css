@@ -159,6 +159,8 @@ html.lenis, html.lenis body { height: auto; }
 
 /* The custom cursor replaces the native one only on fine pointers */
 .has-cursor, .has-cursor * { cursor: none !important; }
+/* …except text fields, which keep the native I-beam so typing feels normal */
+.has-cursor :is(input, textarea, [contenteditable]) { cursor: text !important; }
 
 /* Automation graph: data packets travel along each connector forever */
 @keyframes packet { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }

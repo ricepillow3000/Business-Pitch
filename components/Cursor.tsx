@@ -3,20 +3,22 @@
 import { useRef } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
 
-const INTERACTIVE = "a, button, [data-cursor]";
-const PAD = 10; // bracket breathing room around a target
+const INTERACTIVE = "a, button, summary, [data-cursor]";
+const TEXT = "input, textarea, [contenteditable]";
+const PAD = 6; // viewfinder breathing room around a target
+const IDLE = 22; // viewfinder size when it is not locked onto anything
 
 /**
- * Two layers, one ticker:
- *  - node     : a beige dot with mix-blend-difference (inverts whatever it crosses).
- *               It trails the pointer and stretches along its velocity like a drop of fluid.
- *  - brackets : Flag Blue [ ] that live at the pointer, invisible. Over a link or button
- *               the node collapses and the brackets expand to lock onto the target's box.
- * Elements with [data-magnetic] are pulled toward the pointer while hovered.
+ * Sleek HUD cursor. Two quiet layers:
+ *  - dot   : a 6px beige block (a pixel of the logo). It sits exactly on the pointer, with
+ *            no lag, no stretch and no rotation, so it never feels like it is fighting you.
+ *            mix-blend-difference keeps it visible on beige and slate alike.
+ *  - frame : four thin corner ticks, a camera viewfinder. It hovers loosely around the dot,
+ *            then snaps around a link or button (the dot steps aside). On press it tightens.
+ * Text fields get the native I-beam back. Elements with [data-magnetic] lean toward the pointer.
  * Mouse / trackpad only: touch devices keep the native behaviour.
  */
 export function Cursor() {
-  const node = useRef<HTMLDivElement>(null);
   const dot = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
 
@@ -24,68 +26,73 @@ export function Cursor() {
     if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     document.documentElement.classList.add("has-cursor");
 
-    const n = node.current!;
+    const d = dot.current!;
     const f = frame.current!;
     const to = (el: Element, prop: string, duration: number) => gsap.quickTo(el, prop, { duration, ease: "expo.out" });
-    const nx = to(n, "x", 0.5), ny = to(n, "y", 0.5);
-    const fx = to(f, "x", 0.6), fy = to(f, "y", 0.6), fw = to(f, "width", 0.6), fh = to(f, "height", 0.6);
+    const dx = to(d, "x", 0.08), dy = to(d, "y", 0.08);
+    const fx = to(f, "x", 0.35), fy = to(f, "y", 0.35), fw = to(f, "width", 0.35), fh = to(f, "height", 0.35);
 
     const pointer = { x: innerWidth / 2, y: innerHeight / 2 };
     let target: HTMLElement | null = null;
-    let lastX = pointer.x, lastY = pointer.y, speed = 0;
-    gsap.set(n, { x: pointer.x, y: pointer.y, autoAlpha: 0 });
+    let typing = false;
+    let shown = false;
+    gsap.set([d, f], { autoAlpha: 0 });
+    gsap.set(d, { x: pointer.x, y: pointer.y });
+    gsap.set(f, { x: pointer.x - IDLE / 2, y: pointer.y - IDLE / 2, width: IDLE, height: IDLE });
 
     const magnet = (el: HTMLElement, x: number, y: number, release = false) =>
       gsap.to(el, release
-        ? { x: 0, y: 0, duration: 1, ease: "elastic.out(1, 0.35)", overwrite: "auto" }
-        : { x, y, duration: 0.6, ease: "expo.out", overwrite: "auto" });
+        ? { x: 0, y: 0, duration: 0.8, ease: "expo.out", overwrite: "auto" }
+        : { x, y, duration: 0.5, ease: "expo.out", overwrite: "auto" });
+
+    const state = () => {
+      gsap.to(d, { scale: target ? 0 : 1, autoAlpha: typing ? 0 : 1, duration: 0.25, ease: "expo.out", overwrite: "auto" });
+      gsap.to(f, { autoAlpha: typing ? 0 : target ? 1 : 0.45, duration: 0.25, overwrite: "auto" });
+    };
 
     const onMove = (e: PointerEvent) => {
       pointer.x = e.clientX;
       pointer.y = e.clientY;
-      gsap.to(n, { autoAlpha: 1, duration: 0.3, overwrite: "auto" });
-      nx(pointer.x);
-      ny(pointer.y);
+      if (!shown) {
+        shown = true;
+        gsap.set(d, { x: pointer.x, y: pointer.y });
+        gsap.set(f, { x: pointer.x - IDLE / 2, y: pointer.y - IDLE / 2 });
+        state();
+      }
+      dx(pointer.x);
+      dy(pointer.y);
 
       if (target?.hasAttribute("data-magnetic")) {
         const r = target.getBoundingClientRect();
         const cx = r.left + r.width / 2 - (gsap.getProperty(target, "x") as number);
         const cy = r.top + r.height / 2 - (gsap.getProperty(target, "y") as number);
-        magnet(target, (pointer.x - cx) * 0.3, (pointer.y - cy) * 0.4);
+        magnet(target, (pointer.x - cx) * 0.2, (pointer.y - cy) * 0.3);
       }
     };
 
     const onOver = (e: PointerEvent) => {
-      const next = (e.target as Element).closest<HTMLElement>(INTERACTIVE);
-      if (next === target) return;
-      if (target?.hasAttribute("data-magnetic")) magnet(target, 0, 0, true);
+      const el = e.target as Element;
+      const next = el.closest<HTMLElement>(INTERACTIVE);
+      const nowTyping = !!el.closest(TEXT);
+      if (next === target && nowTyping === typing) return;
+      if (target !== next && target?.hasAttribute("data-magnetic")) magnet(target, 0, 0, true);
       target = next;
-      gsap.to(dot.current, { scale: target ? 0 : 1, duration: 0.5, ease: "expo.out" });
-      gsap.to(f, { autoAlpha: target ? 1 : 0, duration: target ? 0.25 : 0.4 });
+      typing = nowTyping;
+      state();
     };
 
     const tick = () => {
-      // fluid stretch: scale along the direction of travel, squeeze across it
-      const dx = pointer.x - lastX, dy = pointer.y - lastY;
-      speed += (Math.hypot(dx, dy) - speed) * 0.2;
-      lastX = pointer.x;
-      lastY = pointer.y;
-      const s = Math.min(speed / 40, 0.8);
-      if (s > 0.01) gsap.set(n, { rotation: (Math.atan2(dy, dx) * 180) / Math.PI });
-      gsap.set(n, { scaleX: 1 + s, scaleY: 1 - s * 0.45 });
-
-      // brackets: lock onto the target, or wait collapsed at the pointer
       if (target) {
         const r = target.getBoundingClientRect();
         fx(r.left - PAD); fy(r.top - PAD); fw(r.width + PAD * 2); fh(r.height + PAD * 2);
       } else {
-        fx(pointer.x - 14); fy(pointer.y - 14); fw(28); fh(28);
+        fx(pointer.x - IDLE / 2); fy(pointer.y - IDLE / 2); fw(IDLE); fh(IDLE);
       }
     };
 
-    const hide = () => gsap.to([n, f], { autoAlpha: 0, duration: 0.3 });
-    const press = () => gsap.to(dot.current, { scale: target ? 0 : 0.6, duration: 0.2 });
-    const release = () => gsap.to(dot.current, { scale: target ? 0 : 1, duration: 0.5, ease: "elastic.out(1, 0.4)" });
+    const hide = () => { shown = false; gsap.to([d, f], { autoAlpha: 0, duration: 0.2, overwrite: "auto" }); };
+    const press = () => gsap.to(f, { scale: 0.92, duration: 0.15, ease: "power2.out" });
+    const release = () => gsap.to(f, { scale: 1, duration: 0.35, ease: "expo.out" });
 
     addEventListener("pointermove", onMove);
     addEventListener("pointerover", onOver);
@@ -105,15 +112,16 @@ export function Cursor() {
     };
   });
 
+  const tick = "absolute h-1.5 w-1.5 border-current";
   return (
     <>
       {/* blend mode must sit on a top-level fixed element: a wrapper would isolate it */}
-      <div ref={node} aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[200] -mt-2 -ml-2 h-4 w-4 mix-blend-difference">
-        <div ref={dot} className="h-full w-full bg-beige" /> {/* square, like a block of the logo */}
-      </div>
-      <div ref={frame} aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[199] text-flag">
-        <span className="absolute inset-y-0 left-0 w-2 border-y border-l border-current" />
-        <span className="absolute inset-y-0 right-0 w-2 border-y border-r border-current" />
+      <div ref={dot} data-cursor-dot aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[200] -mt-[3px] -ml-[3px] h-1.5 w-1.5 bg-beige mix-blend-difference" />
+      <div ref={frame} data-cursor-frame aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[199] text-beige">
+        <span className={`${tick} top-0 left-0 border-t border-l`} />
+        <span className={`${tick} top-0 right-0 border-t border-r`} />
+        <span className={`${tick} bottom-0 left-0 border-b border-l`} />
+        <span className={`${tick} right-0 bottom-0 border-r border-b`} />
       </div>
     </>
   );

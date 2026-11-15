@@ -136,11 +136,24 @@ const instrument = () => {
   await page.mouse.move(cb.x + cb.width / 2, cb.y + cb.height / 2, { steps: 10 });
   await wait(page, 900);
   const frame = await page.evaluate(() => {
-    const f = document.querySelector('[class*="z-[199]"]');
+    const f = document.querySelector("[data-cursor-frame]");
     const r = f.getBoundingClientRect();
     return { op: +getComputedStyle(f).opacity, w: r.width, h: r.height };
   });
-  check("Cursor morphs into [ ] brackets around links", frame.op > 0.9 && frame.w > cb.width && frame.h > cb.height, `bracket box ${frame.w.toFixed(0)}×${frame.h.toFixed(0)} around ${cb.width.toFixed(0)}×${cb.height.toFixed(0)} link`);
+  check("Cursor viewfinder snaps around links (corner ticks, dot steps aside)", frame.op > 0.9 && frame.w > cb.width && frame.h > cb.height, `frame ${frame.w.toFixed(0)}×${frame.h.toFixed(0)} around ${cb.width.toFixed(0)}×${cb.height.toFixed(0)} link`);
+  // sleek, not obnoxious: the dot is small, sits on the pointer with no lag, never stretches or spins
+  await page.mouse.move(300, 300);
+  await wait(page, 400);
+  await page.mouse.move(1100, 620, { steps: 4 });
+  await wait(page, 60);
+  const calmDot = await page.evaluate(() => {
+    const el = document.querySelector("[data-cursor-dot]"), r = el.getBoundingClientRect();
+    const m = new DOMMatrix(getComputedStyle(el).transform);
+    return { size: r.width, off: Math.hypot(r.left + r.width / 2 - 1100, r.top + r.height / 2 - 620), skew: Math.abs(m.b) + Math.abs(m.c), sx: m.a, sy: m.d };
+  });
+  check("Cursor is calm: 6px dot, on the pointer within 60ms, no stretch or rotation", calmDot.size <= 7 && calmDot.off < 3 && calmDot.skew < 0.001 && Math.abs(calmDot.sx - calmDot.sy) < 0.001, `${calmDot.size}px dot, ${calmDot.off.toFixed(1)}px from the pointer`);
+  const ibeam = await page.evaluate(() => { const i = document.querySelector("input:not([type=hidden])"); return i ? getComputedStyle(i).cursor : "text"; });
+  check("Text fields keep the native I-beam", ibeam === "text", ibeam);
 
   // 4. In-page navigation (no reload)
   await contact.click();
@@ -227,15 +240,7 @@ const instrument = () => {
   await page.evaluate((s) => document.querySelector(s).scrollIntoView({ block: "center" }), cta);
   await wait(page, 1200);
 
-  // 1 Squash & stretch: the cursor stretches along fast moves; the CTA squashes when pressed
-  await page.mouse.move(150, 150);
-  await wait(page, 600);
-  await page.mouse.move(1250, 700, { steps: 3 });
-  await wait(page, 60);
-  const stretch = await page.evaluate(() => {
-    const m = new DOMMatrix(getComputedStyle(document.querySelector('[class*="z-[200]"]')).transform);
-    return Math.abs(Math.hypot(m.a, m.b) - Math.hypot(m.c, m.d));
-  });
+  // 1 Squash & stretch: on press the CTA squashes and the cursor viewfinder tightens
   let b = await page.locator(cta).boundingBox();
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 6 });
   await wait(page, 300);
@@ -243,10 +248,10 @@ const instrument = () => {
   await wait(page, 250);
   const pressed = await page.evaluate((s) => {
     const btn = document.querySelector(s);
-    return { scale: getComputedStyle(btn.querySelector("[data-press]")).scale, wind: getComputedStyle(btn.querySelector("[data-mark]")).scale };
+    return { scale: getComputedStyle(btn.querySelector("[data-press]")).scale, wind: getComputedStyle(btn.querySelector("[data-mark]")).scale, frame: new DOMMatrix(getComputedStyle(document.querySelector("[data-cursor-frame]")).transform).a };
   }, cta);
   await page.mouse.up();
-  ux(1, "Squash & stretch: cursor stretches on fast moves, button squashes on press", stretch > 0.04 && parseFloat(pressed.scale) < 1, `stretch ${stretch.toFixed(2)}, press scale ${pressed.scale}`);
+  ux(1, "Squash & stretch: button squashes and the cursor viewfinder tightens on press", pressed.frame < 0.97 && parseFloat(pressed.scale) < 1, `viewfinder ${pressed.frame.toFixed(2)}, button ${pressed.scale}`);
 
   // 2 Anticipation: the loader reaches toward you before it splits; the CTA crosshair gathers while pressed, snaps open on release
   ux(2, "Anticipation wind-up: loader 'reach' before the split, button crosshair gathers on press", passed("Reach:") && parseFloat(pressed.wind) < 1, `crosshair scale ${pressed.wind} while pressed`);
