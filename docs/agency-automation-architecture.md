@@ -1,7 +1,8 @@
-# AI Agency Business-Development System: proposed architecture (Phase A)
+# AI Agency Business-Development System: architecture
 
-Status: **proposal, waiting for approval.** Nothing in this document has been built yet.
-Date: 2026-11-15. Prices and policies came from web search results and must be re-checked on the official pages before money is spent.
+Status: **Phase A approved. Phase B (research and qualification) built as inactive drafts and tested with fictional data. Waiting for approval before Phase C.**
+Results of every test: [`agency-phase-b-test-log.md`](agency-phase-b-test-log.md).
+Date: 2026-11-15. Prices and policies came from web search results (the official pricing pages were blocked from this environment). Re-check them on the official pages before money is spent.
 
 ---
 
@@ -29,12 +30,12 @@ Date: 2026-11-15. Prices and policies came from web search results and must be r
 
 | Area | What's in it | Status |
 |---|---|---|
-| **A. Internal Agency Automation** | The new system in this document | To be built (Phases B–F) |
-| **B. Client Automation Products** | The 5 dental front-desk workflows, kept as a fictional demo product we may sell later | Kept inactive, renamed, not configured further |
+| **A. Internal Agency Automation** | The new system in this document | Phase B parts built (inactive). Phases C–F to come. Tag `agency-internal` |
+| **B. Client Automation Products** | The 5 dental front-desk workflows, kept as a fictional demo product we may sell later | **Renamed** (done), kept inactive, history kept. Tag `client-demo` |
 
-**Proposed renames** (reversible; history and test logs are kept):
+**Renames** (done in Phase B; reversible; history and test logs are kept):
 
-| Now | Proposed |
+| Before | Now |
 |---|---|
 | `[TEST] Lead Agent - 1 Main Chat Agent (Demo: Bright Smile Dental)` | `[CLIENT DEMO] Dental Front Desk - 1 Main Chat Agent` |
 | `[TEST] Lead Agent - 2 Tool: Save Lead` | `[CLIENT DEMO] Dental Front Desk - 2 Tool: Save Lead` |
@@ -57,13 +58,15 @@ New workflows start with `[AGENCY]`. I'll add tags `client-demo` and `agency-int
 | Single "AI Model (swap here)" design | One shared AI Brain for the whole system | Becomes its own helper workflow |
 | Not reused | Chat front desk, dental rules | Stay in the demo |
 
-## 4. Proposed workflows (Area A)
+## 4. Workflows (Area A)
+
+Built in Phase B (all **inactive**; n8n IDs in brackets): A0 `rD4hJcfkfQ9W9LWl`, A1 `FnT4B2K1YiL3jIvh`, A2 `7dhya6JoSAHZggga`, A3 `mMSUbBxUdWhbLP5e`, A10 `PROqvCbu5CjS6wuY`, H0 `EwEgjWyFneyjExzI`, H1 `wD2yN7CAk0xz0oiW`, H4 `W4IqWN9nxt1abIKb`. Not built yet: A4–A9, S, H2, H3.
 
 | # | Workflow | Stage | What it does | Starts by |
 |---|---|---|---|---|
 | A0 | Setup: Create Agency CRM | — | One time only: creates the CRM Google Sheet with every tab and heading | Manual (needs your approval to run) |
-| A1 | Discover Businesses | 1 | Finds Atlanta-area businesses by industry from approved sources; skips duplicates; adds them as "Not researched" | Scheduler (weekdays) |
-| A2 | Research & Analyze | 2 | Reads each business's **official website only** (home and contact pages, respecting robots.txt); AI writes evidence-based notes and one best opportunity | Scheduler (3× a day, small batches) |
+| A1 | Discover Businesses | 1 | Takes businesses from the **Discovery Inbox** tab (and, only if switched on, a small OpenStreetMap search); checks name, Georgia, target city, usable website or phone; skips duplicates and Suppression List entries; adds them as "Not researched" | Scheduler (weekdays) |
+| A2 | Research & Analyze | 2 | Reads each business's **official website only** (robots.txt first, then home and /contact pages, one page every 1.5 s); fixed rules find emails, phones, booking tools, forms, chat; the AI writes evidence-based notes; quotes the AI gives are kept only if they really appear on the page | Scheduler (3× a day, small batches) |
 | A3 | Score & Qualify | 3 | Fixed, written-down point rules give Warm or Cold; Hot only comes from a real reply | Called by A2 and A6 |
 | A4 | Draft Outreach | 4 | AI personalizes our approved template for approved leads; puts the draft in the CRM for review | Scheduler (2× a day) |
 | A5 | Send Approved Outreach | 4 | Sends only approved drafts, after every safety check (section 7) | Scheduler (hourly, business hours) |
@@ -76,6 +79,7 @@ New workflows start with `[AGENCY]`. I'll add tags `client-demo` and `agency-int
 | H1 | Helper: AI Brain | 2, 4, 5 | The only place the AI model lives. Returns strict JSON and logs requests and tokens. **Swapping Gemini for OpenAI happens here once.** | Called |
 | H2 | Helper: Check Calendar Availability | 6 | Adapted from the demo | Called |
 | H3 | Helper: Book Meeting | 6 | Adapted from the demo, with the double-booking guard | Called |
+| H0 | Helper: Agency Config | all | Reads the CRM Settings tab once per run. If anything is missing or wrong it answers "not OK, paused", so every workflow stops safely | Called |
 | H4 | Helper: Log Activity | 7 | Writes every event (discovered, drafted, sent, reply…) to the Activity Log, which the reports are counted from | Called |
 
 Why helpers? Helper (sub-workflow) runs **don't count** toward n8n's monthly execution limit, and each job lives in one place.
@@ -148,6 +152,25 @@ AI only collects **evidence**. The score comes from fixed rules written in code,
 7. **Send Ledger:** no "sent" or "sending" row already exists for this lead and step.
 8. **Footer present:** agency name, physical mailing address, and a one-line opt-out ("Reply STOP and we won't email you again").
 
+**Outreach Status values (one per lead, shown as a dropdown in the CRM):**
+
+| Status | Meaning | Who sets it |
+|---|---|---|
+| Pending review | A4 wrote a draft; nobody approved it yet | Automation |
+| Approved | A person picked "Approved" in the CRM | **Person only** |
+| Sending | A5 wrote a "Sending" row in the Send Ledger and is about to call Gmail | Automation |
+| Sent | Gmail returned a message ID; it is saved in the Ledger and the Lead | Automation |
+| Failed | Gmail returned an error. **Not retried automatically**; goes to the Review Queue | Automation |
+| Suppressed | The address or domain is on the Suppression List, or the lead opted out. Never sent | Automation |
+
+**Why repeated runs can't send twice:** the Send Ledger key is `Lead ID | step` (for example `L-acme.example|initial`). A5 sends only when no row with that key exists. It writes the "Sending" row **before** calling Gmail. A row stuck at "Sending" (for example after a crash) is never resent automatically. It goes to the Review Queue, because we can't know if Gmail sent it.
+
+**Emergency pause:** two switches in the CRM Settings tab, checked at the start of every run **and again right before each email**:
+- `SYSTEM_PAUSED = YES` stops every agency workflow.
+- `OUTREACH_PAUSED = YES` stops sending only. It starts as `YES` and stays that way until you approve Phase C go-live.
+
+If H0 can't read the Settings tab, it treats both switches as `YES`.
+
 **After sending:** record the Gmail message ID and thread ID, which is how replies are matched later (no tracking pixels). Set the next allowed follow-up date (for example +5 business days, at most 2 follow-ups, each approved).
 
 **US law (CAN-SPAM, plain-English summary; not legal advice):**
@@ -183,14 +206,22 @@ A tab of approved statements. The AI may only use these, word-for-word facts, wh
 
 ## 10. Data sources for discovery (Stage 1)
 
-| Source | Cost | Allowed use | Recommendation |
+We don't rely on one source. Every source feeds the same **Discovery Inbox** tab or the same checks in A1, so a source can be added or dropped without rebuilding anything. Costs are from web search and **not verified** on official pages.
+
+| Source | Cost | Restrictions | Recommendation |
 |---|---|---|---|
-| **OpenStreetMap (Overpass API)** | Free | Open license (ODbL) with attribution. The main public server asks heavy commercial users to self-host or pay, so we'd run small, polite weekly queries and must read its usage policy first. Coverage of small trades is uneven. | **Use first**, at low volume |
-| **Foursquare Open Source Places** | Free | Apache 2.0 license with attribution. Bulk monthly download through a portal (needs a free account and token). Harder to load into n8n. | Later, if OSM coverage is thin |
-| **Business's own official website** | Free | Reading public pages at a normal pace, respecting robots.txt. The **only** place we take emails from. | **Always**, to verify every lead |
-| **Manual seed list** | Free | Businesses you know or find yourself | **Always allowed**: type them into the Leads tab |
-| Google Places API | Text Search Pro: 5,000 free requests a month, then about $32 per 1,000. Requires a billing account with a card. | Google's terms let us keep only the place ID long-term; storing names and phones in a CRM is questionable. | **Not now.** Only after a terms review and your billing approval. |
-| Google Maps scraping, Yelp scraping, email-guessing tools | — | Against terms, or risks fabricated emails | **Never** |
+| **Discovery Inbox tab** (team types businesses in, or pastes an approved export) | Free | Only businesses found legitimately: walking past, referrals, local directories that allow copying, chamber of commerce member lists you have rights to | **Main source now.** Built and tested |
+| **Business's own official website** | Free | Read public pages slowly, obey robots.txt, identify ourselves in the User-Agent. The **only** place we take emails from | **Always**, to verify every lead. Built (A2) |
+| **OpenStreetMap (Overpass API)** | Free | ODbL license: keep the attribution (stored in the Source License column). The public server overpass-api.de asks heavy or commercial users to self-host or pay. Weekly small queries only. Coverage of small trades is uneven | **Optional**, off by default (`OSM_DISCOVERY_ENABLED = NO`). Built and tested with fictional data |
+| **Foursquare Open Source Places** | Free | Apache 2.0, attribution. Bulk files through a portal with a free account and token; too big to load in n8n directly, so it needs a small export step outside n8n | Later, as a bulk seed for the Discovery Inbox |
+| **Overture Maps Places** | Free | CDLA-Permissive 2.0 / Apache 2.0. Big files (GeoParquet); websites and phones often missing; no emails | Later, alongside Foursquare |
+| **Brave Search API** | About $5/month free credit, then about $4–5 per 1,000 queries; needs a card | Only to find a business's **official website** when the inbox row has none. Respect its terms on storing results | Optional, needs billing approval |
+| **City of Atlanta business license lookup / Georgia Secretary of State** | Free | Lookup one business at a time; no bulk export; manual use only | Use by hand to confirm a business is real |
+| Google Places API | Text Search Pro: 5,000 free a month, then about $32 per 1,000; billing account required | Terms allow keeping only the place ID long-term; storing names and phones in our CRM is a problem | **Not now** |
+| Yelp Fusion API | Commercial use needs Yelp's written consent; 24-hour caching limit | Can't build a CRM from it | **No** |
+| Google Maps scraping, Yelp scraping, LinkedIn scraping, email-guessing or "finder" tools | — | Against terms, or produces guessed emails | **Never** |
+
+**No assumptions:** a business only gets a "Primary Opportunity" when the evidence on its own website supports it. A2 may answer "No clear opportunity", and a lead with little evidence gets Low confidence and stays Cold.
 
 **Expect** many small businesses to show only a contact form and no public email. Those leads stay in the CRM as "phone/contact-form only" for manual follow-up. We don't email them.
 
@@ -240,6 +271,38 @@ Example month: 400 businesses researched, 150 emails, 25 replies, 5 meetings.
 
 At this scale **n8n's monthly fee dominates**: about $0.05 per researched lead, versus well under $0.01 for AI.
 
+### Monthly cost at 100, 500 and 1,000 researched businesses
+
+**Labels:** *Reported* = found by web search, not checked on the official page. *Estimate* = my calculation from the assumptions below. Nothing here is confirmed on an official pricing page yet.
+
+**Assumptions** (change any of them and the numbers move):
+- One researched business uses about 5,500 input and 700 output AI tokens: instructions plus up to 14,000 characters of website text, one AI call.
+- 30% of researched businesses become Warm and get one outreach draft (about 2,500 in / 400 out).
+- 5% of sent emails get a reply (about 3,000 in / 500 out to sort and draft).
+- AI on a paid tier, because Google's free tier may use the data and must not see real prospects' emails. Gemini 3 Flash is *reported* at $0.50 / $3.00 per million input / output tokens. A 30% buffer is added for retries.
+- n8n Starter is *reported* at about $24/month with 2,500 executions. Helper (sub-workflow) runs don't count.
+- Research runs 3 times a day in batches of `RESEARCH_BATCH_SIZE` (5 / 10 / 20).
+
+| Category | 100 / month | 500 / month | 1,000 / month | Label |
+|---|---|---|---|---|
+| **n8n** (Starter) | ~$24 | ~$24 | ~$24 | Reported |
+| n8n executions used (of 2,500) | ~1,050 | ~1,080 | ~1,100 | Estimate |
+| **AI API**, Gemini 3 Flash paid | ~$1 | ~$4 | ~$8 | Estimate |
+| AI API if switched to OpenAI GPT-5.4 mini (instead) | ~$1 | ~$6 | ~$11 | Estimate |
+| AI API on the Gemini free tier (fictional data only) | $0 | $0 (may hit daily limits) | not practical | Reported |
+| **Data sources**: Discovery Inbox, websites, OpenStreetMap | $0 | $0 | $0 (public Overpass server may ask us to self-host: ~$20–40/month for a small server) | Estimate |
+| Data sources: Brave Search (optional, website lookups) | $0 (free credit) | ~$0–3 | ~$0–5 | Reported |
+| **Email infrastructure**: own domain + Google Workspace mailbox | ~$9 | ~$9 | ~$9 | Reported |
+| Email: optional address-check service (~30% of leads) | ~$0–1 | ~$1–2 | ~$1–3 | Estimate |
+| Emails sent per month (30% of researched) | ~30 | ~150 | ~300 | Estimate. Well inside Gmail/Workspace caps |
+| **Other**: postal mailing address (required in emails; only if you have none) | $0–30 | $0–30 | $0–30 | Reported |
+| Other: Google Sheets, Gmail, Calendar | $0 | $0 | $0 | Free with the Google account |
+| **Total** | **~$34–65** | **~$38–72** | **~$42–80** (up to ~$120 with a self-hosted OpenStreetMap server) | Estimate |
+
+**What this tells us:** the fixed monthly fees (n8n, mailbox, address) are most of the bill. AI stays under about $11 even at 1,000 businesses. The two things that could raise costs are the OpenStreetMap server policy at high volume and a paid search API. Both are optional, and both need your approval.
+
+**Limits to watch at 1,000/month:** Google Sheets allows about 60 writes a minute (A2 writes in one batch per run). Gemini's free tier would run out, so the paid tier is needed. One A2 run of 20 leads takes about 2–3 minutes because pages are fetched politely, 1.5 s apart.
+
 ### n8n executions estimate (helpers don't count)
 | Job | Runs per month |
 |---|---|
@@ -252,6 +315,34 @@ At this scale **n8n's monthly fee dominates**: about $0.05 per researched lead, 
 | Meetings and errors | about 50 |
 | **Total** | **about 1,050**, within Starter's 2,500 |
 
+## 12b. Future Agent B: prototype builder (designed, **not built**)
+
+Agent B would help the co-founder show a qualified prospect a working example before any sale.
+
+```
+ Qualified lead + research ─► pick ONE pre-approved template ─► build a demo copy
+ (Warm/Hot, approved by       (e.g. missed-call text back,      with FICTIONAL data only
+  a person)                    booking assistant, quote          (fake customers, fake
+                               follow-up, review request)        calendar, @example.com)
+          │
+          ▼
+ run simulated tests ─► demo link or step-by-step instructions ─► "what going live would need"
+ (pinned data, like the   (n8n demo workflow, or a short          (their logins, their
+  tests in this project)   recorded walkthrough)                   approval, contract, price)
+```
+
+| Step | What Agent B does | Guardrail |
+|---|---|---|
+| 1. Input | Receives one lead that a person marked "Build demo", plus its research row | Starts only from a person's approval in the CRM |
+| 2. Choose | Picks one template from a fixed **Template Library** tab that matches the lead's Primary Opportunity | Can't invent new kinds of solutions; "No clear opportunity" means no demo |
+| 3. Build | Copies the template into a new inactive n8n workflow named `[PROSPECT DEMO] <business>` and fills in the business name, services and hours from the research | Fictional customer data only; no prospect logins, websites, inboxes or calendars |
+| 4. Test | Runs simulated tests with pinned data and records pass/fail | Nothing outside n8n is contacted |
+| 5. Hand-off | Writes a demo link or instructions and a "what deployment would need" checklist (their accounts, their approval, contract, price, data handling) to the CRM | The co-founder decides whether and how to show it |
+
+**Agent B will never:** deploy anything to a prospect's website, connect to a prospect's private systems, contact a prospect, quote a price, or publish or activate a workflow. Deployment, contracts and payments stay with the co-founder.
+
+**Building it needs:** Phases C–F finished, a Template Library written and approved by you, and a separate approval to start.
+
 ## 13. Limitations to know about
 
 - **Gemini free tier:** small daily limits, and data may be used by Google. Fine for building and fictional tests. Switch to a paid tier or OpenAI before processing **real prospect emails**.
@@ -261,13 +352,14 @@ At this scale **n8n's monthly fee dominates**: about $0.05 per researched lead, 
 - **Website research:** sites built mostly with JavaScript may show little text, which means lower confidence. We never invent missing facts. They go in "Unknowns to verify".
 - **Discovery quality:** open data misses some businesses and has some closed ones. Every lead is verified on its own website before outreach.
 - **My connection to n8n can't:** create folders, create Data Tables, see or create logins, or read past run details in depth. Those need a few clicks from you.
+- **n8n Code steps:** the browser `URL` tool isn't available inside n8n's Code steps, and item matching through pinned test data isn't reliable. Website addresses are read with plain text rules, and results are matched by list position. Both were found and fixed during Phase B testing.
 
 ## 14. Phased plan
 
 | Phase | What I build and test | What we need from you | Real-world actions (each needs your approval) |
 |---|---|---|---|
 | **A** (this) | Architecture | Approve this plan | None |
-| **B** Research and qualification | A0, H1, H4, A1, A2, A3, A10, Scheduler (all off); tests with fictional Atlanta businesses and mocked website pages | Free Gemini key; the two folders; discovery source choice | Run A0 once to create `Agency CRM - DEMO`; one AI test on fictional data |
+| **B** Research and qualification ✅ built | A0, H0, H1, H4, A1, A2, A3, A10 (all off; the Scheduler moves to Phase C so nothing can run on a timer yet); tests with fictional Atlanta businesses and mocked website pages | Confirm the DEMO CRM and paste its link in H0; free Gemini key; the two folders | A0 was run once to create `Agency CRM - DEMO` (needs your confirmation that it exists); one AI test on fictional data still to do |
 | **C** Outreach | A4, A5, Suppression List, Send Ledger, pause switch; tests with fictional @example.com addresses and simulated sending | Agency details; email template wording; daily limit | None (no real sends) |
 | **D** Inbox and calendar | A6, A7, H2, H3; tests with simulated replies and simulated calendar | Calendar login and agency calendar; confirm the Gmail account | Optional: read-only test on a test label in the inbox |
 | **E** Reports | A8, A9 calculated from Activity Log records; tests on fictional records | Report recipient email | One test report sent to you |

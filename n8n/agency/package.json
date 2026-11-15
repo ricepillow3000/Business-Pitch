@@ -1,0 +1,11 @@
+{
+  "name": "agency-n8n-workflows",
+  "private": true,
+  "description": "Source of the [AGENCY] n8n workflows and their local unit tests. Not part of the website build.",
+  "scripts": {
+    "test": "cd tests && node harness.js ../workflows/a1.js ../workflows/a2.js ../workflows/a3.js ../workflows/a10.js ../workflows/h0.js ../workflows/h1.js ../workflows/h4.js && node test_b1.js && node test_h1.js && node test_a1.js && node test_a2.js && node test_a10.js"
+  },
+  "dependencies": {
+    "luxon": "^3.5.0"
+  }
+}

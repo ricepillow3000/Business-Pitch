@@ -2,17 +2,17 @@
 
 Demo business: **Bright Smile Dental (DEMO)**, a fictional dental office.
 n8n workspace: personal project, n8n Cloud.
-Status: **all 5 workflows are inactive drafts. None are published.**
+Status: **all 5 workflows are inactive drafts. None are published.** On 2026-11-15 they were renamed `[CLIENT DEMO] Dental Front Desk - …` and tagged `client-demo` (a demo product, separate from the agency's own system). History and results below are unchanged.
 
 ## The five workflows
 
 | # | Name | n8n ID | What it does |
 |---|------|--------|--------------|
-| 1 | `[TEST] Lead Agent - 1 Main Chat Agent (Demo: Bright Smile Dental)` | IdkNaVucRL092QrI | Chat box + AI agent. Per-client settings live in the **Business Settings** node. |
-| 2 | `[TEST] Lead Agent - 2 Tool: Save Lead` | JwQ576zMkSElwzKe | Saves or updates one row per customer (matched on email). Emails the owner for new Qualified / Needs Human leads. Also used for human handoff. |
-| 3 | `[TEST] Lead Agent - 3 Tool: Check Availability` | gPWyXH6hFXTpN9Pz | Reads the calendar and returns only open slots inside business hours. Read-only. |
-| 4 | `[TEST] Lead Agent - 4 Tool: Book Appointment` | cD8lXjNfM9xIq1bd | Re-checks the calendar, blocks double bookings and duplicates, creates the event, marks the lead Booked, emails the owner. |
-| 5 | `[TEST] Lead Agent - 5 Error Logger` | 3RLi9Dg58a8G7zMG | When a live workflow fails, writes to an "Error Log" tab and emails the owner. |
+| 1 | `[CLIENT DEMO] Dental Front Desk - 1 Main Chat Agent` | IdkNaVucRL092QrI | Chat box + AI agent. Per-client settings live in the **Business Settings** node. |
+| 2 | `[CLIENT DEMO] Dental Front Desk - 2 Tool: Save Lead` | JwQ576zMkSElwzKe | Saves or updates one row per customer (matched on email). Emails the owner for new Qualified / Needs Human leads. Also used for human handoff. |
+| 3 | `[CLIENT DEMO] Dental Front Desk - 3 Tool: Check Availability` | gPWyXH6hFXTpN9Pz | Reads the calendar and returns only open slots inside business hours. Read-only. |
+| 4 | `[CLIENT DEMO] Dental Front Desk - 4 Tool: Book Appointment` | cD8lXjNfM9xIq1bd | Re-checks the calendar, blocks double bookings and duplicates, creates the event, marks the lead Booked, emails the owner. |
+| 5 | `[CLIENT DEMO] Dental Front Desk - 5 Error Logger` | 3RLi9Dg58a8G7zMG | When a live workflow fails, writes to an "Error Log" tab and emails the owner. |
 
 ## How testing was done
 
