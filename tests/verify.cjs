@@ -61,8 +61,9 @@ const wait = (p, ms) => p.waitForTimeout(ms);
     })),
   );
   check(
-    "Logo: 12 blocks snap into alignment to form the J",
-    blocks.length === 12 && blocks.every((b) => b.op === 1 && !/[1-9]/.test(b.t.replace(/matrix\(1,0,0,1,0,0\)/, ""))),
+    "Logo: 10 blocks snap into alignment to form the J (no tail)",
+    !(await page.$('a[href="#top"] svg path, a[href="#top"] svg circle')) &&
+    blocks.length === 10 && blocks.every((b) => b.op === 1 && !/[1-9]/.test(b.t.replace(/matrix\(1,0,0,1,0,0\)/, ""))),
     `${blocks.length} blocks, ${blocks.filter((b) => b.op === 1).length} settled`,
   );
   const pager = () =>

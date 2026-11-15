@@ -15,6 +15,10 @@ npm run dev
 
 Open http://localhost:3000
 
+### On Windows (easiest)
+
+Double-click **`start-windows.bat`**. It installs everything the first time, starts the site and opens http://localhost:3000. Close the black window to stop it.
+
 ### On Windows (PowerShell)
 
 PowerShell blocks `npm` by default ("running scripts is disabled on this system").
