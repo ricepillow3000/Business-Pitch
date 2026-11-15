@@ -181,6 +181,167 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   await wait(page, 1500);
   const scr = await page.textContent("[data-scroll]");
   check("HUD scroll readout reaches 100% at the bottom", parseInt(scr) === 100, `SCR ${scr}%`);
+
+  /* ── 20 PRINCIPLES OF UX & ANIMATION (enforced) ──────────────
+     Each principle is a check: if a later change breaks one, this run fails. */
+  const ux = (n, name, ok, detail) => check(`UX ${String(n).padStart(2, "0")} ${name}`, ok, detail);
+  const passed = (prefix) => results.some((r) => r.name.startsWith(prefix) && r.ok);
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
+  const cta = "[data-magnetic]";
+  await page.evaluate((s) => document.querySelector(s).scrollIntoView({ block: "center" }), cta);
+  await wait(page, 1200);
+
+  // 1 Squash & stretch: the cursor stretches along fast moves; the CTA squashes when pressed
+  await page.mouse.move(150, 150);
+  await wait(page, 600);
+  await page.mouse.move(1250, 700, { steps: 3 });
+  await wait(page, 60);
+  const stretch = await page.evaluate(() => {
+    const m = new DOMMatrix(getComputedStyle(document.querySelector('[class*="z-[200]"]')).transform);
+    return Math.abs(Math.hypot(m.a, m.b) - Math.hypot(m.c, m.d));
+  });
+  let b = await page.locator(cta).boundingBox();
+  await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2, { steps: 6 });
+  await wait(page, 300);
+  await page.mouse.down();
+  await wait(page, 250);
+  const pressed = await page.evaluate((s) => {
+    const btn = document.querySelector(s);
+    const arrow = btn.querySelector("[aria-hidden] > span");
+    return { scale: getComputedStyle(btn.querySelector("[data-press]")).scale, wind: getComputedStyle(arrow).translate };
+  }, cta);
+  await page.mouse.up();
+  ux(1, "Squash & stretch: cursor stretches on fast moves, button squashes on press", stretch > 0.04 && parseFloat(pressed.scale) < 1, `stretch ${stretch.toFixed(2)}, press scale ${pressed.scale}`);
+
+  // 2 Anticipation: the loader reaches toward you before it splits; the CTA arrow winds back before launching
+  ux(2, "Anticipation wind-up: loader 'reach' before the split, arrow pulls back on press", passed("Reach:") && pressed.wind !== "none" && pressed.wind !== "0px", `arrow translate ${pressed.wind}`);
+
+  // 17 Doherty threshold: a click answers in under 400ms
+  await wait(page, 380);
+  const menuShown = await page.evaluate(() => +getComputedStyle(document.getElementById("contact-options")).opacity);
+  ux(17, "Doherty threshold: the email menu answers a click in under 400ms", menuShown > 0.6, `opacity ${menuShown.toFixed(2)} after 380ms`);
+
+  // 5 Follow through: the menu rows settle in one after another; the magnetic button springs back
+  const delays = await page.evaluate(() => [...document.querySelectorAll("#contact-options a, #contact-options button")].map((r) => parseFloat(getComputedStyle(r).transitionDelay)));
+  await page.mouse.move(80, 300, { steps: 6 });
+  await wait(page, 1600);
+  const rest = await page.evaluate((s) => new DOMMatrix(getComputedStyle(document.querySelector(s)).transform), cta);
+  ux(5, "Follow through: menu rows stagger in, magnetic button springs back to rest", delays.length > 1 && delays.every((d, i) => i === 0 || d > delays[i - 1]) && Math.abs(rest.e) < 1 && Math.abs(rest.f) < 1, `row delays ${delays.join("/")}s`);
+
+  // 6 Slow in & slow out: UI motion uses eased curves, never linear
+  const easing = await page.evaluate(() => ["#contact-options", "#contact-options a"].map((s) => getComputedStyle(document.querySelector(s)).transitionTimingFunction));
+  ux(6, "Slow in & slow out: transitions use eased curves (expo), not linear", easing.every((e) => e.includes("cubic-bezier")), easing.join(" | "));
+
+  // 9 Snappy timing: no UI feedback transition is slower than 500ms
+  const slowest = await page.evaluate(() => {
+    const els = [...document.querySelectorAll("a, button, #contact-options, #contact-options *, [data-magnetic] *")];
+    return Math.max(...els.flatMap((el) => getComputedStyle(el).transitionDuration.split(",").map((d) => parseFloat(d) * (d.includes("ms") ? 0.001 : 1))));
+  });
+  ux(9, "Snappy timing: every hover/press/menu transition is 500ms or less", slowest <= 0.5, `slowest ${slowest}s`);
+
+  // 10 Exaggerated feedback: copying the address answers loudly
+  await page.click("#contact-options button");
+  await wait(page, 200);
+  const fb = await page.evaluate(() => {
+    const r = document.querySelector("#contact-options button");
+    return { text: r.textContent, bg: getComputedStyle(r).backgroundColor };
+  });
+  ux(10, "Exaggerated feedback: 'Copy address' flips to 'Copied ✓' and lights up", fb.text.includes("Copied ✓") && fb.bg !== "rgba(0, 0, 0, 0)", fb.bg);
+
+  // 18 Postel's law: copying still works when the browser blocks the clipboard API
+  await wait(page, 2200);
+  await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { value: () => Promise.reject(new Error("blocked")) }));
+  await page.click("#contact-options button");
+  await wait(page, 200);
+  ux(18, "Postel's law: copy falls back gracefully when the clipboard API is blocked", (await page.textContent("#contact-options button")).includes("Copied ✓"));
+
+  // 11 Solid layering: things never clip through each other (open menu sits on top of what follows)
+  const solid = await page.evaluate(() => {
+    const panel = document.getElementById("contact-options").getBoundingClientRect();
+    const hit = document.elementFromPoint(panel.left + panel.width / 2, panel.bottom - 8);
+    return !!hit && !!hit.closest("#contact-options");
+  });
+  ux(11, "Solid layering: the open menu sits cleanly above the content below it", solid);
+
+  // 15 Hick's law: few choices
+  const choices = await page.evaluate(() => ({
+    menu: document.querySelectorAll("#contact-options a, #contact-options button").length,
+    nav: document.querySelectorAll("[data-hud-bar] a").length,
+  }));
+  ux(15, "Hick's law: 2 email choices, 2 links in the top bar", choices.menu <= 3 && choices.nav <= 2, JSON.stringify(choices));
+  await page.keyboard.press("Escape");
+  await wait(page, 500);
+
+  // 3 Staging the focus: one primary action, text on quiet halos, one section label at a time
+  const stage = await page.evaluate(() => ({ primary: document.querySelectorAll("[data-magnetic]").length, halos: document.querySelectorAll(".quiet").length }));
+  ux(3, "Staging the focus: one primary button, text on quiet halos, one label at a time", stage.primary === 1 && stage.halos >= 8 && passed("Bottom label hides"), JSON.stringify(stage));
+
+  // 4 Pose to pose: the intro moves through clear key poses (count → reach → split → page)
+  ux(4, "Pose to pose: intro hits every key pose (100% → reach → split → hero)", ["Loader: reaches 100%", "Reach:", "Split:", "Hero headline revealed"].every(passed));
+
+  // 7 Moving in arcs: wires (and the data packets riding them) follow curves
+  const arcs = await page.evaluate(() => [...document.querySelectorAll("[data-wire]")].every((w) => /C/.test(w.getAttribute("d"))));
+  ux(7, "Moving in arcs: every wire is a curve, so data packets travel in arcs", arcs);
+
+  // 8 Secondary action: packets flow and the hub ring turns while you read
+  const secondary = await page.evaluate(() => document.getAnimations().filter((a) => a.playState === "running").length);
+  ux(8, "Secondary action: background details keep moving (packets, hub ring)", passed("Automation: all 6 wires") && secondary >= 6, `${secondary} running animations`);
+
+  // 12 Overall appeal: every piece of text uses the brand palette only
+  const palette = await page.evaluate(() => {
+    const ok = ["245, 245, 220", "110, 155, 240", "10, 49, 97"];
+    const bad = new Set();
+    document.querySelectorAll("body *").forEach((el) => {
+      if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) return;
+      const c = getComputedStyle(el).color.replace(/rgba?\(|\)/g, "").split(",").slice(0, 3).map((x) => x.trim()).join(", ");
+      if (!ok.includes(c)) bad.add(c);
+    });
+    return [...bad];
+  });
+  ux(12, "Overall appeal: all text uses the brand palette (beige / flag blue)", palette.length === 0, palette.join(" | ") || "beige, flag, flag-deep only");
+
+  // 13 Fitts's law: the main action is big and close to the message it answers
+  b = await page.locator(cta).boundingBox();
+  ux(13, "Fitts's law: the main button is a big target (at least 200×60px)", b.width >= 200 && b.height >= 60, `${b.width.toFixed(0)}×${b.height.toFixed(0)}px`);
+
+  // 14 Bigger hit areas: small text links still catch a click 20px above/below the text
+  const small = ['a[aria-label="JIDO, back to top"]', '[data-hud-bar] a[href="#initiation"]', '#initiation dl a', 'footer a[href="#top"]', 'footer a[target="_blank"]'];
+  const misses = await page.evaluate((sels) => sels.filter((s) => {
+    const el = document.querySelector(s), r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+    return ![y - 20, y + 20].every((py) => el.contains(document.elementFromPoint(x, py)));
+  }), small);
+  ux(14, "Bigger hit areas: every small link is at least 44px tall to the pointer", misses.length === 0, misses.join(", ") || `${small.length} links checked`);
+
+  // 16 Miller's law: lists stay short enough to hold in your head
+  const longest = await page.evaluate(() => Math.max(...[...document.querySelectorAll("ul, ol")].map((l) => l.children.length)));
+  ux(16, "Miller's law: no list is longer than 7 items", longest <= 7, `longest list ${longest}`);
+
+  // 19 Jakob's law: logo top-left goes home, Contact top-right, new-tab links say so (↗)
+  const jakob = await page.evaluate(() => {
+    const logo = document.querySelector('a[aria-label="JIDO, back to top"]').getBoundingClientRect();
+    const contact = document.querySelector('[data-hud-bar] a[href="#initiation"]').getBoundingClientRect();
+    const ext = [...document.querySelectorAll('a[target="_blank"]')];
+    return logo.left < 100 && logo.top < 80 && contact.right > innerWidth - 100 && contact.top < 80 &&
+      ext.every((a) => a.rel.includes("noopener") && a.textContent.includes("↗"));
+  });
+  ux(19, "Jakob's law: logo top-left → home, Contact top-right, new-tab links marked ↗", jakob);
+
+  // 20 Frequency of use: the most used action (contact) is one click away at every scroll position
+  const reach = [];
+  for (const f of [0, 0.5, 1]) {
+    await page.evaluate((f) => window.scrollTo(0, f * (document.documentElement.scrollHeight - innerHeight)), f);
+    await wait(page, 500);
+    reach.push(await page.isVisible('[data-hud-bar] a[href="#initiation"]'));
+  }
+  ux(20, "Frequency of use: Contact is visible and one click away at every scroll position", reach.every(Boolean), reach.join("/"));
+
+  // 17 (repeat visit) Doherty threshold: the full show plays once; a reload is quick
+  const t0 = Date.now();
+  await page.reload();
+  await page.waitForFunction(() => !document.documentElement.classList.contains("lenis-stopped") && document.querySelector("[data-loader]")?.dataset.intro, null, { timeout: 8000 });
+  const quick = { ms: Date.now() - t0, mode: await page.evaluate(() => document.querySelector("[data-loader]").dataset.intro) };
+  ux(17, "Doherty threshold: a repeat visit skips the long intro (usable in under 2.5s)", quick.mode === "quick" && quick.ms < 2500, `${quick.mode} intro, usable after ${quick.ms}ms`);
+
   check("No JavaScript errors (desktop)", errors.length === 0, errors.join(" | "));
 
   /* ── PHONE ───────────────────────────────────────────────── */

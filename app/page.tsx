@@ -132,7 +132,7 @@ export default function Home() {
             <p data-hero-fade className="quiet max-w-[36ch] text-lead text-flag md:col-span-6">
               We build intelligent workflows for local businesses. Automate the repetitive, focus on the essential.
             </p>
-            <a href="#friction" data-hero-fade className="w-fit font-hud text-flag md:col-span-2 md:col-start-11 md:justify-self-end">
+            <a href="#friction" data-hero-fade className="hit w-fit font-hud text-flag md:col-span-2 md:col-start-11 md:justify-self-end">
               Scroll ↓
             </a>
           </div>
@@ -201,7 +201,7 @@ export default function Home() {
         <dl data-reveal className="quiet mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 md:mt-14">
           <dt className="self-center font-hud text-flag">Email</dt>
           <dd>
-            <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="text-lead break-all text-beige">{EMAIL}</a>
+            <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="hit text-lead break-all text-beige">{EMAIL}<span aria-hidden> ↗</span><span className="sr-only"> (opens Gmail in a new tab)</span></a>
           </dd>
         </dl>
 
@@ -213,9 +213,9 @@ export default function Home() {
             <Logo markClassName="h-8 w-8" />
             <span>© 2026 JIDO</span>
           </span>
-          <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="w-fit normal-case tracking-wider">{EMAIL}</a>
+          <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="hit w-fit normal-case tracking-wider">{EMAIL}<span aria-hidden> ↗</span><span className="sr-only"> (opens Gmail in a new tab)</span></a>
           <span>SYS.STATUS // ONLINE</span>
-          <a href="#top" className="w-fit md:justify-self-end">Back to top ↑</a>
+          <a href="#top" className="hit w-fit md:justify-self-end">Back to top ↑</a>
         </footer>
       </section>
     </main>

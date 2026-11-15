@@ -77,10 +77,10 @@ export function HUD() {
       {/* top bar */}
       <div data-hud-bar className="hud-bar absolute inset-x-0 top-0 flex h-14 items-center gap-3 border-b border-slate-line px-4 md:h-[72px] md:gap-5 md:px-6">
         {corner}
-        <a href="#top" data-fade aria-label="JIDO, back to top" className="pointer-events-auto">
+        <a href="#top" data-fade aria-label="JIDO, back to top" className="hit pointer-events-auto">
           <Logo markClassName="h-7 w-7" />
         </a>
-        <a href="#initiation" data-fade className="pointer-events-auto ml-auto font-hud">Contact</a>
+        <a href="#initiation" data-fade className="hit pointer-events-auto ml-auto font-hud">Contact</a>
         {corner}
       </div>
 

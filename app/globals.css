@@ -80,6 +80,19 @@ body {
   overflow-x: clip;
   background: var(--grid), var(--color-slate);
 }
+/* Fitts's law: small text links get an invisible hit area of at least 44 × 44px
+   (the visible link and the cursor brackets stay tight). */
+.hit { position: relative; }
+.hit::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(calc(100% + 1rem), 44px);
+  height: max(100%, 44px);
+  translate: -50% -50%;
+}
+
 /* HUD bars wear the same (fixed) background, so the page seems to slide under
    an invisible frame: text never collides with the logo or the readouts. */
 .hud-bar { background: var(--grid), var(--color-slate); }

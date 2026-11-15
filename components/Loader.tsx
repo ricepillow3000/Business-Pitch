@@ -27,6 +27,24 @@ import { reveal } from "@/lib/intro";
 const REACH = 0.9;
 const SPLIT = 1.2;
 
+/**
+ * Doherty threshold: the full show plays once per visit. Reloads and repeat
+ * views in the same tab get a quick count, so nobody waits for the site twice.
+ * Read once per page load (React may run effects twice in development).
+ */
+let repeat: boolean | undefined;
+const repeatVisit = () => {
+  if (repeat === undefined) {
+    try {
+      repeat = sessionStorage.getItem("jido:intro") === "1";
+      sessionStorage.setItem("jido:intro", "1");
+    } catch {
+      repeat = false; // storage blocked: always play the full intro
+    }
+  }
+  return repeat;
+};
+
 const pct = (v: number) => `${String(Math.round(v)).padStart(3, "0")}%`;
 
 export function Loader() {
@@ -51,17 +69,20 @@ export function Loader() {
         return;
       }
 
+      const seen = repeatVisit();
+      root.current!.dataset.intro = seen ? "quick" : "full";
+
       const progress = { v: 0 };
       const tl = gsap.timeline({ paused: true, onComplete: () => gsap.set(root.current, { display: "none" }) });
 
-      tl.from(word, { autoAlpha: 0, yPercent: 12, duration: 1.2 })
-        .from(count, { autoAlpha: 0, duration: 0.6 }, 0.2)
+      tl.from(word, { autoAlpha: 0, yPercent: 12, duration: seen ? 0.5 : 1.2 })
+        .from(count, { autoAlpha: 0, duration: seen ? 0.2 : 0.6 }, seen ? 0.05 : 0.2)
         .to(progress, {
           v: 100,
-          duration: 1.8,
+          duration: seen ? 0.4 : 1.8,
           ease: "power2.inOut",
           onUpdate: () => void (count.textContent = pct(progress.v)),
-        }, 0.2)
+        }, seen ? 0.05 : 0.2)
 
         // 100% → numbers fade, word reaches toward the viewer
         .to(count, { autoAlpha: 0, y: 6, duration: 0.35, ease: "power2.in" }, ">+0.1")
