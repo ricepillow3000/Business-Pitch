@@ -37,8 +37,8 @@ export const H3 = ({ children }: { children: React.ReactNode }) => <h3 className
 /** An important notice, framed like a HUD panel. */
 export function Note({ label = "Important", children }: { label?: string; children: React.ReactNode }) {
   return (
-    <div className="max-w-[52ch] border border-flag/40 px-5 py-4">
-      <p className="font-hud text-beige">// {label}</p>
+    <div className="max-w-[52ch] border border-slate-line px-5 py-4">
+      <p className="font-label text-beige">// {label}</p>
       <div className="mt-2 space-y-3 text-flag">{children}</div>
     </div>
   );
@@ -61,11 +61,11 @@ export const A = ({ href, children }: { href: string; children: React.ReactNode 
 export function LegalPage({ href, label, intro, sections }: { href: LegalHref; label: string; intro: React.ReactNode; sections: LegalSection[] }) {
   const page = LEGAL_PAGES.find((p) => p.href === href)!;
   const toc = (
-    <ol className="font-hud">
+    <ol className="font-label">
       {sections.map((s, i) => (
         <li key={s.id}>
           <a href={`#${s.id}`} className="inline-flex min-h-11 items-center gap-3 text-flag">
-            <span className="text-flag/60">{String(i + 1).padStart(2, "0")}</span>
+            <span className="text-flag">{String(i + 1).padStart(2, "0")}</span>
             <span>{s.heading}</span>
           </a>
         </li>
@@ -76,21 +76,16 @@ export function LegalPage({ href, label, intro, sections }: { href: LegalHref; l
   return (
     <main>
       <section id="top" data-section data-label={label} className="gutter relative min-h-svh pt-32 pb-28 md:pt-44">
-        <div className="flex items-center gap-4 font-hud text-flag">
-          <span className="h-1.5 w-1.5 bg-beige" />
-          <span>// {label}</span>
-          <span className="h-px flex-1 bg-slate-line" />
-        </div>
-
-        <h1 className="quiet mt-16 w-fit font-wide text-display text-beige md:mt-24" style={{ viewTransitionName: page.vt }}>
+        {/* no label badge above the title: the HUD's bottom label already names the page */}
+        <h1 className="quiet w-fit font-wide text-display text-beige" style={{ viewTransitionName: page.vt }}>
           {page.title}
         </h1>
-        <p className="mt-6 flex flex-wrap gap-x-8 gap-y-2 font-hud text-flag">
+        <p className="mt-6 flex flex-wrap gap-x-8 gap-y-2 font-label text-flag">
           <span>Effective // <Ph k="effectiveDate" /></span>
           <span>Last updated // {LAST_UPDATED}</span>
         </p>
         {LEGAL_STATUS && (
-          <p data-legal-status className="mt-8 w-fit max-w-[52ch] border border-beige/50 px-4 py-3 font-hud text-beige">
+          <p data-legal-status className="mt-8 w-fit max-w-[52ch] border border-beige/50 px-4 py-3 font-label text-beige">
             {LEGAL_STATUS}
           </p>
         )}
@@ -98,12 +93,12 @@ export function LegalPage({ href, label, intro, sections }: { href: LegalHref; l
 
         <div className="mt-16 grid gap-12 md:mt-24 md:grid-cols-[17rem_1fr] md:gap-16">
           {/* table of contents: collapsible on phones (progressive disclosure), sticky beside the text on wide screens */}
-          <details className="border border-slate-line px-5 py-4 md:hidden">
-            <summary className="font-hud text-beige">On this page</summary>
-            <div className="mt-4">{toc}</div>
+          <details className="border border-slate-line px-5 md:hidden">
+            <summary className="flex min-h-12 items-center font-label text-beige">On this page</summary>
+            <div className="pb-4">{toc}</div>
           </details>
           <nav aria-label="On this page" className="hidden self-start md:sticky md:top-28 md:block">
-            <p className="mb-5 font-hud text-beige">// On this page</p>
+            <p className="mb-5 font-label text-beige">// On this page</p>
             {toc}
           </nav>
 
@@ -111,7 +106,7 @@ export function LegalPage({ href, label, intro, sections }: { href: LegalHref; l
             {sections.map((s, i) => (
               <section key={s.id} id={s.id} aria-labelledby={`${s.id}-h`} className="scroll-mt-28 border-t border-slate-line py-10 first:border-t-0 first:pt-0">
                 <div className="flex items-baseline gap-4">
-                  <span aria-hidden className="font-hud text-flag/60">{String(i + 1).padStart(2, "0")}</span>
+                  <span aria-hidden className="font-label text-flag">{String(i + 1).padStart(2, "0")}</span>
                   <h2 id={`${s.id}-h`} className="font-wide text-[clamp(1.125rem,1.6vw,1.5rem)] leading-tight text-beige">
                     {s.heading}
                   </h2>
@@ -122,7 +117,7 @@ export function LegalPage({ href, label, intro, sections }: { href: LegalHref; l
           </div>
         </div>
 
-        <div className="mt-16 flex flex-wrap items-center justify-between gap-x-10 gap-y-6 border-t border-slate-line pt-8 font-hud text-flag">
+        <div className="mt-16 flex flex-wrap items-center justify-between gap-x-10 gap-y-6 border-t border-slate-line pt-8 font-label text-flag">
           <LegalLinks current={href} />
           <a href="/" className="hit">Back to JIDO</a>
         </div>

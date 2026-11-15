@@ -12,7 +12,11 @@ Prepared 2026-11-15 from the repository, the n8n workspace (read-only) and the p
 
 | Area | Finding | How it was checked |
 |---|---|---|
-| Website framework | Next.js 16, static export (`output: "export"`). No server code, API routes, database, accounts or forms. | `next.config.ts`, `app/` |
+| Website framework | Next.js 16, static export (`output: "export"`). No server code, API routes, database or accounts. One contact form (below). | `next.config.ts`, `app/` |
+| Contact form (`/contact`) | Sends name, email, business (optional), topic, message and the page it was sent from as JSON to the n8n webhook `jido-website-contact`. A hidden "website" field catches spam bots. If the webhook does not answer, the visitor is offered a Gmail draft instead. | `components/ContactForm.tsx`, `lib/site.ts` |
+| Contact form workflow | n8n workflow `N1PRPdxPmwsQiKkI` "[TEST] JIDO Website - Contact Form", **inactive (not published)**. Validates the fields, drops spam, appends valid inquiries to a "Website Inquiries" Google Sheets tab (Time, Name, Email, Business, Topic, Message, Page) and emails the owner with Gmail (reply-to = the visitor). Sheet link and owner email are still placeholders (`REPLACE_WITH_YOUR_SHEET_ID`, `owner@example.com`). It uses the existing "Google Sheets account" and "Gmail account" credentials in n8n. CORS allows any origin (`*`) until the real domain is known. | n8n API, 2026-11-15 |
+| Booking (`/book`) | Google Calendar appointment page, embedded only **after** the visitor clicks "Show available times" (nothing loads from Google before that). No booking link is set yet (`SITE.bookingUrl` is `null`), so the page currently offers a Gmail "discovery call request" instead. | `components/BookingEmbed.tsx`, `lib/site.ts` |
+| Share image and icons | `public/og.png`, `app/icon.svg`, `app/apple-icon.png`, `app/manifest.json`. No third-party requests. The share image is only referenced once `SITE.url` (the real domain) is set. | `lib/site.ts`, `app/layout.tsx` |
 | Cookies, analytics, tracking | None. No analytics, ad or tracking scripts. One `sessionStorage` item, `jido:intro`, that shortens the intro on repeat visits. | `package.json`, `lib/intro.ts`, page source |
 | Fonts | Self-hosted from npm packages (`@fontsource-variable/archivo`, `@fontsource-variable/jetbrains-mono`). No Google Fonts requests. | `app/globals.css` |
 | Outbound links | "Email" links open Gmail compose (`mail.google.com`) in a new tab when clicked. No other third-party requests. | `lib/contact.ts` |
@@ -53,6 +57,7 @@ Prepared 2026-11-15 from the repository, the n8n workspace (read-only) and the p
 | AI disclosure (6 sections, includes sensitive-information rules) | `/ai-disclosure` | `app/ai-disclosure/page.tsx` |
 | Legal contact and privacy requests (4 sections) | `/legal-contact` | `app/legal-contact/page.tsx` |
 | Shared layout (draft notice, dates, table of contents, sections) | | `components/LegalPage.tsx` |
+| Services, Pricing, Book a call, Contact (site pages, not legal pages) | `/services`, `/pricing`, `/book`, `/contact` | `app/*/page.tsx` |
 | Footer legal links | | `components/LegalLinks.tsx` |
 | Placeholders, dates, draft status | | `lib/legal.ts` |
 
@@ -76,6 +81,8 @@ n8n (n8n Cloud), Google Gemini API, OpenAI API (marked as possible future, not c
 - **AI receptionist users (processed for clients):** name, email, phone (optional), reason for contact and answers to qualifying questions, appointment preferences and confirmed date/time, messages and anything shared in the chat, AI-written conversation summary.
 - **Business clients:** business name, contact details, configuration (approved info, services, hours, rules), calendar and integration settings, account and billing information if applicable.
 - **Technical and usage:** usage records (listed above), error records, n8n run history, system performance information.
+- **Contact form senders:** name, email, business name (optional), topic, message, the page the form was sent from and the time; stored in the "Website Inquiries" sheet and the owner's Gmail once the workflow is published.
+- **Booking (after the visitor opts in):** whatever Google's booking page collects; Google may set its own cookies once the calendar is shown.
 - **Browser storage:** `jido:intro` in session storage; possible future chat conversation ID (to be confirmed).
 
 ## 6. Statements that need verification before publication
@@ -157,6 +164,9 @@ Which apply depends on where JIDO is based, where clients and their customers ar
 - [ ] Confirm the hosting provider, enable HTTPS and security headers, and update the Privacy policy with the host.
 - [ ] Describe exactly what the chat window stores in the browser.
 - [ ] Healthcare clients: separate compliance assessment, BAAs and eligible services, or do not onboard.
+- [ ] Contact form: fill in the sheet link and owner email in "Form Settings", set CORS to the real domain, test with the Test URL, then publish **only with the owner's approval**.
+- [ ] Booking: create the Google Calendar appointment schedule and paste its link into `SITE.bookingUrl`.
+- [ ] Set `SITE.url` to the real domain (adds canonical links and the share image).
 - [ ] Update `LAST_UPDATED` and re-run `node tests/verify.cjs`.
 
 ### Proposed retention policy (a business decision, not yet adopted)

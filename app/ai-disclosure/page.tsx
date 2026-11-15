@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import { A, LegalPage, Note, P, Ul } from "@/components/LegalPage";
 
-export const metadata: Metadata = { title: "AI disclosure | JIDO" };
+export const metadata: Metadata = pageMeta(
+  "AI disclosure | JIDO",
+  "How JIDO uses AI, what it can and cannot do, and when a person takes over. Draft pending legal review.",
+  "/ai-disclosure",
+);
 
 export default function AiDisclosure() {
   return (

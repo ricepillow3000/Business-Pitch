@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import { A, LegalPage, Note, P, Ph, Ul } from "@/components/LegalPage";
 
-export const metadata: Metadata = { title: "Terms of service | JIDO" };
+export const metadata: Metadata = pageMeta(
+  "Terms of service | JIDO",
+  "Draft terms of service for the JIDO website and AI automation services, pending review by a qualified attorney.",
+  "/terms",
+);
 
 /** Marks a clause an attorney must finish before these terms are used. */
 const Review = () => (

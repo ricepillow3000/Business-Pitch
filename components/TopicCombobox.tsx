@@ -46,7 +46,7 @@ export function TopicCombobox({ value, onChange }: { value: string; onChange: (v
 
   return (
     <div className="relative w-full max-w-md">
-      <label htmlFor={id} className="font-hud text-flag">
+      <label htmlFor={id} className="font-label text-flag">
         // What should run on its own?
       </label>
       <input
@@ -68,9 +68,9 @@ export function TopicCombobox({ value, onChange }: { value: string; onChange: (v
         onFocus={() => setOpen(true)}
         onBlur={() => setOpen(false)}
         onKeyDown={onKeyDown}
-        className="mt-3 block w-full border-b border-flag/50 bg-transparent py-3 text-lead text-beige placeholder:text-flag/70 focus:border-beige"
+        className="mt-3 block w-full border-b border-beige/50 bg-transparent py-3 text-lead text-beige placeholder:text-flag focus:border-beige"
       />
-      <ul id={listId} role="listbox" aria-label="Suggested tasks" hidden={!shown} className="absolute top-full left-0 z-30 mt-2 w-full border border-flag/40 bg-slate">
+      <ul id={listId} role="listbox" aria-label="Suggested tasks" hidden={!shown} className="absolute top-full left-0 z-30 mt-2 w-full border border-slate-line bg-slate">
         {options.map((t, i) => (
           <li
             key={t}

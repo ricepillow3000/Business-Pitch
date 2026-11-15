@@ -50,7 +50,14 @@
   letter-spacing: -0.03em;
   text-transform: uppercase;
 }
-/* HUD readouts */
+/* Labels in the page: mono, sentence case, readable size (all-caps stays in the HUD frame) */
+@utility font-label {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+}
+/* HUD readouts (the fixed frame, loader and footer status only) */
 @utility font-hud {
   font-family: var(--font-mono);
   font-size: var(--text-micro);
@@ -78,11 +85,10 @@ html {
   color: var(--color-beige);
   -webkit-font-smoothing: antialiased;
 }
-/* subtle blueprint grid, fixed behind everything (96px cells) */
+/* subtle blueprint grid, fixed behind everything (96px cells). Drawn as a tiny SVG
+   tile (two 1px lines), not a gradient: the background is a flat colour plus hairlines. */
 :root {
-  --grid:
-    linear-gradient(to right, oklch(69.41% 0.135 262.25 / 0.055) 1px, transparent 1px) center / 96px 96px fixed,
-    linear-gradient(to bottom, oklch(69.41% 0.135 262.25 / 0.055) 1px, transparent 1px) center / 96px 96px fixed;
+  --grid: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96'%3E%3Cpath d='M.5 0V96M0 .5H96' fill='none' stroke='%236e9bf0' stroke-opacity='.055'/%3E%3C/svg%3E") center / 96px 96px fixed;
 }
 body {
   font-family: var(--font-display);

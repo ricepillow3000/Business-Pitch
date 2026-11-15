@@ -42,7 +42,16 @@ With the dev server running (needs Playwright: `npm i -D playwright && npx playw
 node tests/verify.cjs http://localhost:3000
 ```
 
-111 checks: loader choreography, HUD bars + section label, cursor brackets, magnetic button, in-page navigation without reloads, every section's reveals, phone layout, reduced motion, zero JS errors, **the 20 UX & animation principles**, **the 20 design terms**, **the no-AI-slop scan** and **the legal pages** below.
+145 checks: loader choreography, HUD bars + section label, cursor brackets, magnetic button, in-page navigation without reloads, phone layout, reduced motion, zero JS errors, **the 20 UX & animation principles**, **the 20 design terms**, **the no-AI-slop scan**, **the 20 ways to unslop**, **the legal pages** and **the Services / Pricing / Book / Contact pages** below.
+
+## Launch settings (`lib/site.ts`)
+
+| Setting | Now | What it does |
+|---|---|---|
+| `url` | `null` | The real domain once owned. Adds canonical links and the share image (`public/og.png`). |
+| `bookingUrl` | `null` | Google Calendar appointment page. While empty, `/book` offers an email request. |
+| `contactEndpoint` | n8n webhook | The contact form posts here. The n8n workflow is **not published yet**, so the form falls back to a Gmail draft. |
+| `prices` | from $399 / $199 a month | Shown as plain "from" text on `/pricing`. Exact terms: `docs/business/PRICING-PROPOSAL.md`. |
 
 ## UX & animation principles (enforced)
 
@@ -118,6 +127,28 @@ The site is scanned for the usual "AI-made website" tells, on the home page and 
 | Hover animations, animated arrows | No `:hover` rule moves, scales or rotates anything |
 | Pricing tiers, fake testimonials, star ratings, bento grids, terminal windows, 3 cards in a row | None on the page; no `blockquote`, prices or ratings |
 | No Terms / no Privacy policy | `/privacy`, `/terms`, `/ai-disclosure` and `/legal-contact` exist and are linked from the footer |
+
+## 20 ways to unslop (enforced, every page)
+
+| # | Rule | How it is checked |
+|---|---|---|
+| 1, 17 | No purple gradient, no gradient backgrounds | No `gradient` in any background; no saturated purple anywhere. The grid is a tiny SVG tile of two hairlines. |
+| 2 | Consistent icons, no emojis | Every small icon is one of two 1px line SVGs (crosshair, arrow); no emoji or arrow characters in the text |
+| 3, 4 | No Inter, no italic serif word | All text is Archivo or JetBrains Mono; no italics |
+| 5 | No headline badge | Nothing sits just above any page's main headline (the HUD names the page) |
+| 6 | No 2-button hero | At most one button on any first screen |
+| 7 | Outer + inner radius match | Square corners everywhere (0 inside 0) |
+| 8 | Colour contrast | Every text measured where it is read: WCAG AA 4.5:1 (large 3:1), placeholders too |
+| 9, 12 | No glow, no glass | No shadows, no backdrop blur |
+| 10 | No coloured card borders | Every border is a neutral colour (slate line or beige) |
+| 11 | No identical cards | No group of 3+ look-alike boxes |
+| 13 | Ease up on all-caps labels | Small spaced-out caps only in the HUD readouts; page labels are mono, sentence case, 13px |
+| 14 | No stat banner | No row of big numbers |
+| 15 | No 1-2-3 steps | The process on `/services` is two short paragraphs |
+| 16 | Text wrapping | Headings `balance`, paragraphs `pretty`, no one-word last lines |
+| 18 | Not default shadcn | No shadcn classes; own focus ring |
+| 19 | No fade-in on every section | Each home section has its own entrance (uncover, word-by-word reading, diagram assembling, headline rise); only one uses opacity |
+| 20 | Favicon + meta tags | JIDO mark favicon, home-screen icon, manifest, unique title/description and Open Graph/Twitter tags on every page |
 
 ## Build (static)
 

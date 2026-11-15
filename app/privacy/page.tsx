@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import { A, H3, LegalPage, Note, P, Ph, Ul } from "@/components/LegalPage";
 
-export const metadata: Metadata = { title: "Privacy policy | JIDO" };
+export const metadata: Metadata = pageMeta(
+  "Privacy policy | JIDO",
+  "Draft privacy policy for the JIDO website and services: what information is collected, why, and the choices you have.",
+  "/privacy",
+);
 
 export default function Privacy() {
   return (
@@ -57,6 +62,10 @@ export default function Privacy() {
                 made-up customers. The AI receptionist is not yet connected to any live website and is not handling real customer conversations.
               </P>
               <P>
+                The workflow behind this website&apos;s contact form is also not switched on yet; until it is, the form offers to send your
+                message by email instead.
+              </P>
+              <P>
                 This policy describes how the service is designed to work. We will review and update it before we accept real customers, and the
                 date at the top will change when we do.
               </P>
@@ -69,8 +78,14 @@ export default function Privacy() {
           body: (
             <>
               <H3>Website visitors (collected by us)</H3>
-              <P>This website has no contact forms, accounts, cookies or analytics. We only receive information about you if you email us. Then we receive:</P>
-              <Ul items={["Your email address.", "Your name, if your email shows it.", "Any contact details and other information you include in your message."]} />
+              <P>This website has no accounts, cookies or analytics. We only receive information about you if you contact us or book a call:</P>
+              <Ul
+                items={[
+                  "Contact form: your name, email address, business name (optional), the topic you pick, your message and the page you sent it from.",
+                  "Email: your email address, your name if your email shows it, and anything you include in your message.",
+                  "Discovery call booking: the details you enter on the Google Calendar booking page, such as your name, email address and chosen time.",
+                ]}
+              />
               <P>
                 We do not collect your IP address, browser type, device information or browsing activity through this website. The company that
                 will host it (<Ph k="hostingProvider" />) may automatically record technical information such as IP address, browser type and the
@@ -171,12 +186,12 @@ export default function Privacy() {
               <P>We use these providers to run the service. Each processes the information it needs to do its job, under its own terms and privacy practices. Their data retention and AI training rules are not all the same.</P>
               <Ul
                 items={[
-                  <><strong className="text-beige">n8n (n8n Cloud):</strong> runs our automation workflows and processes the information passing through them, including conversations.</>,
+                  <><strong className="text-beige">n8n (n8n Cloud):</strong> runs our automation workflows and processes the information passing through them, including conversations and this website&apos;s contact form.</>,
                   <><strong className="text-beige">Google Gemini API:</strong> the AI model we use during development, and possibly in production, depending on how a client&apos;s service is configured.</>,
                   <><strong className="text-beige">OpenAI API:</strong> a possible future AI provider that may replace Gemini. It is not connected today.</>,
-                  <><strong className="text-beige">Google Sheets:</strong> stores leads, usage records and error records.</>,
-                  <><strong className="text-beige">Gmail:</strong> sends notifications to business owners and internal error alerts.</>,
-                  <><strong className="text-beige">Google Calendar:</strong> checks availability and creates confirmed appointments.</>,
+                  <><strong className="text-beige">Google Sheets:</strong> stores leads, contact form messages, usage records and error records.</>,
+                  <><strong className="text-beige">Gmail:</strong> sends notifications to business owners and to us, and internal error alerts.</>,
+                  <><strong className="text-beige">Google Calendar:</strong> checks availability and creates confirmed appointments, and runs the booking page for our discovery calls.</>,
                   <><strong className="text-beige">Website hosting (<Ph k="hostingProvider" />):</strong> serves this website.</>,
                 ]}
               />
@@ -314,11 +329,12 @@ export default function Privacy() {
           heading: "Cookies and tracking",
           body: (
             <>
-              <P>This website does not use cookies, analytics, advertising or tracking scripts.</P>
+              <P>This website does not set cookies and does not use analytics, advertising or tracking scripts.</P>
               <Ul
                 items={[
                   "It saves one small note (named jido:intro) in your browser's session storage, so the intro is shorter on your next visit. It stays on your device and is cleared when you close the tab.",
                   "Fonts are served from this website itself, not from a third party.",
+                  "The booking page only loads Google Calendar after you click \"Show available times\". From then on, Google may set its own cookies and collect information under its own privacy policy.",
                 ]}
               />
               <P>

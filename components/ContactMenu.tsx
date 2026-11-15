@@ -1,20 +1,20 @@
 "use client";
 
+import { Arrow } from "./Arrow";
 import { useEffect, useRef, useState } from "react";
-import { EMAIL as email, gmailFor } from "@/lib/contact";
+import { gmailFor } from "@/lib/contact";
 import { smooth } from "@/lib/lenis";
 import { Plus } from "./Plus";
 
 /**
- * "Start the conversation" button. Clicking it opens a small menu so the
- * visitor picks: write in Gmail (new tab) or copy the address. There is
- * deliberately no mailto: link, which would open Outlook on most PCs.
- * Closes on Escape or a click outside.
+ * "Start the conversation" button. Clicking it opens a small menu with three
+ * ways in (Hick's law: no more): book a discovery call, send a message, or
+ * write in Gmail (new tab). There is deliberately no mailto: link, which would
+ * open Outlook on most PCs. Closes on Escape or a click outside.
  */
 export function ContactMenu({ topic = "" }: { topic?: string }) {
   const gmail = gmailFor(topic.trim());
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -35,31 +35,6 @@ export function ContactMenu({ topic = "" }: { topic?: string }) {
       removeEventListener("keydown", onKey);
     };
   }, [open]);
-
-  // Optimistic update: say "Copied" the instant it is clicked, then confirm in the
-  // background; only if every way of copying fails does the label change back.
-  // Postel's law: accept whatever the browser allows. Modern clipboard first,
-  // then the old select-and-copy trick (works on plain http / older browsers).
-  const copy = async () => {
-    setCopied(true);
-    let ok = false;
-    try {
-      await navigator.clipboard.writeText(email);
-      ok = true;
-    } catch {
-      const t = Object.assign(document.createElement("textarea"), { value: email, readOnly: true });
-      t.style.cssText = "position:fixed;opacity:0";
-      document.body.append(t);
-      t.select();
-      try {
-        ok = document.execCommand("copy");
-      } catch {
-        /* still blocked: the address stays visible on the page */
-      }
-      t.remove();
-    }
-    setTimeout(() => setCopied(false), ok ? 2000 : 0);
-  };
 
   // Snappy (300ms or less) and staggered: the rows settle in just after the panel (follow-through).
   // Hover only swaps the background colour instantly: no hover animation.
@@ -99,26 +74,30 @@ export function ContactMenu({ topic = "" }: { topic?: string }) {
 
       <div
         id="contact-options"
-        className={`absolute top-full left-0 z-10 mt-3 w-[min(100%,26rem)] min-w-[18rem] origin-top-left border border-flag/40 bg-slate transition-[opacity,translate,scale,visibility] duration-250 ease-expo ${
+        className={`absolute top-full left-0 z-10 mt-3 w-[min(100%,26rem)] min-w-[18rem] origin-top-left border border-slate-line bg-slate transition-[opacity,translate,scale,visibility] duration-250 ease-expo ${
           open ? "visible translate-y-0 scale-100 opacity-100" : "invisible -translate-y-2 scale-[0.96] opacity-0"
         }`}
       >
-        <p className="border-b border-slate-line px-5 py-3 font-hud text-flag">// How would you like to email?</p>
-        <a href={gmail} target="_blank" rel="noopener noreferrer" {...row(0)} onClick={() => setOpen(false)}>
-          <span className="font-hud text-flag">01</span>
+        <p className="border-b border-slate-line px-5 py-3 font-label text-flag">// How would you like to start?</p>
+        <a href="/book" {...row(0)}>
           <span className="flex-1">
-            <span className="block font-wide text-sm text-beige">Gmail</span>
+            <span className="block font-wide text-sm text-beige">Book a discovery call</span>
+            <span className="block text-sm text-flag">Pick a time that suits you</span>
+          </span>
+        </a>
+        <a href={topic.trim() ? `/contact?topic=${encodeURIComponent(topic.trim())}` : "/contact"} {...row(1)}>
+          <span className="flex-1">
+            <span className="block font-wide text-sm text-beige">Send a message</span>
+            <span className="block text-sm text-flag">A short form, we reply by email</span>
+          </span>
+        </a>
+        <a href={gmail} target="_blank" rel="noopener noreferrer" {...row(2)} onClick={() => setOpen(false)}>
+          <span className="flex-1">
+            <span className="block font-wide text-sm text-beige">Email in Gmail</span>
             <span className="block text-sm text-flag">Opens a new email in Gmail</span>
           </span>
-          <span aria-hidden className="text-beige">↗</span>
+          <span className="text-beige"><Arrow /></span>
         </a>
-        <button type="button" {...row(1, copied ? "bg-flag/15" : "")} onClick={copy}>
-          <span className="font-hud text-flag">02</span>
-          <span className="flex-1">
-            <span className="block font-wide text-sm text-beige">{copied ? "Copied" : "Copy address"}</span>
-            <span className="block text-sm break-all text-flag">{email}</span>
-          </span>
-        </button>
       </div>
     </div>
   );

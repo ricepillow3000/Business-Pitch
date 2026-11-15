@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/site";
 import { A, LegalPage, P, Ph, Ul } from "@/components/LegalPage";
 
-export const metadata: Metadata = { title: "Legal contact | JIDO" };
+export const metadata: Metadata = pageMeta(
+  "Legal contact | JIDO",
+  "How to reach JIDO about privacy requests, legal notices and questions about these policies.",
+  "/legal-contact",
+);
 
 export default function LegalContact() {
   return (

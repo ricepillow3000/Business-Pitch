@@ -15,7 +15,7 @@ export function LegalLinks({ current, className = "" }: { current?: LegalHref; c
           href={p.href}
           aria-current={p.href === current ? "page" : undefined}
           // min-h-11: a real 44px row, so stacked links never steal each other's taps
-          className={`inline-flex min-h-11 w-fit items-center ${p.href === current ? "text-beige" : ""}`}
+          className={`inline-flex min-h-11 min-w-11 w-fit items-center ${p.href === current ? "text-beige" : ""}`}
           style={p.href === current ? undefined : { viewTransitionName: p.vt }}
         >
           {p.label}

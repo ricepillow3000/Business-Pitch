@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { introMode, onReveal } from "@/lib/intro";
+import { NAV } from "@/lib/site";
 import { Logo } from "./Logo";
 import { Plus } from "./Plus";
 
@@ -19,7 +20,8 @@ import { Plus } from "./Plus";
  */
 export function HUD() {
   const root = useRef<HTMLDivElement>(null);
-  const home = usePathname() === "/"; // on /privacy and /terms the links lead back home
+  const path = usePathname();
+  const home = path === "/"; // on other pages the links lead back home
 
   useGSAP(
     (_, contextSafe) => {
@@ -88,7 +90,15 @@ export function HUD() {
         <a href={home ? "#top" : "/"} data-fade aria-label={home ? "JIDO, back to top" : "JIDO, home"} className="hit pointer-events-auto">
           <Logo markClassName="h-7 w-7" />
         </a>
-        <a href={home ? "#initiation" : "/#initiation"} data-fade className="hit pointer-events-auto ml-auto font-hud">
+        {/* wide screens: the main pages; phones keep just Contact (the footer lists the rest) */}
+        <nav data-fade aria-label="Main" className="pointer-events-auto ml-auto hidden items-center gap-7 font-hud md:flex">
+          {NAV.filter((l) => l.href !== "/contact").map((l) => (
+            <a key={l.href} href={l.href} aria-current={path === l.href ? "page" : undefined} className={`hit ${path === l.href ? "text-beige" : ""}`}>
+              {l.label}
+            </a>
+          ))}
+        </nav>
+        <a href={home ? "#initiation" : "/#initiation"} data-fade className="hit pointer-events-auto ml-auto font-hud md:ml-7">
           Contact
         </a>
         {corner}
@@ -117,7 +127,7 @@ export function HUD() {
         SYS.LINK // STABLE &nbsp;·&nbsp; 0x7F3A-02C9 &nbsp;·&nbsp; E1B4 9C07 33AF
       </p>
       <p data-fade className="absolute top-1/2 right-6 hidden -translate-y-1/2 font-hud whitespace-nowrap opacity-60 [writing-mode:vertical-rl] lg:block">
-        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.5.0
+        JIDO.AI // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.6.0
       </p>
     </div>
   );
