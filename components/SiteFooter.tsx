@@ -2,6 +2,7 @@ import { EMAIL, GMAIL } from "@/lib/contact";
 import { NAV } from "@/lib/site";
 import { Arrow } from "./Arrow";
 import { LegalLinks } from "./LegalLinks";
+import { Ph } from "./LegalPage";
 import { Logo } from "./Logo";
 import { Plus } from "./Plus";
 
@@ -37,6 +38,10 @@ export function SiteFooter() {
           Back to top <Arrow dir="up" />
         </a>
       </div>
+      {/* who runs JIDO: the name comes from lib/legal.ts (a marked placeholder until it is filled in) */}
+      <p data-operator className="col-span-full border-t border-slate-line pt-6 text-flag">
+        JIDO. An AI automation platform developed and operated by <Ph k="operatorName" />.
+      </p>
     </footer>
   );
 }

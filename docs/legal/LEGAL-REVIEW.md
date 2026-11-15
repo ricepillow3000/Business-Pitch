@@ -105,6 +105,8 @@ The pages make **no** claim of HIPAA, GDPR, CCPA/CPRA, SOC 2 or ISO 27001 compli
 
 ## 7. Placeholders still to fill in (`lib/legal.ts`)
 
+Filled in: `operatorName` = John Nguyen (provided by the owner). Footer of every page: "JIDO. An AI automation platform developed and operated by John Nguyen." Confirm this is the exact legal name to use.
+
 | Key | Placeholder shown on the pages |
 |---|---|
 | `businessName` | [Legal business name] |

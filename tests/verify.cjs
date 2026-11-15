@@ -824,6 +824,7 @@ const instrument = () => {
       apple: meta('link[rel="apple-touch-icon"]', "href"), manifest: meta('link[rel="manifest"]', "href"),
       theme: meta('meta[name="theme-color"]'), lang: document.documentElement.lang,
     };
+    out.operator = document.querySelector("footer [data-operator]")?.textContent.replace(/\s+/g, " ").trim() || "";
     return out;
   });
 
@@ -942,6 +943,7 @@ const instrument = () => {
   us(17, "No gradient backgrounds: flat colour + hairline grid (an SVG tile)", clean("gradients"), show("gradients", "none"));
   us(18, "Restyle default shadcn: no shadcn classes, own focus ring", clean("shadcn") && focus.style === "solid" && focus.width === "1px" && focus.offset === "6px" && focus.shadow === "none", `${show("shadcn", "no shadcn")}; focus ${focus.style} ${focus.width} offset ${focus.offset}`);
   us(19, "No fade-in on every section: one reading effect, other sections are just there", fades.length <= 1 && readWords, `sections waiting to fade: ${fades.map(([s, n]) => `${s} (${n})`).join(", ") || "none"}; friction words reach full strength: ${readWords}`);
+  check("Footer on every page: JIDO, an AI automation platform developed and operated by [the operator's legal name]", SITE_PAGES.every((p) => /^JIDO\. An AI automation platform developed and operated by .+\.$/.test(scans[p].operator)), scans["/"].operator);
   const metaOk = SITE_PAGES.every((p) => { const m = scans[p].meta; return m.title && m.description.length >= 50 && m.description.length <= 160 && m.ogTitle === m.title && m.ogDescription === m.description && m.ogType && m.ogSite === "JIDO" && m.twitter && m.icon && m.apple && m.manifest && m.theme && m.lang === "en"; });
   const unique = new Set(SITE_PAGES.map((p) => scans[p].meta.title)).size === SITE_PAGES.length && new Set(SITE_PAGES.map((p) => scans[p].meta.description)).size === SITE_PAGES.length;
   us(20, "Custom favicon + meta tags: JIDO mark icon, home-screen icon, manifest, unique title + description + social tags on every page", metaOk && unique && /<rect/.test(iconFile) && scans["/"].meta.iconType === "image/svg+xml" && manifest?.name === "JIDO" && ogFile === 200,

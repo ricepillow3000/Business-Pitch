@@ -117,10 +117,13 @@ export function LegalPage({ href, label, intro, sections }: { href: LegalHref; l
           </div>
         </div>
 
-        <div className="mt-16 flex flex-wrap items-center justify-between gap-x-10 gap-y-6 border-t border-slate-line pt-8 font-label text-flag">
+        <footer className="mt-16 flex flex-wrap items-center justify-between gap-x-10 gap-y-6 border-t border-slate-line pt-8 font-label text-flag">
           <LegalLinks current={href} />
           <a href="/" className="hit">Back to JIDO</a>
-        </div>
+          <p data-operator className="w-full max-w-[64ch] text-flag">
+            JIDO. An AI automation platform developed and operated by <Ph k="operatorName" />.
+          </p>
+        </footer>
       </section>
     </main>
   );

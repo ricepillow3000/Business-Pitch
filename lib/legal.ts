@@ -4,6 +4,7 @@
  * of inventing anything. See docs/legal/LEGAL-REVIEW.md for the full checklist.
  */
 export const LEGAL = {
+  operatorName: "John Nguyen" as string | null, // the legal name of the person who develops and operates JIDO (shown in the footer)
   businessName: null as string | null, // e.g. "JIDO LLC"
   mailingAddress: null as string | null,
   privacyEmail: null as string | null,
@@ -16,6 +17,7 @@ export const LEGAL = {
 export type LegalKey = keyof typeof LEGAL;
 
 export const PLACEHOLDER: Record<LegalKey, string> = {
+  operatorName: "Operator's legal name",
   businessName: "Legal business name",
   mailingAddress: "Business mailing address",
   privacyEmail: "Privacy contact email",
