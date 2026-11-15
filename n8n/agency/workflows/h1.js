@@ -81,7 +81,10 @@ const parse = node({
   config: {
     name: 'Parse And Check Answer',
     parameters: { mode: 'runOnceForEachItem', language: 'javaScript', jsCode: `// Accepts the AI answer only if it is valid JSON with every required key. Otherwise ok = false.
-const req = $('Build Safe Prompt').item.json;
+// One request per run (callers use "run once for each item"), so the answer always belongs
+// to the request that came in. If several arrive anyway, n8n's item link is used.
+const reqs = $('Build Safe Prompt').all();
+const req = (reqs.length === 1 ? reqs[0] : $('Build Safe Prompt').item).json;
 const out = $input.item.json || {};
 const FENCE = String.fromCharCode(96).repeat(3);
 const raw = String(out.text === undefined || out.text === null ? '' : out.text);
@@ -177,20 +180,24 @@ const usage = node({
 });
 
 const result = node({
-  type: 'n8n-nodes-base.set',
-  version: 3.4,
+  type: 'n8n-nodes-base.code',
+  version: 2,
   config: {
     name: 'Return Answer',
-    parameters: { mode: 'manual', assignments: { assignments: [
-      { id: 'r-ok', name: 'ok', value: expr('{{ $("Parse And Check Answer").item.json.ok }}'), type: 'boolean' },
-      { id: 'r-data', name: 'data', value: expr('{{ $("Parse And Check Answer").item.json.data }}'), type: 'object' },
-      { id: 'r-err', name: 'error', value: expr('{{ $("Parse And Check Answer").item.json.error }}'), type: 'string' },
-      { id: 'r-lead', name: 'leadId', value: expr('{{ $("Parse And Check Answer").item.json.leadId }}'), type: 'string' },
-      { id: 'r-in', name: 'estInputTokens', value: expr('{{ $("Parse And Check Answer").item.json.estInputTokens }}'), type: 'number' },
-      { id: 'r-out', name: 'estOutputTokens', value: expr('{{ $("Parse And Check Answer").item.json.estOutputTokens }}'), type: 'number' }
-    ] } }
+    parameters: { mode: 'runOnceForAllItems', language: 'javaScript', jsCode: `// Returns the checked answer(s), each carrying its Lead ID, even if the Usage Log write failed.
+return $('Parse And Check Answer').all().map((i) => {
+  const a = i.json || {};
+  return { json: { ok: a.ok === true, data: a.data || {}, error: a.error || '', leadId: a.leadId || '', task: a.task || '', estInputTokens: a.estInputTokens || 0, estOutputTokens: a.estOutputTokens || 0 } };
+});` }
   },
   output: [{ ok: true, data: { a: 1 }, error: '', leadId: 'L-sample.example', estInputTokens: 1000, estOutputTokens: 200 }]
+});
+
+const pace = node({
+  type: 'n8n-nodes-base.wait',
+  version: 1.1,
+  config: { name: 'Pace AI Requests', parameters: { resume: 'timeInterval', amount: 4, unit: 'seconds' } },
+  output: [{ prompt: 'Analyze...' }]
 });
 
 const note = sticky('## H1 AI Brain (helper) - the ONLY place the AI model lives\nEvery AI step (research now; email drafts and reply sorting later) calls this.\n\n**To switch Gemini to OpenAI:** replace only **AI Model (swap here)** and update AI_MODEL_LABEL + prices in the CRM Settings tab.\n\nSafety: website/email text is wrapped as DATA; the AI has no tools and cannot act; answers must be valid JSON with the required keys or they are rejected (ok = false). Each call adds a Usage Log row.\n\n**AI Model is switched OFF** until a free Gemini key is selected. Never select Gateway credits.', [buildPrompt], { color: 5 });
@@ -198,6 +205,7 @@ const note = sticky('## H1 AI Brain (helper) - the ONLY place the AI model lives
 export default workflow('agency-h1-ai-brain', '[AGENCY] H1 Helper: AI Brain')
   .add(whenCalled)
   .to(buildPrompt)
+  .to(pace)
   .to(runModel)
   .to(parse)
   .to(usage)

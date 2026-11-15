@@ -17,6 +17,7 @@ Date: 2026-11-15.
 | A2 | `[AGENCY] A2 Research & Analyze` | 7dhya6JoSAHZggga | robots.txt → homepage + /contact → fixed-rule facts → AI Brain → quote check → A3 score → save to Leads + Review Queue |
 | A3 | `[AGENCY] A3 Score & Qualify` | mMSUbBxUdWhbLP5e | Fixed point rules: Warm/Cold; Hot only from a real reply |
 | A10 | `[AGENCY] A10 Agency Error Logger` | PROqvCbu5CjS6wuY | Logs failures to the Error Log tab. **Owner email step switched off** |
+| H5 | `[AGENCY] H5 Helper: Read One Business Website` | yzcEwRluSeGL8h3O | Added in the follow-up. Reads **one** lead's website per run (robots.txt → homepage → /contact) and stamps the result with that lead's ID |
 
 Also done:
 - The 5 dental workflows were renamed `[CLIENT DEMO] Dental Front Desk - …` and tagged `client-demo`. They stay inactive, and their history is kept.
@@ -114,7 +115,37 @@ Scenarios covered in A2's local and n8n tests:
 1. **The `URL` tool doesn't work inside n8n Code steps.** Every website looked invalid, so every lead was treated as "no website". Local tests didn't catch it because the tool works on a normal computer. A1's earlier runs 45 and 47 only checked pass/fail, so they missed it too.
    - **Fix:** website addresses are now read with plain text rules in both A1 and A2. Re-tested in runs 54 and 78.
 2. **Matching website pages to the right business.** Item matching through HTTP and pinned steps wasn't reliable.
-   - **Fix:** the robots.txt, homepage and contact-page results are now matched by their position in the list. The HTTP step keeps the order of its input.
+   - **First fix (replaced):** results were matched by their position in the list.
+   - **Final fix (after your review):** position matching was removed. See "Phase B follow-up" below. Each business is now read in its own separate run of a new helper, H5. Every result carries that business's **Lead ID**, and A2 matches results by Lead ID only.
+
+## Phase B follow-up: Lead ID matching instead of list position (requested in your review)
+
+**Why:** list-position matching could give one business another business's website facts if the order of items ever changed.
+
+**What changed:**
+- **New helper H5** (`yzcEwRluSeGL8h3O`). A2 calls it once per lead (n8n's "run once for each item" mode). Each call reads only that lead's website, and its answer is stamped with the lead's ID.
+- **A2** now has "Match Website Results". It matches each answer to its lead **by Lead ID**. A missing answer means "try again later". A duplicate answer, an answer for an unknown ID, or an error item is ignored and logged, never applied to another lead.
+- **The AI Brain (H1)** now returns the Lead ID with every answer. A2 matches AI answers by Lead ID too, and a missing answer counts as a failed attempt for that lead only.
+- **H1** also got a 4-second pause between AI requests, to stay inside the free Gemini rate limit.
+
+**Tests:**
+
+| Test | Scenario | Result |
+|---|---|---|
+| Local (37 A2 tests) | Results **shuffled**, one **missing**, one **duplicated**, one with a **swapped/unknown Lead ID**, AI answers in reverse order | Every lead got only its own facts. Missing → retry later. Duplicate/unknown → ignored. **Pass** |
+| Run 82 | A2 full run with pinned helper answers | **Pass** |
+| Run 85 | Flip on Peachtree (website + AI path) | **Pass**: Peachtree "Lead ready for review"; Marietta in the same run flagged "Suspicious website text" + "AI wording check" |
+| Run 87 | Flip on Glow Lab (robots.txt blocks) | **Pass** |
+| Runs 90–92 | H5 on its own: website read / robots.txt blocked / no website | **Pass** on all three paths |
+| Run 93 | H1 with the new Lead ID answer format (AI step pinned) | **Pass** |
+
+All temporary checkers were removed afterwards.
+
+## CRM check (`Agency CRM - DEMO`)
+
+- **Still not confirmed.** My Google Drive connection uses a different Google account from the one n8n's Google login uses, so it can't see that account's files. n8n doesn't let my connection read run results either.
+- **I did not create a new one**, to avoid duplicates.
+- **Same CRM everywhere (checked in the code):** A1, A2, C1, C2, C3, C4 and A0b all take the CRM link from **H0 only**. H6 and H8 receive it from whichever workflow calls them. A3 and H5 don't use the CRM. So pasting the link once into **H0 → "CRM Location"** connects every workflow to the same sheet.
 
 ## Not tested yet (needs real accounts or approval)
 
@@ -123,7 +154,7 @@ Scenarios covered in A2's local and n8n tests:
 - Fetching real websites (robots.txt, HTML from real sites, JavaScript-heavy sites).
 - Real OpenStreetMap queries. They're off by default.
 - A10 firing automatically. n8n fires error workflows only for **published** workflows, and A10 isn't linked yet.
-- Anything in Phases C–F: outreach drafting and sending, reply reading, meetings, reports, the Scheduler.
+- Phases D–F: reply reading, meetings, reports, the Scheduler. Phase C was built afterwards; see [`agency-phase-c-test-log.md`](agency-phase-c-test-log.md).
 
 ## Errors and limitations
 

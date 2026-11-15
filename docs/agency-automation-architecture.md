@@ -1,7 +1,7 @@
 # AI Agency Business-Development System: architecture
 
-Status: **Phase A approved. Phase B (research and qualification) built as inactive drafts and tested with fictional data. Waiting for approval before Phase C.**
-Results of every test: [`agency-phase-b-test-log.md`](agency-phase-b-test-log.md).
+Status: **Phases B (research) and C (outreach) built as inactive drafts and tested with fictional data. Nothing is published or scheduled, and no email has been sent. Waiting for approval before Phase D.**
+Test results: [`agency-phase-b-test-log.md`](agency-phase-b-test-log.md) and [`agency-phase-c-test-log.md`](agency-phase-c-test-log.md).
 Date: 2026-11-15. Prices and policies came from web search results (the official pricing pages were blocked from this environment). Re-check them on the official pages before money is spent.
 
 ---
@@ -60,7 +60,10 @@ New workflows start with `[AGENCY]`. I'll add tags `client-demo` and `agency-int
 
 ## 4. Workflows (Area A)
 
-Built in Phase B (all **inactive**; n8n IDs in brackets): A0 `rD4hJcfkfQ9W9LWl`, A1 `FnT4B2K1YiL3jIvh`, A2 `7dhya6JoSAHZggga`, A3 `mMSUbBxUdWhbLP5e`, A10 `PROqvCbu5CjS6wuY`, H0 `EwEgjWyFneyjExzI`, H1 `wD2yN7CAk0xz0oiW`, H4 `W4IqWN9nxt1abIKb`. Not built yet: A4–A9, S, H2, H3.
+Built (all **inactive**; n8n IDs in brackets):
+- **Phase B:** A0 `rD4hJcfkfQ9W9LWl`, A1 `FnT4B2K1YiL3jIvh`, A2 `7dhya6JoSAHZggga`, A3 `mMSUbBxUdWhbLP5e`, A10 `PROqvCbu5CjS6wuY`, H0 `EwEgjWyFneyjExzI`, H1 `wD2yN7CAk0xz0oiW`, H4 `W4IqWN9nxt1abIKb`, H5 `yzcEwRluSeGL8h3O`.
+- **Phase C:** C1 `eqbjpKZJScLED37u` (was "A4"), C2 `RWPxQsyACQRt2Ns5`, C3 `GT2ASqrdI85j1PI9` (was "A5"), C4 `epz2HgdmEtiua5pF`, H6 `Xq13OdqjXhOLBWZr`, H7 `bl3Ls9beQiS3HewK`, H8 `r3tCCgZ7xETHATMd`, A0b `xag2fppLlVjKTesi`.
+- **Not built yet:** A6–A9, S, H2, H3.
 
 | # | Workflow | Stage | What it does | Starts by |
 |---|---|---|---|---|
@@ -68,8 +71,14 @@ Built in Phase B (all **inactive**; n8n IDs in brackets): A0 `rD4hJcfkfQ9W9LWl`,
 | A1 | Discover Businesses | 1 | Takes businesses from the **Discovery Inbox** tab (and, only if switched on, a small OpenStreetMap search); checks name, Georgia, target city, usable website or phone; skips duplicates and Suppression List entries; adds them as "Not researched" | Scheduler (weekdays) |
 | A2 | Research & Analyze | 2 | Reads each business's **official website only** (robots.txt first, then home and /contact pages, one page every 1.5 s); fixed rules find emails, phones, booking tools, forms, chat; the AI writes evidence-based notes; quotes the AI gives are kept only if they really appear on the page | Scheduler (3× a day, small batches) |
 | A3 | Score & Qualify | 3 | Fixed, written-down point rules give Warm or Cold; Hot only comes from a real reply | Called by A2 and A6 |
-| A4 | Draft Outreach | 4 | AI personalizes our approved template for approved leads; puts the draft in the CRM for review | Scheduler (2× a day) |
-| A5 | Send Approved Outreach | 4 | Sends only approved drafts, after every safety check (section 7) | Scheduler (hourly, business hours) |
+| C1 (A4) | Draft Outreach Emails | 4 | Drafts one evidence-based idea per Warm/Hot lead, removes unsupported claims, adds the legal footer; saves it as Pending review | Scheduler (2× a day) |
+| C2 | Record Outreach Approvals | 4 | Records your Approve/Reject with a fingerprint of the exact text; any edit cancels approval | Scheduler (every 30 min) |
+| C3 (A5) | Send Approved Outreach | 4 | Sends only approved, unchanged drafts after every safety check (section 7). **Off.** | Scheduler (hourly, business hours) |
+| C4 | Unsubscribe | 4–5 | Unsubscribe link, one-click POST and STOP replies → Suppression List | Web link / called by A6 |
+| H5 | Helper: Read One Website | 2 | One lead per run, result stamped with its Lead ID | Called by A2 |
+| H6 | Helper: Suppression Check | 4–5 | The only suppression check; blocks everyone if the list can't be read | Called |
+| H7 | Helper: Send One Email | 4 | One email per run via the Gmail API with List-Unsubscribe headers. **Send step disabled, no login** | Called by C3 |
+| H8 | Helper: Save CRM Updates | 4 | Writes rows matched by ID, never by position | Called |
 | A6 | Reply Monitor & Classifier | 5 | Reads only replies to our outreach threads; sorts them into the 8 categories; handles opt-outs; creates Gmail **drafts** (not sends) from the Rulebook; sends anything unusual to the Review Queue | Gmail check every 30 min, weekdays |
 | A7 | Meeting Scheduler | 6 | Offers real open times; after the prospect confirms, a booking goes to your approval queue, then onto the agency calendar | Called by A6 |
 | A8 | Morning Report (8:00 AM ET) | 7 | Today's meetings, research notes, follow-ups due, warnings | Scheduler |
@@ -144,7 +153,9 @@ AI only collects **evidence**. The score comes from fixed rules written in code,
 
 **Before any email is sent, every check must pass:**
 1. **Pause switch** in Settings is `NO`, and the Scheduler is on.
-2. The lead is `Outreach approved` **and** its draft is `Approved` by a person.
+2. The draft is `Approved` with a reviewer name, and its text **still matches the approved fingerprint** (any edit cancels approval).
+2b. `GMAIL_SENDING_ENABLED = YES` in Settings (starts as `NO`), and it's a weekday inside the sending hours (default 9:00–16:00 New York).
+2c. In DEMO mode, only `.example` addresses can be sent to.
 3. The address and its domain are **not** on the Suppression List, and the lead has not opted out.
 4. The email was found on the business's own website. We never guess addresses.
 5. **Sender check:** the Gmail account in use matches the sender address in Settings.
@@ -162,6 +173,9 @@ AI only collects **evidence**. The score comes from fixed rules written in code,
 | Sent | Gmail returned a message ID; it is saved in the Ledger and the Lead | Automation |
 | Failed | Gmail returned an error. **Not retried automatically**; goes to the Review Queue | Automation |
 | Suppressed | The address or domain is on the Suppression List, or the lead opted out. Never sent | Automation |
+| Rejected | A person picked "Rejected". Never sent | **Person only** |
+
+The Send Ledger also uses "Not sent – duplicate / paused / suppressed / could not verify / Gmail step off". These record a skipped attempt and **don't** block a later, legitimate try.
 
 **Why repeated runs can't send twice:** the Send Ledger key is `Lead ID | step` (for example `L-acme.example|initial`). A5 sends only when no row with that key exists. It writes the "Sending" row **before** calling Gmail. A row stuck at "Sending" (for example after a crash) is never resent automatically. It goes to the Review Queue, because we can't know if Gmail sent it.
 
@@ -180,6 +194,32 @@ If H0 can't read the Settings tab, it treats both switches as `YES`.
 - Include a working opt-out, and honor it within 10 business days.
 
 Breaking these rules can cost tens of thousands of dollars per email. A quick review by a lawyer before going live is recommended.
+
+### 7b. Phase C compliance findings (built, but not yet verified end-to-end)
+
+**What every draft contains (added by fixed code, not by the AI):**
+- The sender name and agency name.
+- The physical mailing address. If it's missing, the draft shows `[MISSING: AGENCY_MAILING_ADDRESS]` and C3 refuses to send.
+- An optional ad-disclosure line (`AD_DISCLOSURE_LINE` in Settings).
+- The opt-out line: "reply STOP or use this link: …?t=<token>". The link carries only a random token, never the email address.
+
+**Gmail and unsubscribe headers. What I confirmed:**
+- **n8n's built-in Gmail step can't add custom email headers.** So H7 builds the full email itself and sends it through the Gmail API (`users.messages.send`) with the same Gmail login.
+- H7 always adds `List-Unsubscribe: <mailto:…>, <https://…?t=token>`.
+- H7 adds `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (one-click unsubscribe) **only if** `ONE_CLICK_UNSUBSCRIBE_VERIFIED = YES`. It's `NO` now.
+- **One-click unsubscribe is NOT verified, and I don't claim compliance.** Verifying it needs three things, each needing your approval:
+  1. C4 published, so its web address works.
+  2. One real test email to an inbox you own.
+  3. Checking that Gmail shows the "Unsubscribe" button and that clicking it adds the address to the Suppression List.
+- n8n's Gmail login probably grants full mailbox access (from memory, not verified). Phase C doesn't need more Gmail access than "send".
+
+**Still outstanding before any real email (requirements, not legal advice):**
+1. A real physical mailing address (street address, PO box, or registered commercial mail-receiving agency) in Settings.
+2. Lawyer review of the template and footer, including whether an ad disclosure is needed.
+3. **STOP replies must be noticed.** Until Phase D's reply reader exists, someone must check the inbox every business day and enter opt-outs by hand.
+4. Opt-outs must keep working for **at least 30 days** after each email, and be honored within **10 business days**. Ours apply straight away, but only while C4 is published.
+5. Gmail's bulk-sender rules (one-click unsubscribe, SPF/DKIM/DMARC) are strict above about 5,000 emails a day. We'll be far below that, but a custom domain with SPF/DKIM/DMARC is still recommended for deliverability.
+6. Verify that n8n's Code step provides secure random numbers for unsubscribe tokens.
 
 ## 8. Agency Rulebook (Stage 5)
 
@@ -233,7 +273,7 @@ We don't rely on one source. Every source feeds the same **Discovery Inbox** tab
 | Gmail login in n8n | Sending; later, reading replies | Free | ✅ Connected ("Gmail account"). **Please confirm which address it is.** It should be the co-founder's dedicated business Gmail. |
 | Google Calendar login + a dedicated "Agency Sales Calls" calendar | Stage 6 | Free | ❌ Needed in Phase D |
 | Free Gemini API key (AI Studio, personal or agency Google account, **no billing**) | AI Brain | Free | ❌ Needed in Phase B. A school Gemini subscription does **not** include API access, and school accounts may block AI Studio. |
-| Agency details: legal/trade name, sender name, **physical mailing address**, website, services, pricing policy | Emails, Rulebook | — | ❌ Needed in Phase C |
+| Agency details: legal/trade name, sender name, sender email, **physical mailing address**, website, services, pricing policy | Emails, Rulebook | — | ❌ Needed now: type them into the CRM Settings tab (`AGENCY_NAME`, `SENDER_NAME`, `SENDER_EMAIL`, `AGENCY_MAILING_ADDRESS`, `AGENCY_WEBSITE`) |
 | Own domain + Google Workspace mailbox (for example name@youragency.com) | Strongly recommended before **real** outreach (deliverability, trust, Gmail rules) | About $10–20 a year for the domain, plus about $7–8.40 per user per month (verify) | Optional; needs your approval |
 | Mailing address (PO box or virtual mailbox), if you have no business address | Required by law in outreach emails | About $5–30 a month | Only if needed |
 | Lawyer review of the outreach template | Compliance | Varies | Recommended before going live |
@@ -250,6 +290,8 @@ We don't rely on one source. Every source feeds the same **Discovery Inbox** tab
 | Google Sheets, Gmail, Calendar | $0 |
 | OpenStreetMap | $0 |
 | **Total** | **$0 during the trial, then about $24/month** |
+
+Phase C adds **no paid service**. It uses the same Google Sheets and Gmail logins and the same AI Brain, with one short AI request per draft (my estimate: roughly 2,000 input + 400 output tokens; free tier while developing).
 
 ### Live, at a modest volume
 Example month: 400 businesses researched, 150 emails, 25 replies, 5 meetings.
@@ -352,7 +394,7 @@ Agent B would help the co-founder show a qualified prospect a working example be
 - **Website research:** sites built mostly with JavaScript may show little text, which means lower confidence. We never invent missing facts. They go in "Unknowns to verify".
 - **Discovery quality:** open data misses some businesses and has some closed ones. Every lead is verified on its own website before outreach.
 - **My connection to n8n can't:** create folders, create Data Tables, see or create logins, or read past run details in depth. Those need a few clicks from you.
-- **n8n Code steps:** the browser `URL` tool isn't available inside n8n's Code steps, and item matching through pinned test data isn't reliable. Website addresses are read with plain text rules, and results are matched by list position. Both were found and fixed during Phase B testing.
+- **n8n Code steps:** the browser `URL` tool isn't available inside n8n's Code steps, and item matching through pinned test data isn't reliable. Website addresses are read with plain text rules. Results are matched by **Lead ID / Draft ID / Ledger Row ID**, never by list position (fixed after the Phase B review).
 
 ## 14. Phased plan
 
@@ -360,10 +402,70 @@ Agent B would help the co-founder show a qualified prospect a working example be
 |---|---|---|---|
 | **A** (this) | Architecture | Approve this plan | None |
 | **B** Research and qualification ✅ built | A0, H0, H1, H4, A1, A2, A3, A10 (all off; the Scheduler moves to Phase C so nothing can run on a timer yet); tests with fictional Atlanta businesses and mocked website pages | Confirm the DEMO CRM and paste its link in H0; free Gemini key; the two folders | A0 was run once to create `Agency CRM - DEMO` (needs your confirmation that it exists); one AI test on fictional data still to do |
-| **C** Outreach | A4, A5, Suppression List, Send Ledger, pause switch; tests with fictional @example.com addresses and simulated sending | Agency details; email template wording; daily limit | None (no real sends) |
+| **C** Outreach ✅ built | C1–C4, H6, H7, H8, A0b; 86 local tests + n8n runs 95–114 with fictional `.example` addresses and simulated sending | Agency details; mailing address; template wording; daily limit; run A0b once | None (no real sends) |
 | **D** Inbox and calendar | A6, A7, H2, H3; tests with simulated replies and simulated calendar | Calendar login and agency calendar; confirm the Gmail account | Optional: read-only test on a test label in the inbox |
 | **E** Reports | A8, A9 calculated from Activity Log records; tests on fictional records | Report recipient email | One test report sent to you |
 | **F** End-to-end | Full run with fictional businesses; pass/fail per stage | Review results | None |
 | **Go-live** (later, step by step) | Switch on one piece at a time | Explicit approval for each | First real discovery run, then the first real email (to one approved lead), then reply monitoring, then the schedules |
 
 Every "built" claim will come with a test result.
+
+
+## 15. How Phase B connects to Phase C
+
+```
+ PHASE B (research)                                 PHASE C (outreach)
+ ──────────────────                                 ──────────────────
+ A1 Discover ─► A2 Research ─► A3 Score              C1 Draft (AI writes ONE idea,
+                 │  └─ H5 reads one website             code removes made-up claims,
+                 │     (matched by Lead ID)             adds footer) ── checks H6 first
+                 ▼                                        │
+       Leads tab: Warm/Hot + "Ready for review"  ───────►┘
+                                                          ▼
+                                            Outreach Drafts tab: "Pending review"
+                                                          │
+                                                YOU pick Approve / Reject
+                                                          ▼
+                                            C2 records it + fingerprint of the text
+                                            (edit later? → approval cancelled)
+                                                          ▼
+              Settings: OUTREACH_PAUSED=YES     C3 Send: switches → H6 → ledger claim
+                        GMAIL_SENDING_ENABLED=NO        → re-check pause + H6 → H7
+                                                          ▼
+                                            H7 Send One Email ✖ DISABLED, no login
+                                                          ▼
+                                            Send Ledger: Sent / Failed / Uncertain
+                                                          
+ Unsubscribe link / STOP reply ─► C4 ─► Suppression List ─► H6 blocks C1 and C3
+```
+
+All CRM links come from H0, so every workflow uses the same sheet.
+
+## 16. Phase D interface design (designed only, **not built**)
+
+| Piece | Job | Inputs → outputs | Safety rules |
+|---|---|---|---|
+| **A6 Reply Monitor** | Every 30 min on weekdays, look **only** at Gmail threads whose thread ID is in the Send Ledger | Gmail thread IDs from the ledger → `{fromEmail, subject, text, gmailMessageId, gmailThreadId, leadId}` per new reply | Read-only Gmail access to our own threads. Email text is treated as untrusted data and never followed as an instruction. Each message is processed once (message-ID ledger). |
+| **Opt-out first** | Every reply goes to C4 "When Called With A Reply" **before** anything else | `{fromEmail, subject, text, gmailMessageId, gmailThreadId}` → Suppressed / not an opt-out | Already built and tested in C4. Fails closed to the Review Queue. |
+| **Reply classifier** | A new AI Brain task `reply_classify` | Reply text → one of: Interested, Question, Meeting request, Not now, Not interested, Unsubscribe, Out of office, Other; plus confidence and quoted evidence | Low confidence or "Other" → Review Queue. Hot only from Interested/Meeting request (A3 rule). |
+| **Rulebook replies** | Draft an answer using only Rulebook statements | Category + Rulebook tab → **Gmail draft** (never sent automatically) + Review Queue item | Must-ask-a-human topics (pricing, contracts, guarantees, legal, data) always go to the Review Queue with no draft. Your approval is still required to send. |
+| **Escalation** | Anything unusual goes to the Review Queue and the evening report | Review item `{type, leadId, summary, link}` | Never silently dropped. |
+| **A7 Meeting scheduler + H2/H3** | Offer real open times from the "Agency Sales Calls" calendar; book only after the prospect confirms **and** you approve | Lead + calendar free/busy → 3 proposed times → approved booking → calendar event + meeting row | Double-booking guard (re-check right before booking). Test calendar only during development. |
+| **Calendar sync** | Keep the CRM Meetings tab in step with the calendar | Calendar events with our booking ID → Meetings tab | Only events we created (by booking ID) are touched. |
+
+Phase D needs: a Google Calendar login and a dedicated calendar, the confirmed Gmail account, read access to Gmail (a permission step you approve), and the real Rulebook text.
+
+## 17. A10 Error Logger: what changes when it's switched on
+
+A10 is configured and was tested with fake errors (runs 80 and 81). It is **not** published.
+
+When you approve it, I would:
+1. **Publish A10.** n8n only runs error workflows that are published.
+2. Set A10 as the "Error workflow" in the settings of each agency workflow.
+
+What that changes:
+- When a **published** agency workflow fails, n8n automatically starts A10, which writes one row to the CRM Error Log tab. Test runs never trigger it.
+- **No email is sent.** The owner-email step stays switched off until you approve it separately.
+- Since none of the other workflows are published yet, nothing would happen until they are.
+- It doesn't use AI and costs nothing extra. Error runs count as normal n8n executions, but there should be very few.
+- To undo: unpublish A10, or clear the "Error workflow" setting.

@@ -35,7 +35,7 @@ async function run(code, input, nodeData = {}, opts = {}) {
   const $ = (name) => { if (!(name in nodeData)) throw new Error('Node not executed: ' + name); return wrap(nodeData[name]); };
   const $input = { ...wrap(input), item: { json: input[opts.itemIndex || 0] } };
   const fn = new AsyncFunction('$input', '$', 'DateTime', '$execution', '$getWorkflowStaticData', '$json', code);
-  return fn($input, $, DateTime, { id: 'test-1', mode: opts.mode || 'test' }, () => (opts.static || {}), input[0]);
+  return fn($input, $, opts.DateTime || DateTime, { id: opts.execId || 'test-1', mode: opts.mode || 'test' }, () => (opts.static || {}), input[0]);
 }
 module.exports = { load, codeNodes, check, run };
 if (require.main === module) { for (const f of process.argv.slice(2)) { console.log(f); const r = check(f); if (r.bad) process.exitCode = 1; } }
