@@ -11,7 +11,9 @@ export const metadata: Metadata = {
     "We build intelligent workflows for local businesses. Automate the repetitive, focus on the essential.",
 };
 
-export const viewport: Viewport = { themeColor: "#14181b" };
+// viewport-fit=cover: the page may run under a phone's notch; the HUD and gutters
+// then pad themselves with env(safe-area-inset-*) so nothing gets hidden.
+export const viewport: Viewport = { themeColor: "#14181b", viewportFit: "cover" };
 
 /**
  * Persistent shell. Mounted once; nothing here ever re-mounts.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { EMAIL as email, GMAIL as gmail } from "@/lib/contact";
+import { EMAIL as email, gmailFor } from "@/lib/contact";
 import { smooth } from "@/lib/lenis";
 import { Plus } from "./Plus";
 
@@ -11,7 +11,8 @@ import { Plus } from "./Plus";
  * deliberately no mailto: link, which would open Outlook on most PCs.
  * Closes on Escape or a click outside.
  */
-export function ContactMenu() {
+export function ContactMenu({ topic = "" }: { topic?: string }) {
+  const gmail = gmailFor(topic.trim());
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -35,9 +36,12 @@ export function ContactMenu() {
     };
   }, [open]);
 
+  // Optimistic update: say "Copied" the instant it is clicked, then confirm in the
+  // background; only if every way of copying fails does the label change back.
   // Postel's law: accept whatever the browser allows. Modern clipboard first,
   // then the old select-and-copy trick (works on plain http / older browsers).
   const copy = async () => {
+    setCopied(true);
     let ok = false;
     try {
       await navigator.clipboard.writeText(email);
@@ -54,9 +58,7 @@ export function ContactMenu() {
       }
       t.remove();
     }
-    if (!ok) return;
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    setTimeout(() => setCopied(false), ok ? 2000 : 0);
   };
 
   // Snappy (300ms or less) and staggered: the rows settle in just after the panel (follow-through).
@@ -97,8 +99,8 @@ export function ContactMenu() {
 
       <div
         id="contact-options"
-        className={`absolute top-full left-0 z-10 mt-3 w-[min(100%,26rem)] min-w-[18rem] border border-flag/40 bg-slate transition-[opacity,translate,visibility] duration-250 ease-expo ${
-          open ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0"
+        className={`absolute top-full left-0 z-10 mt-3 w-[min(100%,26rem)] min-w-[18rem] origin-top-left border border-flag/40 bg-slate transition-[opacity,translate,scale,visibility] duration-250 ease-expo ${
+          open ? "visible translate-y-0 scale-100 opacity-100" : "invisible -translate-y-2 scale-[0.96] opacity-0"
         }`}
       >
         <p className="border-b border-slate-line px-5 py-3 font-hud text-flag">// How would you like to email?</p>

@@ -1,7 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { ContactMenu } from "@/components/ContactMenu";
+import { LegalLinks } from "@/components/LegalLinks";
+import { TopicCombobox } from "@/components/TopicCombobox";
 import { Logo } from "@/components/Logo";
 import { Plus } from "@/components/Plus";
 import { WorkflowGraph } from "@/components/WorkflowGraph";
@@ -51,6 +53,7 @@ function Line({ children, className = "" }: { children: string; className?: stri
 
 export default function Home() {
   const root = useRef<HTMLElement>(null);
+  const [topic, setTopic] = useState("");
 
   useGSAP(
     (_, contextSafe) => {
@@ -188,14 +191,17 @@ export default function Home() {
       {/* ── THE INITIATION ───────────────────────────────── */}
       <section id="initiation" data-section data-label="INITIATION" className="gutter relative flex min-h-svh flex-col pt-32 pb-24 md:pt-48">
         <Tag>The initiation</Tag>
-        <h2 data-lines className="quiet mt-16 max-w-[18ch] font-wide text-display text-beige md:mt-24">
+        <h2 data-lines className="quiet mt-16 max-w-[20ch] font-wide text-display text-beige md:mt-24">
           Let systems handle the mechanical.
         </h2>
         <p data-reveal className="quiet mt-8 w-fit text-lead text-flag">Focus on what you do best.</p>
 
-        {/* z-20: the reveal transform makes this a stacking context; keep the open menu above what follows */}
-        <div data-reveal className="relative z-20 mt-16 md:mt-20">
-          <ContactMenu />
+        {/* z-30 / z-20: reveal transforms make these stacking contexts; keep open lists above what follows */}
+        <div data-reveal className="relative z-30 mt-14 md:mt-16">
+          <TopicCombobox value={topic} onChange={setTopic} />
+        </div>
+        <div data-reveal className="relative z-20 mt-10 md:mt-12">
+          <ContactMenu topic={topic} />
         </div>
 
         <dl data-reveal className="quiet mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 md:mt-14">
@@ -212,10 +218,7 @@ export default function Home() {
           <span className="flex flex-col gap-3">
             <Logo markClassName="h-8 w-8" />
             <span>© 2026 JIDO</span>
-            <span className="flex gap-6">
-              <a href="/privacy" className="hit">Privacy</a>
-              <a href="/terms" className="hit">Terms</a>
-            </span>
+            <LegalLinks />
           </span>
           <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="hit w-fit normal-case tracking-wider">{EMAIL}<span aria-hidden> ↗</span><span className="sr-only"> (opens Gmail in a new tab)</span></a>
           <span>SYS.STATUS // ONLINE</span>

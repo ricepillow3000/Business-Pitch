@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
-import { onReveal } from "@/lib/intro";
+import { introMode, onReveal } from "@/lib/intro";
 import { Logo } from "./Logo";
 import { Plus } from "./Plus";
 
@@ -51,6 +51,9 @@ export function HUD() {
         onUpdate: (self) => void (scroll.textContent = String(Math.round(self.progress * 100)).padStart(3, "0")),
       });
 
+      // Moving between pages of this site: the frame is a shared element, it just stays.
+      if (introMode() === "none") return;
+
       // Enter on the curtain split: corners snap in from the outside, data fades up.
       gsap.set("[data-corner]", { scale: 2.5, autoAlpha: 0 });
       gsap.set("[data-fade]", { autoAlpha: 0 });
@@ -77,7 +80,10 @@ export function HUD() {
   return (
     <div ref={root} className="pointer-events-none fixed inset-0 z-50 text-flag">
       {/* top bar */}
-      <div data-hud-bar className="hud-bar absolute inset-x-0 top-0 flex h-14 items-center gap-3 border-b border-slate-line px-4 md:h-[72px] md:gap-5 md:px-6">
+      <div
+        data-hud-bar
+        className="hud-bar absolute inset-x-0 top-0 box-content flex h-14 items-center gap-3 border-b border-slate-line pt-[env(safe-area-inset-top)] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))] [view-transition-name:hud-top] md:h-[72px] md:gap-5 md:pr-[max(1.5rem,env(safe-area-inset-right))] md:pl-[max(1.5rem,env(safe-area-inset-left))]"
+      >
         {corner}
         <a href={home ? "#top" : "/"} data-fade aria-label={home ? "JIDO, back to top" : "JIDO, home"} className="hit pointer-events-auto">
           <Logo markClassName="h-7 w-7" />
@@ -89,7 +95,10 @@ export function HUD() {
       </div>
 
       {/* bottom bar */}
-      <div data-hud-bar className="hud-bar absolute inset-x-0 bottom-0 flex h-12 items-center gap-3 border-t border-slate-line px-4 md:h-16 md:gap-5 md:px-6">
+      <div
+        data-hud-bar
+        className="hud-bar absolute inset-x-0 bottom-0 box-content flex h-12 items-center gap-3 border-t border-slate-line pr-[max(1rem,env(safe-area-inset-right))] pb-[env(safe-area-inset-bottom)] pl-[max(1rem,env(safe-area-inset-left))] [view-transition-name:hud-bottom] md:h-16 md:gap-5 md:pr-[max(1.5rem,env(safe-area-inset-right))] md:pl-[max(1.5rem,env(safe-area-inset-left))]"
+      >
         {corner}
         <p data-fade className="font-hud">
           <span data-hud-label className="inline-flex items-center gap-2.5">
@@ -108,7 +117,7 @@ export function HUD() {
         SYS.LINK // STABLE &nbsp;·&nbsp; 0x7F3A-02C9 &nbsp;·&nbsp; E1B4 9C07 33AF
       </p>
       <p data-fade className="absolute top-1/2 right-6 hidden -translate-y-1/2 font-hud whitespace-nowrap opacity-60 [writing-mode:vertical-rl] lg:block">
-        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.4.0
+        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.5.0
       </p>
     </div>
   );

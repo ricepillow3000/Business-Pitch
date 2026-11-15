@@ -8,19 +8,23 @@
    config. Every token becomes both a CSS variable and a utility
    (e.g. --color-beige → bg-beige / text-beige / var(--color-beige)).
 
-   Slate  — Dark Slate Gray. The background. Neutral (no green cast).
-   Beige  — logo and main titles only.
-   Flag   — Flag Blue. Body copy and HUD only (brackets, crosshairs, data).
+   Colours are written in OKLCH (lightness, chroma, hue): perceptually even,
+   so "lighter" and "darker" steps look evenly spaced to the eye.
+   (sRGB hex in brackets, for reference.)
+
+   Slate  (#14181b): Dark Slate Gray. The background. Neutral (no green cast).
+   Beige  (#f5f5dc): logo and main titles only.
+   Flag   (#6e9bf0): Flag Blue. Body copy and HUD only (brackets, crosshairs, data).
             True Flag Blue (#0a3161) is 1.4:1 on slate: invisible as text.
             So `flag` is the same hue lifted to 6.5:1 for text/lines on dark,
             and `flag-deep` is the true Flag Blue, used for text on beige.
    ════════════════════════════════════════════════════════════════════ */
 @theme {
-  --color-slate: #14181b;
-  --color-slate-line: #2b3237;
-  --color-beige: #f5f5dc;
-  --color-flag: #6e9bf0;
-  --color-flag-deep: #0a3161;
+  --color-slate: oklch(20.61% 0.0086 240.33);
+  --color-slate-line: oklch(31.25% 0.0132 238.99);
+  --color-beige: oklch(96.36% 0.0328 107);
+  --color-flag: oklch(69.41% 0.135 262.25);
+  --color-flag-deep: oklch(31.69% 0.0952 256.22);
 
   --font-display: "Archivo Variable", "Arial Black", system-ui, sans-serif;
   --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
@@ -53,8 +57,10 @@
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
+/* Safe area: never closer to the edge than a phone's notch / rounded corners allow */
 @utility gutter {
-  padding-inline: clamp(1.25rem, 5vw, 6rem);
+  padding-left: max(clamp(1.25rem, 5vw, 6rem), env(safe-area-inset-left));
+  padding-right: max(clamp(1.25rem, 5vw, 6rem), env(safe-area-inset-right));
 }
 /* Marathon chamfer */
 @utility chamfer {
@@ -65,6 +71,9 @@
 html {
   /* every digit has the same width: counters never jitter */
   font-variant-numeric: tabular-nums;
+  /* kerning: use the font's own pair spacing (AV, To, LT...) */
+  font-kerning: normal;
+  text-rendering: optimizeLegibility;
   background: var(--color-slate);
   color: var(--color-beige);
   -webkit-font-smoothing: antialiased;
@@ -72,8 +81,8 @@ html {
 /* subtle blueprint grid, fixed behind everything (96px cells) */
 :root {
   --grid:
-    linear-gradient(to right, rgb(110 155 240 / 0.055) 1px, transparent 1px) center / 96px 96px fixed,
-    linear-gradient(to bottom, rgb(110 155 240 / 0.055) 1px, transparent 1px) center / 96px 96px fixed;
+    linear-gradient(to right, oklch(69.41% 0.135 262.25 / 0.055) 1px, transparent 1px) center / 96px 96px fixed,
+    linear-gradient(to bottom, oklch(69.41% 0.135 262.25 / 0.055) 1px, transparent 1px) center / 96px 96px fixed;
 }
 body {
   font-family: var(--font-display);
@@ -99,6 +108,26 @@ body {
 ::selection { background: var(--color-beige); color: var(--color-flag-deep); }
 :focus-visible { outline: 1px solid var(--color-flag); outline-offset: 6px; }
 
+/* No widows: headings balance their lines, paragraphs never end on one lonely word */
+h1, h2, h3 { text-wrap: balance; }
+p, li, dd { text-wrap: pretty; }
+
+/* Affordance: links inside running text look like links */
+.prose-link, p a, dd a, li > a.prose-link {
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-slate-line);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+}
+
+/* Shared element transitions between pages (e.g. the footer "Privacy" link
+   morphs into the Privacy page title). Browsers without support just navigate. */
+@view-transition { navigation: auto; }
+::view-transition-group(*) { animation-duration: 0.5s; animation-timing-function: var(--ease-expo); }
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none; }
+}
+
 /* Text sits on a quiet patch of background, so the grid fades out around the words
    (lines stay crisp in the open space, quieter where you read). The patch is a
    rectangle with feathered edges, squared to the grid: no radial glow. */
@@ -109,7 +138,7 @@ body {
   inset: -2.5rem calc(-1 * min(3rem, 4vw)); /* sideways: always inside the page gutter */
   z-index: -1;
   pointer-events: none;
-  background: rgb(20 24 27 / 0.85);
+  background: oklch(20.61% 0.0086 240.33 / 0.85);
   --feather: 2.5rem;
   mask-image:
     linear-gradient(to right, transparent, #000 var(--feather), #000 calc(100% - var(--feather)), transparent),

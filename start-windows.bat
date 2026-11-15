@@ -20,7 +20,7 @@ if not exist node_modules (
   call npm.cmd install || (echo Install failed. & pause & exit /b 1)
 )
 echo.
-echo JIDO build 1.4.0
+echo JIDO build 1.5.0
 echo Starting at http://localhost:3000  ^(keep this window open, close it to stop^)
 start "" cmd /c "timeout /t 8 >NUL & start http://localhost:3000"
 call npm.cmd run dev -- -p 3000

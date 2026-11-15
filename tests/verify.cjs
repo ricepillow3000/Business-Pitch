@@ -11,11 +11,43 @@ const results = [];
 const check = (name, ok, detail = "") => results.push({ name, ok: !!ok, detail });
 const wait = (p, ms) => p.waitForTimeout(ms);
 
+// Installed in every page before it loads: layout-shift total (CLS), whether a
+// cross-document view transition ran, and helpers used by the design checks.
+const instrument = () => {
+  window.__cls = 0;
+  try {
+    new PerformanceObserver((l) => { for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value; }).observe({ type: "layout-shift", buffered: true });
+  } catch {}
+  addEventListener("pagereveal", (e) => { window.__vt = !!e.viewTransition; });
+  // any CSS colour (oklch, oklab, color-mix...) -> [r, g, b, a] in sRGB
+  window.__rgb = (c) => {
+    const x = (window.__ctx ??= Object.assign(document.createElement("canvas"), { width: 1, height: 1 }).getContext("2d", { willReadFrequently: true }));
+    x.clearRect(0, 0, 1, 1); x.fillStyle = "#000"; x.fillStyle = c; x.fillRect(0, 0, 1, 1);
+    return [...x.getImageData(0, 0, 1, 1).data];
+  };
+  // the rendered lines of an element: [{ words, chars }]
+  window.__lines = (el) => {
+    const lines = [];
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    for (let n; (n = walker.nextNode()); ) {
+      for (const m of n.textContent.matchAll(/\S+/g)) {
+        const r = document.createRange(); r.setStart(n, m.index); r.setEnd(n, m.index + m[0].length);
+        const rect = r.getClientRects()[0]; if (!rect) continue;
+        let line = lines.find((l) => Math.abs(l.top - rect.top) < 4);
+        if (!line) lines.push((line = { top: rect.top, words: 0, chars: 0 }));
+        line.words += 1; line.chars += m[0].length + 1;
+      }
+    }
+    return lines.sort((a, b) => a.top - b.top);
+  };
+};
+
 (async () => {
   const browser = await chromium.launch();
 
   /* ── DESKTOP ─────────────────────────────────────────────── */
   const page = await browser.newPage({ viewport: { width: 1440, height: 900 } });
+  await page.addInitScript(instrument);
   const errors = [];
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
@@ -32,6 +64,10 @@ const wait = (p, ms) => p.waitForTimeout(ms);
     seen.add(await page.textContent("[data-count]"));
     await wait(page, 80);
   }
+  const optical = await page.evaluate(() => {
+    const r = document.querySelector("[data-word]").getBoundingClientRect();
+    return { word: Math.round(r.top + r.height / 2), mid: Math.round(innerHeight / 2) };
+  });
   check("Loader: % counts up with zero-padded tabular digits", seen.size > 5 && [...seen].every((s) => /^\d{3}%$/.test(s)), [...seen].slice(0, 6).join(" "));
   await page.waitForFunction(() => document.querySelector("[data-count]").textContent === "100%");
   check("Loader: reaches 100%", true);
@@ -61,7 +97,7 @@ const wait = (p, ms) => p.waitForTimeout(ms);
     const contentLeft = sr.left + parseFloat(getComputedStyle(sec).paddingLeft);
     const edge = [...document.querySelectorAll("[data-fade]")].find((e) => e.textContent.includes("SYS.LINK")).getBoundingClientRect();
     return {
-      solid: bars.length === 2 && bars.every((b) => getComputedStyle(b).backgroundColor === "rgb(20, 24, 27)"),
+      solid: bars.length === 2 && bars.every((b) => { const [r, g, bl, a] = window.__rgb(getComputedStyle(b).backgroundColor); return Math.abs(r - 20) <= 2 && Math.abs(g - 24) <= 2 && Math.abs(bl - 27) <= 2 && a === 255; }),
       top: inside('a[aria-label="JIDO, back to top"]', bars[0]) && inside('a[href="#initiation"]', bars[0]),
       bottom: inside("[data-hud-label]", bars[1]) && inside("[data-scroll]", bars[1]),
       margin: edge.right < contentLeft, edgeRight: edge.right, contentLeft,
@@ -249,7 +285,7 @@ const wait = (p, ms) => p.waitForTimeout(ms);
 
   // 18 Postel's law: copying still works when the browser blocks the clipboard API
   await wait(page, 2200);
-  await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { value: () => Promise.reject(new Error("blocked")) }));
+  await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: () => Promise.reject(new Error("blocked")) }));
   await page.click("#contact-options button");
   await wait(page, 200);
   ux(18, "Postel's law: copy falls back gracefully when the clipboard API is blocked", (await page.textContent("#contact-options button")).includes("Copied"));
@@ -288,12 +324,12 @@ const wait = (p, ms) => p.waitForTimeout(ms);
 
   // 12 Overall appeal: every piece of text uses the brand palette only
   const palette = await page.evaluate(() => {
-    const ok = ["245, 245, 220", "110, 155, 240", "10, 49, 97"];
+    const ok = [[245, 245, 220], [110, 155, 240], [10, 49, 97]];
     const bad = new Set();
     document.querySelectorAll("body *").forEach((el) => {
       if (![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) return;
-      const c = getComputedStyle(el).color.replace(/rgba?\(|\)/g, "").split(",").slice(0, 3).map((x) => x.trim()).join(", ");
-      if (!ok.includes(c)) bad.add(c);
+      const [r, g, b] = window.__rgb(getComputedStyle(el).color);
+      if (!ok.some(([R, G, B]) => Math.abs(R - r) <= 3 && Math.abs(G - g) <= 3 && Math.abs(B - b) <= 3)) bad.add(`${r}, ${g}, ${b}`);
     });
     return [...bad];
   });
@@ -353,7 +389,8 @@ const wait = (p, ms) => p.waitForTimeout(ms);
       }
       // (skip Next.js's own dev-only overlay, which never ships to the real site)
       if (!cs.fontFamily.includes("__nextjs") && /(^|[\s,"])(inter|geist|space grotesk)/i.test(cs.fontFamily)) add("font", cs.fontFamily);
-      if (/^rgba?\(255, 255, 255(, 1)?\)$/.test(cs.backgroundColor)) add("white", name(el));
+      const bgc = window.__rgb ? window.__rgb(cs.backgroundColor) : [0, 0, 0, 0];
+      if (bgc[0] > 250 && bgc[1] > 250 && bgc[2] > 250 && bgc[3] > 250) add("white", name(el));
     }
     const text = document.body.innerText + " " + document.title;
     const grab = (re) => (text.match(re) || [""])[0];
@@ -386,7 +423,116 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   check("No AI slop: no pure white backgrounds", none("white"), why("white"));
   check("No AI slop: no hover animations (hover never moves, scales or rotates)", none("hoverAnimation"), why("hoverAnimation"));
   check("No AI slop: no pricing tiers, fake testimonials or star ratings", none("pricing/testimonials"));
-  check("Footer links to a Privacy policy and Terms of service", (await page.$('footer a[href="/privacy"]')) && (await page.$('footer a[href="/terms"]')));
+  const legalLinks = await page.evaluate(() => [...document.querySelectorAll('footer nav[aria-label="Legal"] a')].map((a) => a.getAttribute("href")));
+  check("Footer links to Privacy, Terms, AI disclosure and Legal contact", ["/privacy", "/terms", "/ai-disclosure", "/legal-contact"].every((h) => legalLinks.includes(h)), legalLinks.join(" "));
+
+  /* ── 20 DESIGN TERMS (enforced) ──────────────────────────────── */
+  const dt = (n, name, ok, detail) => check(`D${String(n).padStart(2, "0")} ${name}`, ok, detail);
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await wait(page, 600);
+  const type = await page.evaluate(() => {
+    const h1 = getComputedStyle(document.querySelector("h1"));
+    const hud = getComputedStyle(document.querySelector(".font-hud"));
+    return {
+      kerning: h1.fontKerning, rendering: h1.textRendering,
+      h1Track: parseFloat(h1.letterSpacing), hudTrack: parseFloat(hud.letterSpacing),
+      tabular: ["[data-scroll]", "[data-count]"].every((q) => getComputedStyle(document.querySelector(q)).fontVariantNumeric.includes("tabular-nums")),
+    };
+  });
+  dt(1, "Kerning: the font's own pair spacing is switched on", type.kerning === "normal" && type.rendering === "optimizelegibility", `${type.kerning}, ${type.rendering}`);
+  dt(2, "Optical centre: the intro word sits slightly above the true middle", optical.word < optical.mid - 10, `word centre ${optical.word}px, screen middle ${optical.mid}px`);
+  dt(3, "Tabular numbers: counters and readouts use equal-width digits", type.tabular);
+  dt(5, "Tracking: big titles tight, small HUD labels open", type.h1Track < 0 && type.hudTrack > 0, `title ${type.h1Track.toFixed(1)}px, HUD +${type.hudTrack.toFixed(1)}px`);
+
+  // running text = lowercase reading text (not uppercase display or HUD lines)
+  const reading = await page.evaluate(() => {
+    const els = [...document.querySelectorAll("main p, main li, main dd, main label, [data-reveal] span")].filter((el) => {
+      const cs = getComputedStyle(el);
+      return cs.textTransform !== "uppercase" && el.getClientRects().length && /[a-z]{3}/.test(el.textContent) && [...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+    });
+    const ctx = document.createElement("canvas").getContext("2d");
+    const xh = els.map((el) => {
+      const cs = getComputedStyle(el);
+      ctx.font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      return { t: el.textContent.trim().slice(0, 24), x: ctx.measureText("x").actualBoundingBoxAscent };
+    });
+    const paras = [...document.querySelectorAll("main p")].filter((el) => getComputedStyle(el).textTransform !== "uppercase" && el.getClientRects().length && /[a-z]{3}/.test(el.textContent));
+    const leading = paras.map((el) => { const cs = getComputedStyle(el); return { t: el.textContent.trim().slice(0, 24), r: parseFloat(cs.lineHeight) / parseFloat(cs.fontSize) }; });
+    const heads = [...document.querySelectorAll("main h1, main h2")].map((el) => { const cs = getComputedStyle(el); return parseFloat(cs.lineHeight) / parseFloat(cs.fontSize); });
+    const longest = Math.max(...paras.flatMap((el) => window.__lines(el).map((l) => l.chars)));
+    const widows = [...document.querySelectorAll("main h2, main p")].filter((el) => el.getClientRects().length).filter((el) => {
+      const l = window.__lines(el); return l.length > 1 && l[l.length - 1].words === 1;
+    }).map((el) => el.textContent.trim().slice(0, 30));
+    const wrap = { h: getComputedStyle(document.querySelector("main h2")).textWrapStyle, p: getComputedStyle(document.querySelector("main p")).textWrapStyle };
+    const underlined = [...document.querySelectorAll("main p a, main dd a")].every((a) => getComputedStyle(a).textDecorationLine.includes("underline"));
+    return { minX: Math.min(...xh.map((v) => v.x)), smallest: xh.sort((a, b) => a.x - b.x)[0], leading, heads, longest, widows, wrap, underlined };
+  });
+  dt(7, "x-height: lowercase reading text is at least 7px tall at its x-height", reading.minX >= 7, `smallest x-height ${reading.minX.toFixed(1)}px ("${reading.smallest?.t}")`);
+  dt(9, "Leading: paragraphs 1.4 to 1.8, headlines tight (1.15 or less)", reading.leading.every((l) => l.r >= 1.4 && l.r <= 1.8) && reading.heads.every((r) => r <= 1.15), reading.leading.filter((l) => l.r < 1.4 || l.r > 1.8).map((l) => `${l.t} ${l.r.toFixed(2)}`).join(" | ") || "all in range");
+  dt(12, "Widows: headings balance, paragraphs never end on one lonely word", reading.wrap.h === "balance" && reading.wrap.p === "pretty" && reading.widows.length === 0, reading.widows.join(" | ") || `${reading.wrap.h} / ${reading.wrap.p}`);
+  dt(15, "Line length: no reading line is longer than 80 characters", reading.longest <= 80, `longest line ${reading.longest} characters`);
+  dt(16, "Affordance: links in text are underlined, the button looks like a button", reading.underlined && (await page.$("button[data-magnetic] [data-press].bg-beige")) !== null);
+
+  const tokens = await page.evaluate(() => {
+    const css = getComputedStyle(document.documentElement);
+    const vars = ["--color-slate", "--color-slate-line", "--color-beige", "--color-flag", "--color-flag-deep"].map((v) => css.getPropertyValue(v).trim());
+    let safe = 0;
+    const walk = (rules) => { for (const r of rules) { if (r.cssText && r.cssText.includes("safe-area-inset")) safe++; if (r.cssRules) walk(r.cssRules); } };
+    for (const sh of document.styleSheets) { try { walk(sh.cssRules); } catch {} }
+    return { vars, safe, fit: document.querySelector('meta[name="viewport"]').content };
+  });
+  // the source defines them in OKLCH (Tailwind's CSS optimiser may serialise them as lab() in the browser)
+  const theme = require("fs").readFileSync(require("path").join(__dirname, "../app/globals.css"), "utf8").match(/@theme \{([\s\S]*?)\n\}/)[1];
+  const colourDefs = [...theme.matchAll(/--color-[\w-]+:\s*([^;]+);/g)].map((m) => m[1].trim());
+  dt(11, "OKLCH: every brand colour is defined in OKLCH", colourDefs.length === 5 && colourDefs.every((v) => v.startsWith("oklch(")), colourDefs.join(" | "));
+  dt(13, "Safe area: page may sit under a notch, HUD and gutters pad around it", tokens.fit.includes("viewport-fit=cover") && tokens.safe >= 3, `${tokens.fit}; ${tokens.safe} safe-area rules`);
+  dt(14, "Stagger: lists and menus enter one item after another", passed("UX 05"));
+
+  // combobox + optimistic update + origin-aware + interruptible menu, in the contact section
+  await page.evaluate(() => document.querySelector("[data-combobox]").scrollIntoView({ block: "center" }));
+  await wait(page, 900);
+  const lbHidden = await page.evaluate(() => document.querySelector('[role="listbox"]').hidden);
+  await page.click("[data-combobox]");
+  await wait(page, 150);
+  const lbOpen = await page.evaluate(() => !document.querySelector('[role="listbox"]').hidden && document.querySelector("[data-combobox]").getAttribute("aria-expanded") === "true");
+  await page.keyboard.type("inv");
+  await wait(page, 100);
+  const filtered = await page.evaluate(() => [...document.querySelectorAll('[role="option"]')].map((o) => o.textContent));
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await wait(page, 100);
+  const combo = await page.evaluate(() => ({
+    value: document.querySelector("[data-combobox]").value,
+    closed: document.querySelector('[role="listbox"]').hidden,
+    gmail: decodeURIComponent(document.querySelector("#contact-options a[target=_blank]").href),
+  }));
+  dt(17, "Combobox: type to filter, arrow keys + Enter pick, the choice fills the email subject", filtered.length === 1 && filtered[0] === "Invoicing" && combo.value === "Invoicing" && combo.closed && combo.gmail.includes("su=Hello JIDO: Invoicing"), `${filtered.join("/")} -> "${combo.value}"`);
+  dt(19, "Progressive disclosure: suggestions and email options stay hidden until asked for", lbHidden && lbOpen && passed("Email menu is hidden until"));
+
+  const origin = await page.evaluate(() => { const cs = getComputedStyle(document.getElementById("contact-options")); return { o: cs.transformOrigin, scale: cs.scale }; });
+  await page.click("[data-magnetic]");
+  await wait(page, 80);
+  const mid = await page.evaluate(() => +getComputedStyle(document.getElementById("contact-options")).opacity);
+  await page.keyboard.press("Escape");
+  await wait(page, 40);
+  const back1 = await page.evaluate(() => +getComputedStyle(document.getElementById("contact-options")).opacity);
+  await wait(page, 160);
+  const back2 = await page.evaluate(() => +getComputedStyle(document.getElementById("contact-options")).opacity);
+  dt(10, "Origin-aware animation: the email menu grows out of its button (top-left)", origin.o.startsWith("0px 0px") && parseFloat(origin.scale) < 1, `origin ${origin.o}, closed scale ${origin.scale}`);
+  const menuInterrupt = mid > 0 && mid < 1 && back2 < back1;
+  await wait(page, 500);
+
+  await page.click("[data-magnetic]");
+  await wait(page, 500);
+  await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: () => new Promise((r) => setTimeout(r, 1500)) }));
+  await page.click("#contact-options button");
+  await wait(page, 60);
+  const optimistic = await page.textContent("#contact-options button");
+  dt(6, "Optimistic update: 'Copied' shows instantly, before the copy finishes", optimistic.includes("Copied"), "label after 60ms of a 1.5s copy");
+  await page.keyboard.press("Escape");
+  await wait(page, 600);
+  const cls = await page.evaluate(() => window.__cls);
+  dt(4, "Layout shift: nothing jumps while the page loads and scrolls (CLS under 0.05)", cls < 0.05, `CLS ${cls.toFixed(4)}`);
 
   // 17 (repeat visit) Doherty threshold: the full show plays once; a reload is quick
   const t0 = Date.now();
@@ -396,8 +542,25 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   ux(17, "Doherty threshold: a repeat visit skips the long intro (usable in under 2.5s)", quick.mode === "quick" && quick.ms < 2500, `${quick.mode} intro, usable after ${quick.ms}ms`);
 
 
+  /* ── SHARED ELEMENT TRANSITION: footer "Privacy" link becomes the Privacy title ── */
+  await page.evaluate(() => document.querySelector('footer a[href="/privacy"]').scrollIntoView({ block: "center" }));
+  await wait(page, 800);
+  const vtName = await page.evaluate(() => document.querySelector('footer a[href="/privacy"]').style.viewTransitionName);
+  await page.click('footer a[href="/privacy"]');
+  await page.waitForURL(/\/privacy$/);
+  await page.waitForFunction(() => document.querySelector("[data-loader]")?.dataset.intro, null, { timeout: 8000 });
+  await wait(page, 700);
+  const vt = await page.evaluate(() => ({ ran: window.__vt, mode: document.querySelector("[data-loader]").dataset.intro, h1: document.querySelector("h1").style.viewTransitionName }));
+  dt(20, "Shared element transition: the footer link morphs into the page title", vt.ran === true && vt.mode === "none" && vtName === vt.h1 && vt.h1 === "legal-privacy", JSON.stringify({ ...vt, link: vtName }));
+
   /* ── LEGAL PAGES ─────────────────────────────────────────── */
-  for (const [path, label, heading] of [["/privacy", "PRIVACY", "Privacy policy."], ["/terms", "TERMS", "Terms of service."]]) {
+  const legalPages = [
+    ["/privacy", "PRIVACY", "Privacy policy.", 17],
+    ["/terms", "TERMS", "Terms of service.", 20],
+    ["/ai-disclosure", "AI DISCLOSURE", "AI disclosure.", 6],
+    ["/legal-contact", "LEGAL CONTACT", "Legal contact.", 4],
+  ];
+  for (const [path, label, heading, count] of legalPages) {
     await page.goto(BASE + path);
     await page.waitForFunction(() => !document.documentElement.classList.contains("lenis-stopped") && document.querySelector("[data-loader]")?.dataset.intro, null, { timeout: 8000 });
     await wait(page, 1200);
@@ -409,6 +572,19 @@ const wait = (p, ms) => p.waitForTimeout(ms);
       home: document.querySelector('[data-hud-bar] a[aria-label^="JIDO"]').getAttribute("href"),
     }));
     check(`${heading.replace(".", "")} page: loads in the site style, HUD links lead back home`, lp.h1 === heading && lp.updated && lp.label === label && lp.contact === "/#initiation" && lp.home === "/", JSON.stringify(lp));
+    const doc = await page.evaluate(() => ({
+      sections: document.querySelectorAll("main section[id] h2").length,
+      toc: [...document.querySelectorAll('nav[aria-label="On this page"] a')].every((a) => document.getElementById(a.hash.slice(1))),
+      tocCount: document.querySelectorAll('nav[aria-label="On this page"] a').length,
+      draft: !!document.querySelector("[data-legal-status]"),
+      placeholders: [...new Set([...document.querySelectorAll("[data-placeholder]")].map((p) => p.textContent))],
+      links: [...document.querySelectorAll('nav[aria-label="Legal"] a')].length,
+      widows: [...document.querySelectorAll("main h2, main p")].filter((el) => el.getClientRects().length).filter((el) => { const l = window.__lines(el); return l.length > 1 && l[l.length - 1].words === 1; }).length,
+      longest: Math.max(...[...document.querySelectorAll("main p")].filter((el) => el.getClientRects().length && getComputedStyle(el).textTransform !== "uppercase").flatMap((el) => window.__lines(el).map((l) => l.chars))),
+      unsupported: /\b(HIPAA compliant|GDPR compliant|CCPA compliant|SOC 2 certified|ISO 27001 certified|encrypted at rest|we never share)\b/i.test(document.body.innerText.replace(/not HIPAA compliant/gi, "")),
+    }));
+    check(`${heading.replace(".", "")} page: ${count} sections, working table of contents, draft notice, links to every legal page`, doc.sections === count && doc.toc && doc.tocCount === count && doc.draft && doc.links === 4, JSON.stringify({ ...doc, placeholders: doc.placeholders.length }));
+    check(`${heading.replace(".", "")} page: readable (no widows, lines of 80 characters or less), no unverified compliance claims`, doc.widows === 0 && doc.longest <= 80 && !doc.unsupported, `widows ${doc.widows}, longest line ${doc.longest}, placeholders: ${doc.placeholders.join(" ")}`);
     const ls = await slopScan(page);
     check(`${heading.replace(".", "")} page: no AI-slop markers either`, Object.keys(ls).length === 0, JSON.stringify(ls));
   }
@@ -429,8 +605,37 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   const ph = await phone.evaluate(() => ({ w: document.documentElement.scrollWidth, cursor: document.documentElement.classList.contains("has-cursor") }));
   check("Phone: no sideways scrolling", ph.w <= 390, `page width ${ph.w}px`);
   check("Phone: custom cursor off (touch keeps native behaviour)", !ph.cursor);
+  // D08 touch targets: every tappable thing catches a tap 20px from its centre in every direction
+  const touchMisses = async (pg) => pg.evaluate(() => {
+    const els = [...document.querySelectorAll("a, button, input, summary")].filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== "hidden" && !el.closest("[hidden], #contact-options") && !el.closest("details:not([open]) > :not(summary)"));
+    const miss = [];
+    for (const el of els) {
+      const fixed = el.closest("[data-hud-bar]");
+      if (!fixed) el.scrollIntoView({ block: "center" });
+      const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      const ok = [[x, y - 20], [x, y + 20], [x - 20, y], [x + 20, y]].every(([px, py]) => { const h = document.elementFromPoint(px, py); return h && (el.contains(h) || h.contains(el)); });
+      if (!ok) miss.push((el.textContent || el.getAttribute("aria-label") || el.tagName).trim().slice(0, 20));
+    }
+    return { checked: els.length, miss };
+  });
+  const tHome = await touchMisses(phone);
+  await phone.goto(BASE + "/privacy");
+  await wait(phone, 2500);
+  const tLegal = await touchMisses(phone);
+  dt(8, "Touch targets: every link, button and field is at least 44 x 44px to a finger", tHome.miss.length === 0 && tLegal.miss.length === 0, `${tHome.checked + tLegal.checked} checked; misses: ${[...tHome.miss, ...tLegal.miss].join(", ") || "none"}`);
   check("No JavaScript errors (phone)", perr.length === 0, perr.join(" | "));
   if (SHOTS) await phone.screenshot({ path: `${SHOTS}/5-phone.png` });
+
+  /* ── INTERRUPTIBLE INTRO: a click fast-forwards it smoothly ───────── */
+  const fresh = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await fresh.goto(BASE);
+  await fresh.waitForFunction(() => document.querySelector("[data-loader]")?.dataset.intro === "full", null, { timeout: 8000 });
+  await wait(fresh, 400);
+  const t1 = Date.now();
+  await fresh.mouse.click(640, 400);
+  await fresh.waitForFunction(() => !document.documentElement.classList.contains("lenis-stopped"), null, { timeout: 6000 }).catch(() => {});
+  const skipMs = Date.now() - t1;
+  dt(18, "Interruptible animation: a click speeds up the intro, an open menu reverses mid-way", skipMs < 1500 && menuInterrupt, `page usable ${skipMs}ms after the click (full intro is about 3s); menu ${mid.toFixed(2)} -> ${back1.toFixed(2)} -> ${back2.toFixed(2)}`);
 
   /* ── REDUCED MOTION ──────────────────────────────────────── */
   const calm = await browser.newPage({ viewport: { width: 1280, height: 800 }, reducedMotion: "reduce" });
