@@ -5,15 +5,16 @@ import { gsap, useGSAP } from "@/lib/gsap";
 
 const INTERACTIVE = "a, button, summary, [data-cursor]";
 const TEXT = "input, textarea, [contenteditable]";
-const PAD = 6; // viewfinder breathing room around a target
-const IDLE = 22; // viewfinder size when it is not locked onto anything
+const PAD = 8; // viewfinder breathing room around a target
+const IDLE = 38; // viewfinder size when it is not locked onto anything
 
 /**
  * Sleek HUD cursor. Two quiet layers:
- *  - dot   : a 6px beige block (a pixel of the logo). It sits exactly on the pointer, with
+ *  - dot   : a 10px beige block (a pixel of the logo). It sits exactly on the pointer, with
  *            no lag, no stretch and no rotation, so it never feels like it is fighting you.
  *            mix-blend-difference keeps it visible on beige and slate alike.
- *  - frame : four thin corner ticks, a camera viewfinder. It hovers loosely around the dot,
+ *  - frame : four bold corner ticks, a camera viewfinder (also blend-difference, so it shows
+ *            on any background). It hovers loosely around the dot,
  *            then snaps around a link or button (the dot steps aside). On press it tightens.
  * Text fields get the native I-beam back. Elements with [data-magnetic] lean toward the pointer.
  * Mouse / trackpad only: touch devices keep the native behaviour.
@@ -47,7 +48,7 @@ export function Cursor() {
 
     const state = () => {
       gsap.to(d, { scale: target ? 0 : 1, autoAlpha: typing ? 0 : 1, duration: 0.25, ease: "expo.out", overwrite: "auto" });
-      gsap.to(f, { autoAlpha: typing ? 0 : target ? 1 : 0.45, duration: 0.25, overwrite: "auto" });
+      gsap.to(f, { autoAlpha: typing ? 0 : 1, duration: 0.25, overwrite: "auto" });
     };
 
     const onMove = (e: PointerEvent) => {
@@ -112,16 +113,16 @@ export function Cursor() {
     };
   });
 
-  const tick = "absolute h-1.5 w-1.5 border-current";
+  const tick = "absolute h-3 w-3 border-current";
   return (
     <>
       {/* blend mode must sit on a top-level fixed element: a wrapper would isolate it */}
-      <div ref={dot} data-cursor-dot aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[200] -mt-[3px] -ml-[3px] h-1.5 w-1.5 bg-beige mix-blend-difference" />
-      <div ref={frame} data-cursor-frame aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[199] text-beige">
-        <span className={`${tick} top-0 left-0 border-t border-l`} />
-        <span className={`${tick} top-0 right-0 border-t border-r`} />
-        <span className={`${tick} bottom-0 left-0 border-b border-l`} />
-        <span className={`${tick} right-0 bottom-0 border-r border-b`} />
+      <div ref={dot} data-cursor-dot aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[200] -mt-[5px] -ml-[5px] h-2.5 w-2.5 bg-beige mix-blend-difference" />
+      <div ref={frame} data-cursor-frame aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[199] text-beige mix-blend-difference">
+        <span className={`${tick} top-0 left-0 border-t-2 border-l-2`} />
+        <span className={`${tick} top-0 right-0 border-t-2 border-r-2`} />
+        <span className={`${tick} bottom-0 left-0 border-b-2 border-l-2`} />
+        <span className={`${tick} right-0 bottom-0 border-r-2 border-b-2`} />
       </div>
     </>
   );

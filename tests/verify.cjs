@@ -151,7 +151,7 @@ const instrument = () => {
     const m = new DOMMatrix(getComputedStyle(el).transform);
     return { size: r.width, off: Math.hypot(r.left + r.width / 2 - 1100, r.top + r.height / 2 - 620), skew: Math.abs(m.b) + Math.abs(m.c), sx: m.a, sy: m.d };
   });
-  check("Cursor is calm: 6px dot, on the pointer within 60ms, no stretch or rotation", calmDot.size <= 7 && calmDot.off < 3 && calmDot.skew < 0.001 && Math.abs(calmDot.sx - calmDot.sy) < 0.001, `${calmDot.size}px dot, ${calmDot.off.toFixed(1)}px from the pointer`);
+  check("Cursor is easy to see yet calm: 10px dot, on the pointer within 60ms, no stretch or rotation", calmDot.size >= 9 && calmDot.size <= 11 && calmDot.off < 3 && calmDot.skew < 0.001 && Math.abs(calmDot.sx - calmDot.sy) < 0.001, `${calmDot.size}px dot, ${calmDot.off.toFixed(1)}px from the pointer`);
   const ibeam = await page.evaluate(() => { const i = document.querySelector("input:not([type=hidden])"); return i ? getComputedStyle(i).cursor : "text"; });
   check("Text fields keep the native I-beam", ibeam === "text", ibeam);
 
