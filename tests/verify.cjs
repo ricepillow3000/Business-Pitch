@@ -959,7 +959,7 @@ const instrument = () => {
   await wait(phone, 5200);
   const ph = await phone.evaluate(() => ({ w: document.documentElement.scrollWidth, cursor: document.documentElement.classList.contains("has-cursor") }));
   check("Phone: no sideways scrolling", ph.w <= 390, `page width ${ph.w}px`);
-  check("Phone: custom cursor off (touch keeps native behaviour)", !ph.cursor);
+  check("Phone: the system pointer is never hidden on touch (the JIDO cursor appears on tap instead, see tests/cursor-touch.cjs)", !ph.cursor);
   // D08 touch targets: every tappable thing catches a tap 20px from its centre in every direction
   const touchMisses = async (pg) => pg.evaluate(() => {
     // links inside a sentence are exempt (as in WCAG 2.5.8); everything else needs a full target

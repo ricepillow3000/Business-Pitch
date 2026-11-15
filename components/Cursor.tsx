@@ -17,15 +17,22 @@ const IDLE = 38; // viewfinder size when it is not locked onto anything
  *            on any background). It is glued around the dot too, and only animates when it
  *            boxes a link or button (the dot steps aside) or lets go of one. On press it tightens.
  * Nothing on the page moves toward the pointer. Text fields get the native I-beam back.
- * Mouse / trackpad only: touch devices keep the native behaviour.
+ *
+ * One cursor for every input. The mode is decided by each pointer event (pointerType), never
+ * by a one-time media query, so phones, Chrome DevTools phone mode and touchscreen laptops
+ * all get it:
+ *  - mouse / pen : the full cursor (system pointer hidden).
+ *  - finger      : the same dot + viewfinder appear where you touch, box the tapped button,
+ *                  then fade. The system pointer is never hidden on touch.
  */
 export function Cursor() {
   const dot = useRef<HTMLDivElement>(null);
   const frame = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
-    if (!matchMedia("(hover: hover) and (pointer: fine)").matches) return;
-    document.documentElement.classList.add("has-cursor");
+    const root = document.documentElement;
+    // a real mouse is likely: hide the system pointer straight away (confirmed by the first move)
+    if (matchMedia("(hover: hover) and (pointer: fine)").matches) root.classList.add("has-cursor");
 
     const d = dot.current!;
     const f = frame.current!;
@@ -37,6 +44,14 @@ export function Cursor() {
     let typing = false;
     let shown = false;
     let releasing = 0; // after letting go of a target, ease back for a moment, then glue to the pointer
+    let touch = false; // was the last input a finger?
+    let fade: ReturnType<typeof setTimeout> | undefined;
+    const isTouch = (e: PointerEvent) => e.pointerType === "touch";
+    const useMouse = () => {
+      clearTimeout(fade);
+      if (touch) { touch = false; shown = false; }
+      root.classList.add("has-cursor");
+    };
     gsap.set([d, f], { autoAlpha: 0 });
     gsap.set(d, { x: pointer.x, y: pointer.y });
     gsap.set(f, { x: pointer.x - IDLE / 2, y: pointer.y - IDLE / 2, width: IDLE, height: IDLE });
@@ -47,6 +62,14 @@ export function Cursor() {
     };
 
     const onMove = (e: PointerEvent) => {
+      if (isTouch(e)) {
+        // finger dragging: the cursor follows it until it lifts
+        pointer.x = e.clientX; pointer.y = e.clientY;
+        gsap.set(d, { x: pointer.x, y: pointer.y });
+        if (!target) glue();
+        return;
+      }
+      useMouse();
       pointer.x = e.clientX;
       pointer.y = e.clientY;
       if (!shown) {
@@ -67,6 +90,7 @@ export function Cursor() {
     };
 
     const onOver = (e: PointerEvent) => {
+      if (isTouch(e)) return; // touches are handled on pointerdown
       const el = e.target as Element;
       const next = el.closest<HTMLElement>(INTERACTIVE);
       const nowTyping = !!el.closest(TEXT);
@@ -86,24 +110,61 @@ export function Cursor() {
       } else glue();
     };
 
-    const hide = () => { shown = false; gsap.to([d, f], { autoAlpha: 0, duration: 0.2, overwrite: "auto" }); };
-    const press = () => gsap.to(f, { scale: 0.92, duration: 0.15, ease: "power2.out" });
-    const release = () => gsap.to(f, { scale: 1, duration: 0.35, ease: "expo.out" });
+    const hide = (e: PointerEvent) => {
+      if (isTouch(e)) return; // a lifted finger fades on its own schedule
+      shown = false;
+      gsap.to([d, f], { autoAlpha: 0, duration: 0.2, overwrite: "auto" });
+    };
+
+    // finger down: show the cursor at the touch, and box the button under it
+    const touchDown = (e: PointerEvent) => {
+      clearTimeout(fade);
+      touch = true;
+      root.classList.remove("has-cursor");
+      pointer.x = e.clientX; pointer.y = e.clientY;
+      const el = e.target as Element;
+      target = el.closest<HTMLElement>(INTERACTIVE);
+      typing = !!el.closest(TEXT);
+      gsap.set(d, { x: pointer.x, y: pointer.y });
+      glue(); // corners start at the finger, then (if on a button) expand around it
+      gsap.to(d, { scale: target ? 0 : 1, autoAlpha: typing ? 0 : 1, duration: 0.15, overwrite: "auto" });
+      gsap.to(f, { autoAlpha: typing ? 0 : 1, duration: 0.15, overwrite: "auto" });
+    };
+    // finger up: linger a moment so the tap reads, then fade out
+    const touchUp = () => {
+      clearTimeout(fade);
+      fade = setTimeout(() => {
+        gsap.to([d, f], { autoAlpha: 0, duration: 0.35, overwrite: "auto", onComplete: () => { target = null; } });
+      }, 550);
+    };
+
+    const press = (e: PointerEvent) => {
+      if (isTouch(e)) touchDown(e);
+      else useMouse();
+      gsap.to(f, { scale: 0.92, duration: 0.15, ease: "power2.out" });
+    };
+    const release = (e: PointerEvent) => {
+      gsap.to(f, { scale: 1, duration: 0.35, ease: "expo.out" });
+      if (isTouch(e)) touchUp();
+    };
 
     addEventListener("pointermove", onMove);
     addEventListener("pointerover", onOver);
     addEventListener("pointerdown", press);
     addEventListener("pointerup", release);
-    document.documentElement.addEventListener("pointerleave", hide);
+    addEventListener("pointercancel", release); // e.g. the finger started scrolling
+    root.addEventListener("pointerleave", hide);
     gsap.ticker.add(tick);
 
     return () => {
-      document.documentElement.classList.remove("has-cursor");
+      clearTimeout(fade);
+      root.classList.remove("has-cursor");
       removeEventListener("pointermove", onMove);
       removeEventListener("pointerover", onOver);
       removeEventListener("pointerdown", press);
       removeEventListener("pointerup", release);
-      document.documentElement.removeEventListener("pointerleave", hide);
+      removeEventListener("pointercancel", release);
+      root.removeEventListener("pointerleave", hide);
       gsap.ticker.remove(tick);
     };
   });
