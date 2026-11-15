@@ -147,7 +147,9 @@ const gmail = (href) => {
     emailLinks.push(...(await page.evaluate(() => [...document.querySelectorAll("a")].map((a) => a.href).filter((h) => /mailto:|mail\.google|outlook/.test(h)))));
   }
   check("Every email link uses Gmail compose to the JIDO address (no mailto, no Outlook)", emailLinks.length > 0 && emailLinks.every((h) => h.startsWith("https://mail.google.com/") && gmail(h).to === EMAIL), `${emailLinks.length} links checked`);
-  check("No JavaScript errors", errors.length === 0, errors.join(" | "));
+  // "Transition was aborted" = the browser skipped a page-change animation (page still opens); not a site error
+  const real = errors.filter((e) => !/Transition was aborted/.test(e));
+  check("No JavaScript errors", real.length === 0, real.join(" | ") || `${errors.length - real.length} skipped page animation(s) ignored`);
 
   await browser.close();
   if (OUT) fs.writeFileSync(OUT, JSON.stringify(payloads.slice(0, 9), null, 2));

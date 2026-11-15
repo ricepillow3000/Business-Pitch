@@ -149,9 +149,10 @@ const instrument = () => {
   const calmDot = await page.evaluate(() => {
     const el = document.querySelector("[data-cursor-dot]"), r = el.getBoundingClientRect();
     const m = new DOMMatrix(getComputedStyle(el).transform);
-    return { size: r.width, off: Math.hypot(r.left + r.width / 2 - 1100, r.top + r.height / 2 - 620), skew: Math.abs(m.b) + Math.abs(m.c), sx: m.a, sy: m.d };
+    const fr = document.querySelector("[data-cursor-frame]").getBoundingClientRect();
+    return { size: r.width, off: Math.hypot(r.left + r.width / 2 - 1100, r.top + r.height / 2 - 620), frameOff: Math.hypot(fr.left + fr.width / 2 - 1100, fr.top + fr.height / 2 - 620), skew: Math.abs(m.b) + Math.abs(m.c), sx: m.a, sy: m.d };
   });
-  check("Cursor is easy to see yet calm: 10px dot, on the pointer within 60ms, no stretch or rotation", calmDot.size >= 9 && calmDot.size <= 11 && calmDot.off < 3 && calmDot.skew < 0.001 && Math.abs(calmDot.sx - calmDot.sy) < 0.001, `${calmDot.size}px dot, ${calmDot.off.toFixed(1)}px from the pointer`);
+  check("Cursor moves like a normal cursor: dot and viewfinder stay on the pointer (no lag), no stretch or rotation", calmDot.size >= 9 && calmDot.size <= 11 && calmDot.off < 1.5 && calmDot.frameOff < 1.5 && calmDot.skew < 0.001 && Math.abs(calmDot.sx - calmDot.sy) < 0.001, `${calmDot.size}px dot ${calmDot.off.toFixed(1)}px and viewfinder ${calmDot.frameOff.toFixed(1)}px from the pointer`);
   const ibeam = await page.evaluate(() => { const i = document.querySelector("input:not([type=hidden])"); return i ? getComputedStyle(i).cursor : "text"; });
   check("Text fields keep the native I-beam", ibeam === "text", ibeam);
 
@@ -167,13 +168,14 @@ const instrument = () => {
   p = await pager();
   check("Bottom label switched to INITIATION", p.label === "INITIATION" && p.shown, JSON.stringify(p));
 
-  // 5. Magnetic CTA
-  const btn = await page.$("[data-magnetic]");
+  // 5. The main button stays still while hovered
+  const btn = await page.$("[data-cta]");
   const bb = await btn.boundingBox();
   await page.mouse.move(bb.x + bb.width * 0.9, bb.y + bb.height * 0.9, { steps: 10 });
   await wait(page, 700);
-  const pull = await page.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector("[data-magnetic]")).transform));
-  check("CTA button is magnetic (pulled toward cursor)", pull.e > 3 && pull.f > 3, `moved x=${pull.e.toFixed(1)} y=${pull.f.toFixed(1)}`);
+  const pull = await page.evaluate(() => new DOMMatrix(getComputedStyle(document.querySelector("[data-cta]")).transform));
+  const box = await page.evaluate(() => { const f = document.querySelector("[data-cursor-frame]").getBoundingClientRect(), b = document.querySelector("[data-cta]").getBoundingClientRect(); return { boxed: f.left < b.left && f.right > b.right && f.top < b.top && f.bottom > b.bottom }; });
+  check("Main button stays still while hovered, and the cursor boxes it", Math.abs(pull.e) < 0.5 && Math.abs(pull.f) < 0.5 && box.boxed, `moved x=${pull.e.toFixed(1)} y=${pull.f.toFixed(1)}; boxed ${box.boxed}`);
   const menu = "#contact-options";
   check("Email menu is hidden until the button is clicked", !(await page.isVisible(menu)));
   await btn.click();
@@ -236,7 +238,7 @@ const instrument = () => {
   const ux = (n, name, ok, detail) => check(`UX ${String(n).padStart(2, "0")} ${name}`, ok, detail);
   const passed = (prefix) => results.some((r) => r.name.startsWith(prefix) && r.ok);
   await page.context().grantPermissions(["clipboard-read", "clipboard-write"], { origin: BASE });
-  const cta = "[data-magnetic]";
+  const cta = "[data-cta]";
   await page.evaluate((s) => document.querySelector(s).scrollIntoView({ block: "center" }), cta);
   await wait(page, 1200);
 
@@ -261,12 +263,12 @@ const instrument = () => {
   const menuShown = await page.evaluate(() => +getComputedStyle(document.getElementById("contact-options")).opacity);
   ux(17, "Doherty threshold: the email menu answers a click in under 400ms", menuShown > 0.6, `opacity ${menuShown.toFixed(2)} after 380ms`);
 
-  // 5 Follow through: the menu rows settle in one after another; the magnetic button springs back
+  // 5 Follow through: the menu rows settle in one after another; the button is at rest
   const delays = await page.evaluate(() => [...document.querySelectorAll("#contact-options a, #contact-options button")].map((r) => parseFloat(getComputedStyle(r).transitionDelay)));
   await page.mouse.move(80, 300, { steps: 6 });
   await wait(page, 1600);
   const rest = await page.evaluate((s) => new DOMMatrix(getComputedStyle(document.querySelector(s)).transform), cta);
-  ux(5, "Follow through: menu rows stagger in, magnetic button springs back to rest", delays.length > 1 && delays.every((d, i) => i === 0 || d > delays[i - 1]) && Math.abs(rest.e) < 1 && Math.abs(rest.f) < 1, `row delays ${delays.join("/")}s`);
+  ux(5, "Follow through: menu rows stagger in, the button stays at rest", delays.length > 1 && delays.every((d, i) => i === 0 || d > delays[i - 1]) && Math.abs(rest.e) < 1 && Math.abs(rest.f) < 1, `row delays ${delays.join("/")}s`);
 
   // 6 Slow in & slow out: UI motion uses eased curves, never linear
   const easing = await page.evaluate(() => ["#contact-options", "#contact-options a"].map((s) => getComputedStyle(document.querySelector(s)).transitionTimingFunction));
@@ -274,7 +276,7 @@ const instrument = () => {
 
   // 9 Snappy timing: no UI feedback transition is slower than 500ms
   const slowest = await page.evaluate(() => {
-    const els = [...document.querySelectorAll("a, button, #contact-options, #contact-options *, [data-magnetic] *")];
+    const els = [...document.querySelectorAll("a, button, #contact-options, #contact-options *, [data-cta] *")];
     return Math.max(...els.flatMap((el) => getComputedStyle(el).transitionDuration.split(",").map((d) => parseFloat(d) * (d.includes("ms") ? 0.001 : 1))));
   });
   ux(9, "Snappy timing: every hover/press/menu transition is 500ms or less", slowest <= 0.5, `slowest ${slowest}s`);
@@ -306,7 +308,7 @@ const instrument = () => {
   await page.click("#initiation [data-copy]");
   await wait(page, 200);
   ux(18, "Postel's law: copy falls back gracefully when the clipboard API is blocked", (await page.textContent("#initiation [data-copy]")).includes("Copied"));
-  await page.click("[data-magnetic]");
+  await page.click("[data-cta]");
   await wait(page, 500);
 
 
@@ -321,7 +323,7 @@ const instrument = () => {
   await wait(page, 500);
 
   // 3 Staging the focus: one primary action, text on quiet halos, one section label at a time
-  const stage = await page.evaluate(() => ({ primary: document.querySelectorAll("[data-magnetic]").length, halos: document.querySelectorAll(".quiet").length }));
+  const stage = await page.evaluate(() => ({ primary: document.querySelectorAll("[data-cta]").length, halos: document.querySelectorAll(".quiet").length }));
   ux(3, "Staging the focus: one primary button, text on quiet halos, one label at a time", stage.primary === 1 && stage.halos >= 8 && passed("Bottom label hides"), JSON.stringify(stage));
 
   // 4 Pose to pose: the intro moves through clear key poses (count → reach → split → page)
@@ -486,7 +488,7 @@ const instrument = () => {
   dt(9, "Leading: paragraphs 1.4 to 1.8, headlines tight (1.15 or less)", reading.leading.every((l) => l.r >= 1.4 && l.r <= 1.8) && reading.heads.every((r) => r <= 1.15), reading.leading.filter((l) => l.r < 1.4 || l.r > 1.8).map((l) => `${l.t} ${l.r.toFixed(2)}`).join(" | ") || "all in range");
   dt(12, "Widows: headings balance, paragraphs never end on one lonely word", reading.wrap.h === "balance" && reading.wrap.p === "pretty" && reading.widows.length === 0, reading.widows.join(" | ") || `${reading.wrap.h} / ${reading.wrap.p}`);
   dt(15, "Line length: no reading line is longer than 80 characters", reading.longest <= 80, `longest line ${reading.longest} characters`);
-  dt(16, "Affordance: links in text are underlined, the button looks like a button", reading.underlined && (await page.$("button[data-magnetic] [data-press].bg-beige")) !== null);
+  dt(16, "Affordance: links in text are underlined, the button looks like a button", reading.underlined && (await page.$("button[data-cta] [data-press].bg-beige")) !== null);
 
   const tokens = await page.evaluate(() => {
     const css = getComputedStyle(document.documentElement);
@@ -525,7 +527,7 @@ const instrument = () => {
   dt(19, "Progressive disclosure: suggestions and email options stay hidden until asked for", lbHidden && lbOpen && passed("Email menu is hidden until"));
 
   const origin = await page.evaluate(() => { const cs = getComputedStyle(document.getElementById("contact-options")); return { o: cs.transformOrigin, scale: cs.scale }; });
-  await page.click("[data-magnetic]");
+  await page.click("[data-cta]");
   await wait(page, 80);
   const mid = await page.evaluate(() => +getComputedStyle(document.getElementById("contact-options")).opacity);
   await page.keyboard.press("Escape");

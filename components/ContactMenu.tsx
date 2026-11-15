@@ -49,14 +49,13 @@ export function ContactMenu({ topic = "" }: { topic?: string }) {
     <div ref={root} className="relative w-fit">
       <button
         type="button"
-        data-magnetic
+        data-cta
         aria-expanded={open}
         aria-controls="contact-options"
         onClick={() => setOpen((v) => !v)}
         className="group block"
       >
-        {/* The button moves (magnetic, GSAP); its face squashes on press (CSS). Kept on
-            separate elements because GSAP resets the CSS `scale` of what it animates. */}
+        {/* The button stays put while hovered; only its face squashes on press (CSS). */}
         <span
           data-press
           className="chamfer inline-flex items-center gap-8 bg-beige py-6 pr-6 pl-8 text-flag-deep transition-[scale] duration-150 ease-out group-active:scale-[0.96] md:py-8 md:pr-8 md:pl-10"

@@ -10,13 +10,13 @@ const IDLE = 38; // viewfinder size when it is not locked onto anything
 
 /**
  * Sleek HUD cursor. Two quiet layers:
- *  - dot   : a 10px beige block (a pixel of the logo). It sits exactly on the pointer, with
- *            no lag, no stretch and no rotation, so it never feels like it is fighting you.
+ *  - dot   : a 10px beige block (a pixel of the logo). It is glued to the pointer (moves in
+ *            the same frame, no easing), so it feels exactly like a normal cursor.
  *            mix-blend-difference keeps it visible on beige and slate alike.
  *  - frame : four bold corner ticks, a camera viewfinder (also blend-difference, so it shows
- *            on any background). It hovers loosely around the dot,
- *            then snaps around a link or button (the dot steps aside). On press it tightens.
- * Text fields get the native I-beam back. Elements with [data-magnetic] lean toward the pointer.
+ *            on any background). It is glued around the dot too, and only animates when it
+ *            boxes a link or button (the dot steps aside) or lets go of one. On press it tightens.
+ * Nothing on the page moves toward the pointer. Text fields get the native I-beam back.
  * Mouse / trackpad only: touch devices keep the native behaviour.
  */
 export function Cursor() {
@@ -30,21 +30,16 @@ export function Cursor() {
     const d = dot.current!;
     const f = frame.current!;
     const to = (el: Element, prop: string, duration: number) => gsap.quickTo(el, prop, { duration, ease: "expo.out" });
-    const dx = to(d, "x", 0.08), dy = to(d, "y", 0.08);
-    const fx = to(f, "x", 0.35), fy = to(f, "y", 0.35), fw = to(f, "width", 0.35), fh = to(f, "height", 0.35);
+    const fx = to(f, "x", 0.3), fy = to(f, "y", 0.3), fw = to(f, "width", 0.3), fh = to(f, "height", 0.3);
 
     const pointer = { x: innerWidth / 2, y: innerHeight / 2 };
     let target: HTMLElement | null = null;
     let typing = false;
     let shown = false;
+    let releasing = 0; // after letting go of a target, ease back for a moment, then glue to the pointer
     gsap.set([d, f], { autoAlpha: 0 });
     gsap.set(d, { x: pointer.x, y: pointer.y });
     gsap.set(f, { x: pointer.x - IDLE / 2, y: pointer.y - IDLE / 2, width: IDLE, height: IDLE });
-
-    const magnet = (el: HTMLElement, x: number, y: number, release = false) =>
-      gsap.to(el, release
-        ? { x: 0, y: 0, duration: 0.8, ease: "expo.out", overwrite: "auto" }
-        : { x, y, duration: 0.5, ease: "expo.out", overwrite: "auto" });
 
     const state = () => {
       gsap.to(d, { scale: target ? 0 : 1, autoAlpha: typing ? 0 : 1, duration: 0.25, ease: "expo.out", overwrite: "auto" });
@@ -60,15 +55,15 @@ export function Cursor() {
         gsap.set(f, { x: pointer.x - IDLE / 2, y: pointer.y - IDLE / 2 });
         state();
       }
-      dx(pointer.x);
-      dy(pointer.y);
+      gsap.set(d, { x: pointer.x, y: pointer.y });
+      if (!target && performance.now() > releasing) glue();
+    };
 
-      if (target?.hasAttribute("data-magnetic")) {
-        const r = target.getBoundingClientRect();
-        const cx = r.left + r.width / 2 - (gsap.getProperty(target, "x") as number);
-        const cy = r.top + r.height / 2 - (gsap.getProperty(target, "y") as number);
-        magnet(target, (pointer.x - cx) * 0.2, (pointer.y - cy) * 0.3);
-      }
+    // idle: the frame sits around the pointer exactly, like part of the cursor
+    const glue = () => {
+      // (start = end: jump there this frame, but keep the quickTo tweens alive for the next lock-on)
+      const x = pointer.x - IDLE / 2, y = pointer.y - IDLE / 2;
+      fx(x, x); fy(y, y); fw(IDLE, IDLE); fh(IDLE, IDLE);
     };
 
     const onOver = (e: PointerEvent) => {
@@ -76,7 +71,7 @@ export function Cursor() {
       const next = el.closest<HTMLElement>(INTERACTIVE);
       const nowTyping = !!el.closest(TEXT);
       if (next === target && nowTyping === typing) return;
-      if (target !== next && target?.hasAttribute("data-magnetic")) magnet(target, 0, 0, true);
+      if (target && !next) releasing = performance.now() + 220;
       target = next;
       typing = nowTyping;
       state();
@@ -86,9 +81,9 @@ export function Cursor() {
       if (target) {
         const r = target.getBoundingClientRect();
         fx(r.left - PAD); fy(r.top - PAD); fw(r.width + PAD * 2); fh(r.height + PAD * 2);
-      } else {
+      } else if (performance.now() < releasing) {
         fx(pointer.x - IDLE / 2); fy(pointer.y - IDLE / 2); fw(IDLE); fh(IDLE);
-      }
+      } else glue();
     };
 
     const hide = () => { shown = false; gsap.to([d, f], { autoAlpha: 0, duration: 0.2, overwrite: "auto" }); };
