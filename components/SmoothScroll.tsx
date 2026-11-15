@@ -22,7 +22,12 @@ export function SmoothScroll() {
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 
-    const off = onReveal(() => lenis.start());
+    const off = onReveal(() => {
+      lenis.start();
+      // arriving from another page with a #section (e.g. /#initiation): glide to it
+      const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (target) lenis.scrollTo(target, { duration: 1.4, force: true });
+    });
     document.fonts.ready.then(() => ScrollTrigger.refresh());
 
     return () => {

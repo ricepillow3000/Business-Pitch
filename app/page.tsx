@@ -212,6 +212,10 @@ export default function Home() {
           <span className="flex flex-col gap-3">
             <Logo markClassName="h-8 w-8" />
             <span>© 2026 JIDO</span>
+            <span className="flex gap-6">
+              <a href="/privacy" className="hit">Privacy</a>
+              <a href="/terms" className="hit">Terms</a>
+            </span>
           </span>
           <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="hit w-fit normal-case tracking-wider">{EMAIL}<span aria-hidden> ↗</span><span className="sr-only"> (opens Gmail in a new tab)</span></a>
           <span>SYS.STATUS // ONLINE</span>

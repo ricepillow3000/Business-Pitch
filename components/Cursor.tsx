@@ -109,7 +109,7 @@ export function Cursor() {
     <>
       {/* blend mode must sit on a top-level fixed element: a wrapper would isolate it */}
       <div ref={node} aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[200] -mt-2 -ml-2 h-4 w-4 mix-blend-difference">
-        <div ref={dot} className="h-full w-full rounded-full bg-beige" />
+        <div ref={dot} className="h-full w-full bg-beige" /> {/* square, like a block of the logo */}
       </div>
       <div ref={frame} aria-hidden className="pointer-events-none invisible fixed top-0 left-0 z-[199] text-flag">
         <span className="absolute inset-y-0 left-0 w-2 border-y border-l border-current" />

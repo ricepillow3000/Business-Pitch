@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useRef } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import { onReveal } from "@/lib/intro";
@@ -18,6 +19,7 @@ import { Plus } from "./Plus";
  */
 export function HUD() {
   const root = useRef<HTMLDivElement>(null);
+  const home = usePathname() === "/"; // on /privacy and /terms the links lead back home
 
   useGSAP(
     (_, contextSafe) => {
@@ -77,10 +79,12 @@ export function HUD() {
       {/* top bar */}
       <div data-hud-bar className="hud-bar absolute inset-x-0 top-0 flex h-14 items-center gap-3 border-b border-slate-line px-4 md:h-[72px] md:gap-5 md:px-6">
         {corner}
-        <a href="#top" data-fade aria-label="JIDO, back to top" className="hit pointer-events-auto">
+        <a href={home ? "#top" : "/"} data-fade aria-label={home ? "JIDO, back to top" : "JIDO, home"} className="hit pointer-events-auto">
           <Logo markClassName="h-7 w-7" />
         </a>
-        <a href="#initiation" data-fade className="hit pointer-events-auto ml-auto font-hud">Contact</a>
+        <a href={home ? "#initiation" : "/#initiation"} data-fade className="hit pointer-events-auto ml-auto font-hud">
+          Contact
+        </a>
         {corner}
       </div>
 
@@ -104,7 +108,7 @@ export function HUD() {
         SYS.LINK // STABLE &nbsp;·&nbsp; 0x7F3A-02C9 &nbsp;·&nbsp; E1B4 9C07 33AF
       </p>
       <p data-fade className="absolute top-1/2 right-6 hidden -translate-y-1/2 font-hud whitespace-nowrap opacity-60 [writing-mode:vertical-rl] lg:block">
-        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.3.0
+        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.4.0
       </p>
     </div>
   );

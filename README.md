@@ -1,4 +1,4 @@
-# JIDO — Intelligent workflows for local businesses
+# JIDO: intelligent workflows for local businesses
 
 One-page agency site. Marathon-style HUD art direction, Lusion-style motion.
 Next.js 16 (static export) · GSAP 3 (ScrollTrigger, SplitText, CustomEase, ScrambleText) · Lenis · Tailwind v4.
@@ -42,7 +42,7 @@ With the dev server running (needs Playwright: `npm i -D playwright && npx playw
 node tests/verify.cjs http://localhost:3000
 ```
 
-64 checks: loader choreography, HUD bars + section label, cursor brackets, magnetic button, in-page navigation without reloads, every section's reveals, phone layout, reduced motion, zero JS errors, **and the 20 UX & animation principles below**.
+79 checks: loader choreography, HUD bars + section label, cursor brackets, magnetic button, in-page navigation without reloads, every section's reveals, phone layout, reduced motion, zero JS errors, **the 20 UX & animation principles** and **the no-AI-slop scan** below.
 
 ## UX & animation principles (enforced)
 
@@ -71,6 +71,23 @@ Every principle has a check (`UX 01` … `UX 20`) in `tests/verify.cjs`. If a ch
 | 19 | Jakob's law | Logo top-left → home, Contact top-right, new-tab links marked ↗ |
 | 20 | Frequency of use | Contact stays visible, one click away, at every scroll position |
 
+## No AI slop (enforced)
+
+The site is scanned for the usual "AI-made website" tells, on the home page and both legal pages. Any hit fails the run.
+
+| Not allowed | How it is checked |
+|---|---|
+| Drop shadows, glows, blur | No `box-shadow`, `text-shadow`, `drop-shadow` or `blur` on any element |
+| Radial orbs, harsh gradients, gradient text | No `radial-` / `conic-gradient`, no `background-clip: text` (the text backdrop is a feathered rectangle) |
+| Liquid glass | No `backdrop-filter` |
+| Soft corner radius | Every corner is square (the button uses an angled chamfer) |
+| Em dashes, emojis, checkmarks, sparkles | Scanned in the visible text and the page title |
+| Inter / Geist / Space Grotesk, Lucide icons | Fonts are Archivo + JetBrains Mono; no icon library |
+| Pure white backgrounds, purple, neon, pastel | Slate background; text only in beige / flag blue (see UX 12) |
+| Hover animations, animated arrows | No `:hover` rule moves, scales or rotates anything |
+| Pricing tiers, fake testimonials, star ratings, bento grids, terminal windows, 3 cards in a row | None on the page; no `blockquote`, prices or ratings |
+| No Terms / no Privacy policy | `/terms` and `/privacy` exist and are linked from the footer |
+
 ## Build (static)
 
 ```bash
@@ -93,4 +110,5 @@ Outputs plain files to `out/`, deployable to any CDN.
 | `components/WorkflowGraph.tsx` | Automation section: SVG workflow map |
 | `components/Logo.tsx`, `app/icon.svg` | Logo mark + wordmark, favicon |
 | `app/page.tsx` | The four sections + their scroll reveals |
+| `app/privacy`, `app/terms`, `components/LegalPage.tsx` | Privacy policy + Terms of service |
 | `lib/contact.ts`, `components/ContactMenu.tsx` | Email address + Gmail link (no mailto, so Outlook never opens) |

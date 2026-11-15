@@ -6,7 +6,7 @@ import { SmoothScroll } from "@/components/SmoothScroll";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "JIDO — Intelligent workflows for local businesses",
+  title: "JIDO | Intelligent workflows for local businesses",
   description:
     "We build intelligent workflows for local businesses. Automate the repetitive, focus on the essential.",
 };

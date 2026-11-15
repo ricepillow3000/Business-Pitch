@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { EMAIL as email, GMAIL as gmail } from "@/lib/contact";
 import { smooth } from "@/lib/lenis";
+import { Plus } from "./Plus";
 
 /**
  * "Start the conversation" button. Clicking it opens a small menu so the
@@ -58,9 +59,10 @@ export function ContactMenu() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Snappy (≤300ms) and staggered: the rows settle in just after the panel (follow-through).
+  // Snappy (300ms or less) and staggered: the rows settle in just after the panel (follow-through).
+  // Hover only swaps the background colour instantly: no hover animation.
   const row = (i: number, extra = "") => ({
-    className: `flex w-full items-center gap-5 px-5 py-4 text-left transition-[background-color,opacity,translate] duration-300 ease-expo hover:bg-slate-line/60 ${
+    className: `flex w-full items-center gap-5 px-5 py-4 text-left transition-[opacity,translate] duration-300 ease-expo hover:bg-slate-line/60 ${
       open ? "translate-y-0 opacity-100" : "translate-y-1.5 opacity-0"
     } ${extra}`,
     style: { transitionDelay: open ? `${60 + i * 50}ms` : "0ms" },
@@ -82,20 +84,12 @@ export function ContactMenu() {
           data-press
           className="chamfer inline-flex items-center gap-8 bg-beige py-6 pr-6 pl-8 text-flag-deep transition-[scale] duration-150 ease-out group-active:scale-[0.96] md:py-8 md:pr-8 md:pl-10"
         >
-          <span className="relative block overflow-hidden font-wide text-sm md:text-base">
-            <span className="block transition-transform duration-500 ease-expo group-hover:-translate-y-full">Start the conversation</span>
-            <span aria-hidden className="absolute inset-0 translate-y-full transition-transform duration-500 ease-expo group-hover:translate-y-0">
-              Start the conversation
-            </span>
-          </span>
+          <span className="font-wide text-sm md:text-base">Start the conversation</span>
           <span aria-hidden className="grid h-9 w-9 place-items-center bg-flag-deep text-beige">
-            {/* anticipation: the arrow winds back while pressed, then launches */}
-            <span
-              className={`transition-[rotate,translate] duration-300 ease-expo group-active:-translate-x-0.5 group-active:translate-y-0.5 ${
-                open ? "rotate-90" : "group-hover:rotate-45"
-              }`}
-            >
-              ↗
+            {/* HUD crosshair, turns into × while the menu is open. Anticipation: it gathers
+                (shrinks) while pressed, then snaps open on release. No hover animation. */}
+            <span data-mark className={`block transition-[rotate,scale] duration-300 ease-expo group-active:scale-75 ${open ? "rotate-45" : ""}`}>
+              <Plus />
             </span>
           </span>
         </span>
@@ -103,7 +97,7 @@ export function ContactMenu() {
 
       <div
         id="contact-options"
-        className={`absolute top-full left-0 z-10 mt-3 w-[min(100%,26rem)] min-w-[18rem] border border-flag/40 bg-slate shadow-2xl transition-[opacity,translate,visibility] duration-250 ease-expo ${
+        className={`absolute top-full left-0 z-10 mt-3 w-[min(100%,26rem)] min-w-[18rem] border border-flag/40 bg-slate transition-[opacity,translate,visibility] duration-250 ease-expo ${
           open ? "visible translate-y-0 opacity-100" : "invisible -translate-y-2 opacity-0"
         }`}
       >
@@ -119,7 +113,7 @@ export function ContactMenu() {
         <button type="button" {...row(1, copied ? "bg-flag/15" : "")} onClick={copy}>
           <span className="font-hud text-flag">02</span>
           <span className="flex-1">
-            <span className="block font-wide text-sm text-beige">{copied ? "Copied ✓" : "Copy address"}</span>
+            <span className="block font-wide text-sm text-beige">{copied ? "Copied" : "Copy address"}</span>
             <span className="block text-sm break-all text-flag">{email}</span>
           </span>
         </button>

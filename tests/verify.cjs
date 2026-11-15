@@ -207,14 +207,13 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   await wait(page, 250);
   const pressed = await page.evaluate((s) => {
     const btn = document.querySelector(s);
-    const arrow = btn.querySelector("[aria-hidden] > span");
-    return { scale: getComputedStyle(btn.querySelector("[data-press]")).scale, wind: getComputedStyle(arrow).translate };
+    return { scale: getComputedStyle(btn.querySelector("[data-press]")).scale, wind: getComputedStyle(btn.querySelector("[data-mark]")).scale };
   }, cta);
   await page.mouse.up();
   ux(1, "Squash & stretch: cursor stretches on fast moves, button squashes on press", stretch > 0.04 && parseFloat(pressed.scale) < 1, `stretch ${stretch.toFixed(2)}, press scale ${pressed.scale}`);
 
-  // 2 Anticipation: the loader reaches toward you before it splits; the CTA arrow winds back before launching
-  ux(2, "Anticipation wind-up: loader 'reach' before the split, arrow pulls back on press", passed("Reach:") && pressed.wind !== "none" && pressed.wind !== "0px", `arrow translate ${pressed.wind}`);
+  // 2 Anticipation: the loader reaches toward you before it splits; the CTA crosshair gathers while pressed, snaps open on release
+  ux(2, "Anticipation wind-up: loader 'reach' before the split, button crosshair gathers on press", passed("Reach:") && parseFloat(pressed.wind) < 1, `crosshair scale ${pressed.wind} while pressed`);
 
   // 17 Doherty threshold: a click answers in under 400ms
   await wait(page, 380);
@@ -246,14 +245,14 @@ const wait = (p, ms) => p.waitForTimeout(ms);
     const r = document.querySelector("#contact-options button");
     return { text: r.textContent, bg: getComputedStyle(r).backgroundColor };
   });
-  ux(10, "Exaggerated feedback: 'Copy address' flips to 'Copied ✓' and lights up", fb.text.includes("Copied ✓") && fb.bg !== "rgba(0, 0, 0, 0)", fb.bg);
+  ux(10, "Exaggerated feedback: 'Copy address' flips to 'Copied' and lights up", fb.text.includes("Copied") && fb.bg !== "rgba(0, 0, 0, 0)", fb.bg);
 
   // 18 Postel's law: copying still works when the browser blocks the clipboard API
   await wait(page, 2200);
   await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { value: () => Promise.reject(new Error("blocked")) }));
   await page.click("#contact-options button");
   await wait(page, 200);
-  ux(18, "Postel's law: copy falls back gracefully when the clipboard API is blocked", (await page.textContent("#contact-options button")).includes("Copied ✓"));
+  ux(18, "Postel's law: copy falls back gracefully when the clipboard API is blocked", (await page.textContent("#contact-options button")).includes("Copied"));
 
   // 11 Solid layering: things never clip through each other (open menu sits on top of what follows)
   const solid = await page.evaluate(() => {
@@ -335,12 +334,89 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   }
   ux(20, "Frequency of use: Contact is visible and one click away at every scroll position", reach.every(Boolean), reach.join("/"));
 
+
+  /* ── NO AI SLOP (enforced) ───────────────────────────────────
+     Scans styles + text for the usual "AI-made website" tells. Any hit fails the run. */
+  const slopScan = (pg) => pg.evaluate(() => {
+    const issues = {};
+    const add = (k, v) => { issues[k] ??= []; if (issues[k].length < 3) issues[k].push(v); };
+    const name = (el) => el.tagName.toLowerCase() + (typeof el.className === "string" && el.className ? "." + el.className.trim().split(/\s+/)[0] : "");
+    const all = [...document.querySelectorAll("body *")];
+    for (const el of all) {
+      const cs = getComputedStyle(el);
+      for (const c of [cs, getComputedStyle(el, "::before"), getComputedStyle(el, "::after")]) {
+        if (c.boxShadow !== "none" || c.textShadow !== "none" || /drop-shadow|blur/.test(c.filter)) add("shadow", name(el));
+        if (c.backdropFilter && c.backdropFilter !== "none") add("glass", name(el));
+        if (/radial-gradient|conic-gradient/.test(c.backgroundImage)) add("orb", name(el));
+        if (c.backgroundClip === "text") add("gradientText", name(el));
+        if (["borderTopLeftRadius", "borderTopRightRadius", "borderBottomLeftRadius", "borderBottomRightRadius"].some((k) => parseFloat(c[k]) > 0)) add("radius", name(el));
+      }
+      // (skip Next.js's own dev-only overlay, which never ships to the real site)
+      if (!cs.fontFamily.includes("__nextjs") && /(^|[\s,"])(inter|geist|space grotesk)/i.test(cs.fontFamily)) add("font", cs.fontFamily);
+      if (/^rgba?\(255, 255, 255(, 1)?\)$/.test(cs.backgroundColor)) add("white", name(el));
+    }
+    const text = document.body.innerText + " " + document.title;
+    const grab = (re) => (text.match(re) || [""])[0];
+    if (/[—–]/.test(text)) add("dash", grab(/.{0,24}[—–].{0,24}/));
+    if (/\p{Emoji_Presentation}/u.test(text)) add("emoji", grab(/\p{Emoji_Presentation}/u));
+    if (/[✓✔☑✅]/.test(text)) add("checkmark", grab(/[✓✔☑✅]/));
+    if (/[✦✧✨⭐★☆]/.test(text)) add("sparkle/stars", grab(/[✦✧✨⭐★☆]/));
+    if (/\/mo\b|per month|pricing|testimonial/i.test(text) || document.querySelector("blockquote")) add("pricing/testimonials", "found");
+    if (document.querySelector("svg.lucide, [class*='lucide']")) add("lucide", "icon");
+    // hover may only swap colours instantly: nothing moves, scales or rotates on hover
+    const walk = (rules, hover) => {
+      for (const r of rules) {
+        const h = hover || (r.selectorText || "").includes(":hover");
+        if (h && r.style && /translate|rotate|scale|transform|animation/.test(r.style.cssText)) add("hoverAnimation", r.selectorText || "nested rule");
+        if (r.cssRules) walk(r.cssRules, h);
+      }
+    };
+    for (const sh of document.styleSheets) { try { walk(sh.cssRules, false); } catch {} }
+    return issues;
+  });
+  const slop = await slopScan(page);
+  const none = (...keys) => keys.every((k) => !slop[k]);
+  const why = (...keys) => keys.filter((k) => slop[k]).map((k) => `${k}: ${slop[k].join(", ")}`).join(" | ");
+  check("No AI slop: no drop shadows, glows or blur", none("shadow"), why("shadow"));
+  check("No AI slop: no radial orbs, no gradient text", none("orb", "gradientText"), why("orb", "gradientText"));
+  check("No AI slop: no liquid glass (backdrop blur)", none("glass"), why("glass"));
+  check("No AI slop: square corners everywhere (no soft radius)", none("radius"), why("radius"));
+  check("No AI slop: no em dashes, emojis, checkmarks or sparkles in the text", none("dash", "emoji", "checkmark", "sparkle/stars"), why("dash", "emoji", "checkmark", "sparkle/stars"));
+  check("No AI slop: no Inter / Geist / Space Grotesk fonts, no Lucide icons", none("font", "lucide"), why("font", "lucide"));
+  check("No AI slop: no pure white backgrounds", none("white"), why("white"));
+  check("No AI slop: no hover animations (hover never moves, scales or rotates)", none("hoverAnimation"), why("hoverAnimation"));
+  check("No AI slop: no pricing tiers, fake testimonials or star ratings", none("pricing/testimonials"));
+  check("Footer links to a Privacy policy and Terms of service", (await page.$('footer a[href="/privacy"]')) && (await page.$('footer a[href="/terms"]')));
+
   // 17 (repeat visit) Doherty threshold: the full show plays once; a reload is quick
   const t0 = Date.now();
   await page.reload();
   await page.waitForFunction(() => !document.documentElement.classList.contains("lenis-stopped") && document.querySelector("[data-loader]")?.dataset.intro, null, { timeout: 8000 });
   const quick = { ms: Date.now() - t0, mode: await page.evaluate(() => document.querySelector("[data-loader]").dataset.intro) };
   ux(17, "Doherty threshold: a repeat visit skips the long intro (usable in under 2.5s)", quick.mode === "quick" && quick.ms < 2500, `${quick.mode} intro, usable after ${quick.ms}ms`);
+
+
+  /* ── LEGAL PAGES ─────────────────────────────────────────── */
+  for (const [path, label, heading] of [["/privacy", "PRIVACY", "Privacy policy."], ["/terms", "TERMS", "Terms of service."]]) {
+    await page.goto(BASE + path);
+    await page.waitForFunction(() => !document.documentElement.classList.contains("lenis-stopped") && document.querySelector("[data-loader]")?.dataset.intro, null, { timeout: 8000 });
+    await wait(page, 1200);
+    const lp = await page.evaluate(() => ({
+      h1: document.querySelector("h1")?.textContent,
+      updated: /last updated/i.test(document.body.innerText),
+      label: document.querySelector("[data-hud-text]").textContent,
+      contact: document.querySelector('[data-hud-bar] a[href$="#initiation"]').getAttribute("href"),
+      home: document.querySelector('[data-hud-bar] a[aria-label^="JIDO"]').getAttribute("href"),
+    }));
+    check(`${heading.replace(".", "")} page: loads in the site style, HUD links lead back home`, lp.h1 === heading && lp.updated && lp.label === label && lp.contact === "/#initiation" && lp.home === "/", JSON.stringify(lp));
+    const ls = await slopScan(page);
+    check(`${heading.replace(".", "")} page: no AI-slop markers either`, Object.keys(ls).length === 0, JSON.stringify(ls));
+  }
+  await page.click('[data-hud-bar] a[href="/#initiation"]');
+  await page.waitForURL(/#initiation$/);
+  const waitErr = await page.waitForFunction(() => Math.abs(document.getElementById("initiation").getBoundingClientRect().top) < 5, null, { timeout: 8000 }).then(() => "", (e) => e.message.split("\n")[0]);
+  const landed = await page.evaluate(() => Math.round(document.getElementById("initiation").getBoundingClientRect().top));
+  check("Contact from a legal page lands on the contact section", Math.abs(landed) < 5, `section top ${landed}px ${waitErr}`.trim());
 
   check("No JavaScript errors (desktop)", errors.length === 0, errors.join(" | "));
 
