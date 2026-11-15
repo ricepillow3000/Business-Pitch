@@ -53,7 +53,23 @@ const wait = (p, ms) => p.waitForTimeout(ms);
 
   // 2. HUD
   check("HUD: 4 corner crosshairs", (await page.$$("[data-corner]")).length === 4);
-  check("HUD: rotated micro-data present", (await page.textContent("body")).includes("SYS.LOC //"));
+  check("HUD: rotated micro-data present", (await page.textContent("body")).includes("SYS.LINK //"));
+  const layout = await page.evaluate(() => {
+    const bars = [...document.querySelectorAll("[data-hud-bar]")];
+    const inside = (sel, bar) => { const r = document.querySelector(sel).getBoundingClientRect(), b = bar.getBoundingClientRect(); return r.top >= b.top && r.bottom <= b.bottom; };
+    const sec = document.getElementById("friction"), sr = sec.getBoundingClientRect();
+    const contentLeft = sr.left + parseFloat(getComputedStyle(sec).paddingLeft);
+    const edge = [...document.querySelectorAll("[data-fade]")].find((e) => e.textContent.includes("SYS.LINK")).getBoundingClientRect();
+    return {
+      solid: bars.length === 2 && bars.every((b) => getComputedStyle(b).backgroundColor === "rgb(20, 24, 27)"),
+      top: inside('a[aria-label="JIDO, back to top"]', bars[0]) && inside('a[href="#initiation"]', bars[0]),
+      bottom: inside("[data-hud-label]", bars[1]) && inside("[data-scroll]", bars[1]),
+      margin: edge.right < contentLeft, edgeRight: edge.right, contentLeft,
+    };
+  });
+  check("HUD: top + bottom bars are solid, so text slides under them (no overlap)", layout.solid);
+  check("HUD: logo + Contact sit inside the top bar, label + scroll inside the bottom bar", layout.top && layout.bottom);
+  check("HUD: side micro-data stays in the margin, clear of the text", layout.margin, `micro-data ends ${layout.edgeRight.toFixed(0)}px, text starts ${layout.contentLeft.toFixed(0)}px`);
   const blocks = await page.evaluate(() =>
     [...document.querySelectorAll('a[href="#top"] [data-block]')].map((b) => ({
       op: +getComputedStyle(b).opacity,
@@ -67,15 +83,13 @@ const wait = (p, ms) => p.waitForTimeout(ms);
     `${blocks.length} blocks, ${blocks.filter((b) => b.op === 1).length} settled`,
   );
   const pager = () =>
-    page.evaluate(() => {
-      const digits = [...document.querySelectorAll("[data-reel]")].map((r) => {
-        const m = new DOMMatrix(getComputedStyle(r).transform);
-        return Math.round(-m.f / (r.offsetHeight / 10));
-      });
-      return { n: digits.join(""), label: document.querySelector("[data-hud-label]").textContent };
-    });
+    page.evaluate(() => ({
+      label: document.querySelector("[data-hud-text]").textContent,
+      shown: +getComputedStyle(document.querySelector("[data-hud-label]")).opacity > 0.9,
+    }));
   let p = await pager();
-  check("Pagination starts at [[001]] OVERVIEW", p.n === "001" && p.label === "OVERVIEW", JSON.stringify(p));
+  check("Page numbers removed (no [[00X]] anywhere)", !/\[\[\d{3}\]\]/.test(await page.textContent("body")) && !(await page.$("[data-reel]")));
+  check("Bottom label shows OVERVIEW on the hero", p.label === "OVERVIEW" && p.shown, JSON.stringify(p));
 
   // 3. Cursor
   check("Custom cursor active on mouse devices", await page.evaluate(() => document.documentElement.classList.contains("has-cursor")));
@@ -100,9 +114,9 @@ const wait = (p, ms) => p.waitForTimeout(ms);
     top: document.getElementById("initiation").getBoundingClientRect().top,
     loads: performance.getEntriesByType("navigation").length,
   }));
-  check("Contact link smooth-scrolls to [[004]] with NO page reload", nav.alive === "same-page" && nav.loads === 1 && Math.abs(nav.top) < 5, `section top=${nav.top.toFixed(0)}px, page state kept=${nav.alive === "same-page"}`);
+  check("Contact link smooth-scrolls to the contact section with NO page reload", nav.alive === "same-page" && nav.loads === 1 && Math.abs(nav.top) < 5, `section top=${nav.top.toFixed(0)}px, page state kept=${nav.alive === "same-page"}`);
   p = await pager();
-  check("Pagination rolled to [[004]] INITIATION", p.n === "004" && p.label === "INITIATION", JSON.stringify(p));
+  check("Bottom label switched to INITIATION", p.label === "INITIATION" && p.shown, JSON.stringify(p));
 
   // 5. Magnetic CTA
   const btn = await page.$("[data-magnetic]");
@@ -118,27 +132,36 @@ const wait = (p, ms) => p.waitForTimeout(ms);
   const menuBottom = await page.evaluate((m) => document.querySelector(m).getBoundingClientRect().bottom - innerHeight, menu);
   check("Email menu is scrolled fully into view when opened", menuBottom <= 0, `${Math.round(-menuBottom)}px above the bottom edge`);
   const gmail = await page.getAttribute(`${menu} a[target="_blank"]`, "href");
-  check("Clicking 'Start the conversation' offers Gmail / email app / copy", (await page.isVisible(menu)) && (await page.$$(`${menu} a, ${menu} button`)).length === 3);
+  check("Clicking 'Start the conversation' offers Gmail / copy address", (await page.isVisible(menu)) && (await page.$$(`${menu} a, ${menu} button`)).length === 2);
   check("Gmail option opens a new Gmail email to the right address", gmail.startsWith("https://mail.google.com/mail/") && gmail.includes("to=john7000.nguyen%40gmail.com"), gmail);
-  check("Email-app option uses mailto:", (await page.getAttribute(`${menu} a[href^="mailto:"]`, "href")).startsWith("mailto:john7000.nguyen@gmail.com"));
+  check("No email link opens Outlook / the default mail app (no mailto: anywhere)", !(await page.$('a[href^="mailto:"]')));
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/4b-email-menu.png` });
   await page.keyboard.press("Escape");
   await wait(page, 700);
   check("Escape closes the email menu", !(await page.isVisible(menu)));
-  check("Contact: email address shown as a link", await page.isVisible('#initiation dl a[href="mailto:john7000.nguyen@gmail.com"]'));
+  check("Contact: email address is a link that opens Gmail", await page.isVisible('#initiation dl a[href^="https://mail.google.com/"][target="_blank"]'));
   check("Phone number removed from the site", !(await page.textContent("body")).includes("265-9930") && !(await page.$('a[href^="tel:"]')));
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/4-initiation.png` });
 
-  // 6. Every section: pagination + reveals
+  // 6. Every section: label + reveals
   await page.mouse.move(1300, 120);
-  const sections = [["top", "001", "OVERVIEW"], ["friction", "002", "FRICTION"], ["automation", "003", "AUTOMATION"], ["initiation", "004", "INITIATION"]];
-  for (const [id, n, label] of sections) {
+  const sections = [["top", "OVERVIEW"], ["friction", "FRICTION"], ["automation", "AUTOMATION"], ["initiation", "INITIATION"]];
+  for (const [id, label] of sections) {
     await page.evaluate((id) => document.getElementById(id).scrollIntoView(), id);
     await wait(page, 1800);
     p = await pager();
     const hidden = await page.evaluate((id) =>
       [...document.querySelectorAll(`#${id} [data-reveal]`)].filter((el) => getComputedStyle(el).opacity < 0.99).length, id);
-    check(`[[${n}]] ${label}: pagination correct + content revealed`, p.n === n && p.label === label && hidden === 0, `${JSON.stringify(p)} hidden=${hidden}`);
+    check(`${label}: bottom label shown + content revealed`, p.label === label && p.shown && hidden === 0, `${JSON.stringify(p)} hidden=${hidden}`);
+    if (id === "friction") {
+      // halfway between two sections, neither "owns" the screen: the label steps aside
+      await page.evaluate(() => window.scrollTo(0, scrollY + document.getElementById("friction").getBoundingClientRect().top - innerHeight / 2));
+      await wait(page, 1200);
+      const between = await pager();
+      check("Bottom label hides between sections", !between.shown, JSON.stringify(between));
+      await page.evaluate(() => document.getElementById("friction").scrollIntoView());
+      await wait(page, 1200);
+    }
     if (SHOTS && (id === "friction" || id === "automation")) await page.screenshot({ path: `${SHOTS}/${id === "friction" ? 2 : 3}-${id}.png` });
     if (id === "friction") {
       await page.evaluate(() => document.querySelector("[data-strikes]").scrollIntoView({ block: "start" }));

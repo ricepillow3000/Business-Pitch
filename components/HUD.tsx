@@ -6,50 +6,42 @@ import { onReveal } from "@/lib/intro";
 import { Logo } from "./Logo";
 import { Plus } from "./Plus";
 
-/** One slot-machine reel: a 0–9 strip inside a one-digit window. */
-function Reel() {
-  return (
-    <span className="inline-block h-[1em] overflow-hidden align-top">
-      <span data-reel className="flex flex-col">
-        {Array.from({ length: 10 }, (_, d) => (
-          <span key={d} className="block h-[1em] leading-none">{d}</span>
-        ))}
-      </span>
-    </span>
-  );
-}
-
 /**
- * Global tactical frame: crosshairs in the corners, rotated micro-data on the
- * edges, and [[00X]] pagination that rolls like a slot machine as sections pass.
- * Reads sections from the DOM (`[data-section]` + `data-label`), so the page
- * owns its content and the HUD only observes it.
+ * Global tactical frame. Two thin bars (top + bottom) share the page's own
+ * background, so content slides *under* them and never collides with the HUD.
+ *
+ * Top bar:    + JIDO ............................ CONTACT +
+ * Bottom bar: + ■ FRICTION .......................  SCR 042% +
+ *
+ * The bottom label only shows while a section fills the screen: it hides
+ * between sections and scrambles in with the next one's name.
  */
 export function HUD() {
   const root = useRef<HTMLDivElement>(null);
 
   useGSAP(
     (_, contextSafe) => {
-      const reels = gsap.utils.toArray<HTMLElement>("[data-reel]", root.current);
-      const [label, loc, scroll] = ["hud-label", "loc", "scroll"].map((k) => root.current!.querySelector<HTMLElement>(`[data-${k}]`)!);
+      const q = (k: string) => root.current!.querySelector<HTMLElement>(`[data-${k}]`)!;
+      const [label, text, scroll] = [q("hud-label"), q("hud-text"), q("scroll")];
 
-      const go = (index: number, text: string) => {
-        const digits = String(index + 1).padStart(3, "0");
-        reels.forEach((reel, i) =>
-          gsap.to(reel, { yPercent: -10 * Number(digits[i]), duration: 0.9, ease: "expo.inOut", overwrite: true }),
-        );
-        gsap.to(label, { duration: 0.8, scrambleText: { text, chars: "0123456789/#_", speed: 0.5 }, overwrite: true });
-        loc.textContent = digits;
+      gsap.set(label, { autoAlpha: 0 });
+      let triggers: ScrollTrigger[] = [];
+      let shown = "";
+      const sync = () => {
+        const active = triggers.find((t) => t.isActive);
+        const name = active ? (active.trigger as HTMLElement).dataset.label ?? "" : "";
+        if (name === shown) return;
+        shown = name;
+        if (!name) return void gsap.to(label, { autoAlpha: 0, duration: 0.35, overwrite: true });
+        gsap.to(label, { autoAlpha: 1, duration: 0.35, overwrite: true });
+        gsap.to(text, { duration: 0.8, scrambleText: { text: name, chars: "0123456789/#_", speed: 0.5 }, overwrite: true });
       };
 
-      document.querySelectorAll<HTMLElement>("[data-section]").forEach((el, i) =>
-        ScrollTrigger.create({
-          trigger: el,
-          start: "top 55%",
-          end: "bottom 55%",
-          onToggle: (self) => self.isActive && go(i, el.dataset.label ?? ""),
-        }),
+      // A section counts as "on screen" once it covers the middle 40% of the viewport.
+      triggers = [...document.querySelectorAll<HTMLElement>("[data-section]")].map((el) =>
+        ScrollTrigger.create({ trigger: el, start: "top 30%", end: "bottom 70%", onToggle: sync }),
       );
+      sync();
 
       ScrollTrigger.create({
         start: 0,
@@ -78,43 +70,41 @@ export function HUD() {
     { scope: root },
   );
 
+  const corner = <span data-corner className="block h-[13px] w-[13px] shrink-0"><Plus /></span>;
+
   return (
     <div ref={root} className="pointer-events-none fixed inset-0 z-50 text-flag">
-      {/* corners */}
-      <span data-corner className="absolute top-4 left-4 h-[13px] w-[13px] md:top-6 md:left-6"><Plus /></span>
-      <span data-corner className="absolute top-4 right-4 h-[13px] w-[13px] md:top-6 md:right-6"><Plus /></span>
-      <span data-corner className="absolute bottom-4 left-4 h-[13px] w-[13px] md:bottom-6 md:left-6"><Plus /></span>
-      <span data-corner className="absolute right-4 bottom-4 h-[13px] w-[13px] md:right-6 md:bottom-6"><Plus /></span>
-
       {/* top bar */}
-      <a href="#top" data-fade aria-label="JIDO, back to top" className="pointer-events-auto absolute top-2 left-10 md:top-[14px] md:left-14">
-        <Logo markClassName="h-7 w-7" />
-      </a>
-      <a href="#initiation" data-fade className="pointer-events-auto absolute top-3.5 right-10 font-hud md:top-6 md:right-14">
-        Contact
-      </a>
-
-      {/* pagination */}
-      <div data-fade className="absolute bottom-3.5 left-10 flex items-baseline gap-3 md:bottom-6 md:left-14">
-        <span className="font-mono text-xs leading-none tracking-wider text-beige">
-          [[<Reel />
-          <Reel />
-          <Reel />]]
-        </span>
-        <span data-hud-label className="font-hud">OVERVIEW</span>
+      <div data-hud-bar className="hud-bar absolute inset-x-0 top-0 flex h-14 items-center gap-3 border-b border-slate-line px-4 md:h-[72px] md:gap-5 md:px-6">
+        {corner}
+        <a href="#top" data-fade aria-label="JIDO, back to top" className="pointer-events-auto">
+          <Logo markClassName="h-7 w-7" />
+        </a>
+        <a href="#initiation" data-fade className="pointer-events-auto ml-auto font-hud">Contact</a>
+        {corner}
       </div>
 
-      {/* scroll readout */}
-      <p data-fade className="absolute right-10 bottom-3.5 font-hud md:right-14 md:bottom-6">
-        SCR <span data-scroll>000</span>%
-      </p>
+      {/* bottom bar */}
+      <div data-hud-bar className="hud-bar absolute inset-x-0 bottom-0 flex h-12 items-center gap-3 border-t border-slate-line px-4 md:h-16 md:gap-5 md:px-6">
+        {corner}
+        <p data-fade className="font-hud">
+          <span data-hud-label className="inline-flex items-center gap-2.5">
+            <span className="h-1.5 w-1.5 bg-beige" />
+            <span data-hud-text>OVERVIEW</span>
+          </span>
+        </p>
+        <p data-fade className="ml-auto font-hud">
+          SCR <span data-scroll>000</span>%
+        </p>
+        {corner}
+      </div>
 
-      {/* edge micro-data, set vertically (desktop only: keep phones clean) */}
-      <p data-fade className="absolute top-1/2 left-6 hidden -translate-y-1/2 rotate-180 font-hud whitespace-nowrap opacity-70 [writing-mode:vertical-rl] md:block">
-        SYS.LOC // <span data-loc>001</span> &nbsp;·&nbsp; 0x7F3A-02C9 &nbsp;·&nbsp; E1B4 9C07 33AF
+      {/* edge micro-data, set vertically (wide screens only, where the margins have room for it) */}
+      <p data-fade className="absolute top-1/2 left-6 hidden -translate-y-1/2 rotate-180 font-hud whitespace-nowrap opacity-60 [writing-mode:vertical-rl] lg:block">
+        SYS.LINK // STABLE &nbsp;·&nbsp; 0x7F3A-02C9 &nbsp;·&nbsp; E1B4 9C07 33AF
       </p>
-      <p data-fade className="absolute top-1/2 right-6 hidden -translate-y-1/2 font-hud whitespace-nowrap opacity-70 [writing-mode:vertical-rl] md:block">
-        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.1.0
+      <p data-fade className="absolute top-1/2 right-6 hidden -translate-y-1/2 font-hud whitespace-nowrap opacity-60 [writing-mode:vertical-rl] lg:block">
+        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.2.0
       </p>
     </div>
   );

@@ -42,7 +42,7 @@ With the dev server running (needs Playwright: `npm i -D playwright && npx playw
 node tests/verify.cjs http://localhost:3000
 ```
 
-38 checks: loader choreography, HUD pagination, cursor brackets, magnetic button, in-page navigation without reloads, every section's reveals, phone layout, reduced motion, zero JS errors.
+43 checks: loader choreography, HUD bars + section label, cursor brackets, magnetic button, in-page navigation without reloads, every section's reveals, phone layout, reduced motion, zero JS errors.
 
 ## Build (static)
 
@@ -60,9 +60,10 @@ Outputs plain files to `out/`, deployable to any CDN.
 | `lib/gsap.ts` | Plugin registration + the two custom eases (`reach` / `split`) |
 | `lib/intro.ts` | The one-shot "curtain split" signal everything else waits for |
 | `components/Loader.tsx` | JIDO intro: count → reach → split |
-| `components/HUD.tsx` | Crosshairs, edge micro-data, `[[00X]]` slot-machine pagination |
+| `components/HUD.tsx` | Top + bottom bars (content slides under them), crosshairs, edge micro-data, section label |
 | `components/Cursor.tsx` | Fluid blend-mode node → Flag Blue `[ ]` brackets, magnetic targets |
 | `components/SmoothScroll.tsx` | Lenis on GSAP's ticker; `#anchor` links scroll smoothly |
 | `components/WorkflowGraph.tsx` | [[003]] SVG automation map |
 | `components/Logo.tsx`, `app/icon.svg` | Logo mark + wordmark, favicon |
 | `app/page.tsx` | The four sections + their scroll reveals |
+| `lib/contact.ts`, `components/ContactMenu.tsx` | Email address + Gmail link (no mailto, so Outlook never opens) |

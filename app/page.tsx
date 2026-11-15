@@ -5,10 +5,10 @@ import { ContactMenu } from "@/components/ContactMenu";
 import { Logo } from "@/components/Logo";
 import { Plus } from "@/components/Plus";
 import { WorkflowGraph } from "@/components/WorkflowGraph";
+import { EMAIL, GMAIL } from "@/lib/contact";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 import { onReveal } from "@/lib/intro";
 
-const EMAIL = "john7000.nguyen@gmail.com";
 const TASKS = ["Re-typing form entries", "Chasing unpaid invoices", "Booking and rebooking", "Updating the CRM"];
 const WORKFLOWS = [
   { name: "Invoicing", line: "Completed jobs become invoices. Payments are matched to them." },
@@ -18,11 +18,11 @@ const WORKFLOWS = [
 
 /* ── small building blocks ─────────────────────────────────────────── */
 
-/** `[[002]] // THE FRICTION ───────` */
-function Tag({ n, children }: { n: string; children: string }) {
+/** `■ // THE FRICTION ───────` (the square echoes a block of the logo) */
+function Tag({ children }: { children: string }) {
   return (
     <div data-reveal className="flex items-center gap-4 font-hud text-flag">
-      <span className="text-beige">[[{n}]]</span>
+      <span className="h-1.5 w-1.5 bg-beige" />
       <span>// {children}</span>
       <span className="h-px flex-1 bg-slate-line" />
     </div>
@@ -54,7 +54,7 @@ export default function Home() {
 
   useGSAP(
     (_, contextSafe) => {
-      // [[001]] HERO: waits for the loader. Same ease + duration as the curtain split,
+      // HERO: waits for the loader. Same ease + duration as the curtain split,
       // so the page appears to be *uncovered* by the letters rather than animate after them.
       gsap.set("[data-hero-line]", { yPercent: 110 });
       gsap.set("[data-hero-fade]", { autoAlpha: 0, y: 24 });
@@ -94,7 +94,7 @@ export default function Home() {
         }),
       );
 
-      // [[002]] FRICTION: the statement lights up word by word as you read it.
+      // FRICTION: the statement lights up word by word as you read it.
       SplitText.create("[data-words]", {
         type: "words",
         autoSplit: true,
@@ -119,7 +119,7 @@ export default function Home() {
 
   return (
     <main ref={root}>
-      {/* ── [[001]] THE HERO ─────────────────────────────────────── */}
+      {/* ── THE HERO ─────────────────────────────────────── */}
       <section id="top" data-section data-label="OVERVIEW" className="gutter relative flex min-h-svh flex-col justify-end overflow-hidden pt-28 pb-20 md:pb-24">
         <div data-hero className="flex flex-col gap-10 md:gap-14">
           <p data-hero-fade className="font-hud text-flag">[ AI automation // local business ]</p>
@@ -139,9 +139,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── [[002]] THE FRICTION ─────────────────────────────────── */}
+      {/* ── THE FRICTION ─────────────────────────────────── */}
       <section id="friction" data-section data-label="FRICTION" className="gutter relative py-32 md:py-48">
-        <Tag n="002">The friction</Tag>
+        <Tag>The friction</Tag>
         <h2 data-words className="quiet mt-16 max-w-[17ch] font-wide text-display text-beige md:mt-24">
           The average business loses hours a week to manual tasks.
         </h2>
@@ -160,9 +160,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── [[003]] THE AUTOMATION ───────────────────────────────── */}
+      {/* ── THE AUTOMATION ───────────────────────────────── */}
       <section id="automation" data-section data-label="AUTOMATION" className="gutter relative py-32 md:py-48">
-        <Tag n="003">The automation</Tag>
+        <Tag>The automation</Tag>
         <h2 data-lines className="quiet mt-16 w-fit font-wide text-display text-beige md:mt-24">Connected, quietly.</h2>
         <div className="mt-12 grid items-center gap-20 md:mt-16 md:grid-cols-12">
           <div className="quiet md:col-span-5">
@@ -185,9 +185,9 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── [[004]] THE INITIATION ───────────────────────────────── */}
+      {/* ── THE INITIATION ───────────────────────────────── */}
       <section id="initiation" data-section data-label="INITIATION" className="gutter relative flex min-h-svh flex-col pt-32 pb-24 md:pt-48">
-        <Tag n="004">The initiation</Tag>
+        <Tag>The initiation</Tag>
         <h2 data-lines className="quiet mt-16 max-w-[18ch] font-wide text-display text-beige md:mt-24">
           Let systems handle the mechanical.
         </h2>
@@ -195,13 +195,13 @@ export default function Home() {
 
         {/* z-20: the reveal transform makes this a stacking context; keep the open menu above what follows */}
         <div data-reveal className="relative z-20 mt-16 md:mt-20">
-          <ContactMenu email={EMAIL} />
+          <ContactMenu />
         </div>
 
         <dl data-reveal className="quiet mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 md:mt-14">
           <dt className="self-center font-hud text-flag">Email</dt>
           <dd>
-            <a href={`mailto:${EMAIL}`} className="text-lead break-all text-beige">{EMAIL}</a>
+            <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="text-lead break-all text-beige">{EMAIL}</a>
           </dd>
         </dl>
 
@@ -213,7 +213,7 @@ export default function Home() {
             <Logo markClassName="h-8 w-8" />
             <span>© 2026 JIDO</span>
           </span>
-          <a href={`mailto:${EMAIL}`} className="w-fit normal-case tracking-wider">{EMAIL}</a>
+          <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="w-fit normal-case tracking-wider">{EMAIL}</a>
           <span>SYS.STATUS // ONLINE</span>
           <a href="#top" className="w-fit md:justify-self-end">Back to top ↑</a>
         </footer>

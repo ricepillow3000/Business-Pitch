@@ -69,15 +69,20 @@ html {
   color: var(--color-beige);
   -webkit-font-smoothing: antialiased;
 }
+/* subtle blueprint grid, fixed behind everything (96px cells) */
+:root {
+  --grid:
+    linear-gradient(to right, rgb(110 155 240 / 0.055) 1px, transparent 1px) center / 96px 96px fixed,
+    linear-gradient(to bottom, rgb(110 155 240 / 0.055) 1px, transparent 1px) center / 96px 96px fixed;
+}
 body {
   font-family: var(--font-display);
   overflow-x: clip;
-  /* subtle blueprint grid, fixed behind everything (96px cells) */
-  background:
-    linear-gradient(to right, rgb(110 155 240 / 0.055) 1px, transparent 1px) center / 96px 96px fixed,
-    linear-gradient(to bottom, rgb(110 155 240 / 0.055) 1px, transparent 1px) center / 96px 96px fixed,
-    var(--color-slate);
+  background: var(--grid), var(--color-slate);
 }
+/* HUD bars wear the same (fixed) background, so the page seems to slide under
+   an invisible frame: text never collides with the logo or the readouts. */
+.hud-bar { background: var(--grid), var(--color-slate); }
 ::selection { background: var(--color-beige); color: var(--color-flag-deep); }
 :focus-visible { outline: 1px solid var(--color-flag); outline-offset: 6px; }
 

@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { EMAIL as email, GMAIL as gmail } from "@/lib/contact";
 import { smooth } from "@/lib/lenis";
-
-const SUBJECT = "Hello JIDO";
 
 /**
  * "Start the conversation" button. Clicking it opens a small menu so the
- * visitor picks HOW to email: Gmail in a new tab, their own mail app, or
- * copy the address. Closes on Escape or a click outside.
+ * visitor picks: write in Gmail (new tab) or copy the address. There is
+ * deliberately no mailto: link, which would open Outlook on most PCs.
+ * Closes on Escape or a click outside.
  */
-export function ContactMenu({ email }: { email: string }) {
+export function ContactMenu() {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -44,8 +44,6 @@ export function ContactMenu({ email }: { email: string }) {
     }
   };
 
-  const gmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(SUBJECT)}`;
-  const mailto = `mailto:${email}?subject=${encodeURIComponent(SUBJECT)}`;
   const row = "flex w-full items-center gap-5 px-5 py-4 text-left transition-colors hover:bg-slate-line/60";
 
   return (
@@ -84,16 +82,8 @@ export function ContactMenu({ email }: { email: string }) {
           </span>
           <span aria-hidden className="text-beige">↗</span>
         </a>
-        <a href={mailto} className={row} onClick={() => setOpen(false)}>
-          <span className="font-hud text-flag">02</span>
-          <span className="flex-1">
-            <span className="block font-wide text-sm text-beige">Email app</span>
-            <span className="block text-sm text-flag">Outlook, Apple Mail, etc.</span>
-          </span>
-          <span aria-hidden className="text-beige">→</span>
-        </a>
         <button type="button" className={row} onClick={copy}>
-          <span className="font-hud text-flag">03</span>
+          <span className="font-hud text-flag">02</span>
           <span className="flex-1">
             <span className="block font-wide text-sm text-beige">{copied ? "Copied ✓" : "Copy address"}</span>
             <span className="block text-sm break-all text-flag">{email}</span>
