@@ -119,7 +119,9 @@ export default function Home() {
   return (
     <main ref={root}>
       {/* ── THE HERO ─────────────────────────────────────── */}
-      <section id="top" data-section data-label="OVERVIEW" className="gutter relative flex min-h-svh flex-col justify-end overflow-hidden pt-28 pb-20 md:pb-24">
+      {/* Upright screens (phones, tablets): the hero is as tall as its content, so the next section
+          follows instead of a screen of empty space. Wide screens: a full-screen hero, centred. */}
+      <section id="top" data-section data-label="OVERVIEW" className="gutter relative flex flex-col justify-center overflow-hidden pt-[calc(4rem+12svh)] pb-10 landscape:min-h-svh landscape:pt-28 landscape:pb-20 md:landscape:pb-24">
         <div data-hero className="flex flex-col gap-10 md:gap-14">
           <h1 className="quiet font-wide text-mega text-beige">
             <Line>Intelligent</Line>
@@ -138,7 +140,7 @@ export default function Home() {
       </section>
 
       {/* ── THE FRICTION ─────────────────────────────────── */}
-      <section id="friction" data-section data-label="FRICTION" className="gutter relative py-32 md:py-48">
+      <section id="friction" data-section data-label="FRICTION" className="gutter relative pt-16 pb-32 md:pb-48 landscape:pt-32 md:landscape:pt-48">
         <Tag>The friction</Tag>
         <h2 data-words className="quiet mt-16 max-w-[17ch] font-wide text-display text-beige md:mt-24">
           The average business loses hours a week to manual tasks.

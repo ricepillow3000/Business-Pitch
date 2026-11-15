@@ -60,6 +60,16 @@ node tests/contact-journeys.cjs http://localhost:3000
 
 The form's request is intercepted, so nothing is sent.
 
+### Cursor on touch, and first-screen spacing
+
+```bash
+node tests/cursor-touch.cjs http://localhost:3000
+node tests/hero-spacing.cjs http://localhost:3000
+```
+
+- **Cursor on touch:** the JIDO cursor appears on a finger tap, including in Chrome DevTools phone mode and on touchscreen laptops.
+- **First-screen spacing:** after the logo loads the home page, no empty band covers more than 25% of the screen. Checked on 3 phones, a tablet and 3 desktop sizes.
+
 ## Launch settings (`lib/site.ts`)
 
 | Setting | Now | What it does |
