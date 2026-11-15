@@ -42,7 +42,7 @@ With the dev server running (needs Playwright: `npm i -D playwright && npx playw
 node tests/verify.cjs http://localhost:3000
 ```
 
-30 checks: loader choreography, HUD pagination, cursor brackets, magnetic button, in-page navigation without reloads, every section's reveals, phone layout, reduced motion, zero JS errors.
+38 checks: loader choreography, HUD pagination, cursor brackets, magnetic button, in-page navigation without reloads, every section's reveals, phone layout, reduced motion, zero JS errors.
 
 ## Build (static)
 

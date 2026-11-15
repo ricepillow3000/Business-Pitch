@@ -114,7 +114,7 @@ export function HUD() {
         SYS.LOC // <span data-loc>001</span> &nbsp;·&nbsp; 0x7F3A-02C9 &nbsp;·&nbsp; E1B4 9C07 33AF
       </p>
       <p data-fade className="absolute top-1/2 right-6 hidden -translate-y-1/2 font-hud whitespace-nowrap opacity-70 [writing-mode:vertical-rl] md:block">
-        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.0.0
+        JIDO.OPS // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.1.0
       </p>
     </div>
   );
