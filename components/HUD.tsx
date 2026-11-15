@@ -67,13 +67,11 @@ export function HUD() {
         rotation: () => gsap.utils.random(-90, 90),
         autoAlpha: 0,
       });
-      gsap.set("[data-trace]", { autoAlpha: 0 });
       return onReveal(
         contextSafe!(() => {
           gsap.to("[data-corner]", { scale: 1, autoAlpha: 1, duration: 1.2, ease: "split", stagger: 0.06 });
           gsap.to("[data-fade]", { autoAlpha: 1, duration: 1, delay: 0.5, stagger: 0.08 });
           gsap.to("[data-block]", { x: 0, y: 0, rotation: 0, autoAlpha: 1, duration: 1.1, delay: 0.5, ease: "expo.inOut", stagger: { each: 0.04, from: "random" } });
-          gsap.to("[data-trace]", { autoAlpha: 1, duration: 0.6, delay: 1.5 });
         }),
       );
     },
