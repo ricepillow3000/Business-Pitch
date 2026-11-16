@@ -1,4 +1,4 @@
-import { EMAIL, GMAIL } from "@/lib/contact";
+import { EMAIL, GMAIL, SHOW_EMAIL } from "@/lib/contact";
 import { NAV } from "@/lib/site";
 import { Arrow } from "./Arrow";
 import { LegalLinks } from "./LegalLinks";
@@ -29,11 +29,13 @@ export function SiteFooter() {
       </nav>
       <LegalLinks className="flex-col" />
       <div className="flex flex-col md:items-end">
-        <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-fit items-center normal-case tracking-wider">
-          {EMAIL}
-          &nbsp;<Arrow />
-          <span className="sr-only"> (opens Gmail in a new tab)</span>
-        </a>
+        {SHOW_EMAIL && (
+          <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 w-fit items-center normal-case tracking-wider">
+            {EMAIL}
+            &nbsp;<Arrow />
+            <span className="sr-only"> (opens Gmail in a new tab)</span>
+          </a>
+        )}
         <a href="#top" className="inline-flex min-h-11 w-fit items-center gap-2">
           Back to top <Arrow dir="up" />
         </a>

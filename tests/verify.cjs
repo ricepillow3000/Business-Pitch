@@ -190,7 +190,9 @@ const instrument = () => {
   await page.keyboard.press("Escape");
   await wait(page, 700);
   check("Escape closes the email menu", !(await page.isVisible(menu)));
-  check("Contact: email address is a link that opens Gmail", await page.isVisible('#initiation dl a[href^="https://mail.google.com/"][target="_blank"]'));
+  if (await page.locator("#initiation [data-copy]").count())
+    check("Contact: email address is a link that opens Gmail", await page.isVisible('#initiation dl a[href^="https://mail.google.com/"][target="_blank"]'));
+  else results.push({ name: "Contact: email address is a link that opens Gmail  [SKIPPED: email hidden for now]", ok: true, detail: "SHOW_EMAIL is off", skipped: true });
   check("Phone number removed from the site", !(await page.textContent("body")).includes("265-9930") && !(await page.$('a[href^="tel:"]')));
   if (SHOTS) await page.screenshot({ path: `${SHOTS}/4-initiation.png` });
 
@@ -289,25 +291,34 @@ const instrument = () => {
   });
   ux(11, "Solid layering: the open menu sits cleanly above the content below it", solid);
 
-  // 10 Exaggerated feedback: copying the address answers loudly
-  await page.keyboard.press("Escape");
-  await wait(page, 500);
-  await page.evaluate(() => document.querySelector("#initiation [data-copy]").scrollIntoView({ block: "center" }));
-  await wait(page, 600);
-  await page.click("#initiation [data-copy]");
-  await wait(page, 200);
-  const fb = await page.evaluate(() => {
-    const r = document.querySelector("#initiation [data-copy]");
-    return { text: r.textContent, bg: getComputedStyle(r).backgroundColor };
-  });
-  ux(10, "Exaggerated feedback: 'Copy' flips to 'Copied' and lights up", fb.text.includes("Copied") && fb.bg !== "rgba(0, 0, 0, 0)", fb.bg);
+  // The email address (and its Copy button) can be switched off in lib/contact.ts (SHOW_EMAIL).
+  // While it is off, the copy checks are reported as SKIPPED rather than silently passing.
+  const hasCopy = (await page.locator("#initiation [data-copy]").count()) > 0;
+  const skip = (label) => results.push({ name: `${label}  [SKIPPED: email hidden for now]`, ok: true, detail: "SHOW_EMAIL is off", skipped: true });
+  if (hasCopy) {
+    // 10 Exaggerated feedback: copying the address answers loudly
+    await page.keyboard.press("Escape");
+    await wait(page, 500);
+    await page.evaluate(() => document.querySelector("#initiation [data-copy]").scrollIntoView({ block: "center" }));
+    await wait(page, 600);
+    await page.click("#initiation [data-copy]");
+    await wait(page, 200);
+    const fb = await page.evaluate(() => {
+      const r = document.querySelector("#initiation [data-copy]");
+      return { text: r.textContent, bg: getComputedStyle(r).backgroundColor };
+    });
+    ux(10, "Exaggerated feedback: 'Copy' flips to 'Copied' and lights up", fb.text.includes("Copied") && fb.bg !== "rgba(0, 0, 0, 0)", fb.bg);
 
-  // 18 Postel's law: copying still works when the browser blocks the clipboard API
-  await wait(page, 2200);
-  await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: () => Promise.reject(new Error("blocked")) }));
-  await page.click("#initiation [data-copy]");
-  await wait(page, 200);
-  ux(18, "Postel's law: copy falls back gracefully when the clipboard API is blocked", (await page.textContent("#initiation [data-copy]")).includes("Copied"));
+    // 18 Postel's law: copying still works when the browser blocks the clipboard API
+    await wait(page, 2200);
+    await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: () => Promise.reject(new Error("blocked")) }));
+    await page.click("#initiation [data-copy]");
+    await wait(page, 200);
+    ux(18, "Postel's law: copy falls back gracefully when the clipboard API is blocked", (await page.textContent("#initiation [data-copy]")).includes("Copied"));
+  } else {
+    skip("UX 10 Exaggerated feedback: 'Copy' flips to 'Copied' and lights up");
+    skip("UX 18 Postel's law: copy falls back gracefully when the clipboard API is blocked");
+  }
   await page.click("[data-cta]");
   await wait(page, 500);
 
@@ -356,11 +367,15 @@ const instrument = () => {
 
   // 14 Bigger hit areas: small text links still catch a click 20px above/below the text
   const small = ['a[aria-label="JIDO, back to top"]', '[data-hud-bar] a[href="#initiation"]', '#initiation dl a', 'footer a[href="#top"]', 'footer a[target="_blank"]'];
-  const misses = await page.evaluate((sels) => sels.filter((s) => {
-    const el = document.querySelector(s), r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
-    return ![y - 20, y + 20].every((py) => el.contains(document.elementFromPoint(x, py)));
-  }), small);
-  ux(14, "Bigger hit areas: every small link is at least 44px tall to the pointer", misses.length === 0, misses.join(", ") || `${small.length} links checked`);
+  // (the email links are left out while the address is hidden: SHOW_EMAIL)
+  const { misses, checked } = await page.evaluate((sels) => {
+    const present = sels.filter((s) => document.querySelector(s));
+    return { checked: present.length, misses: present.filter((s) => {
+      const el = document.querySelector(s), r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+      return ![y - 20, y + 20].every((py) => el.contains(document.elementFromPoint(x, py)));
+    }) };
+  }, small);
+  ux(14, "Bigger hit areas: every small link is at least 44px tall to the pointer", misses.length === 0 && checked >= 3, misses.join(", ") || `${checked} links checked`);
 
   // 16 Miller's law: lists stay short enough to hold in your head
   const longest = await page.evaluate(() => Math.max(...[...document.querySelectorAll("ul, ol")].map((l) => l.children.length)));
@@ -539,13 +554,15 @@ const instrument = () => {
   const menuInterrupt = mid > 0 && mid < 1 && back2 < back1;
   await wait(page, 500);
 
-  await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: () => new Promise((r) => setTimeout(r, 1500)) }));
-  await page.evaluate(() => document.querySelector("#initiation [data-copy]").scrollIntoView({ block: "center" }));
-  await wait(page, 600);
-  await page.click("#initiation [data-copy]");
-  await wait(page, 60);
-  const optimistic = await page.textContent("#initiation [data-copy]");
-  dt(6, "Optimistic update: 'Copied' shows instantly, before the copy finishes", optimistic.includes("Copied"), "label after 60ms of a 1.5s copy");
+  if (hasCopy) {
+    await page.evaluate(() => Object.defineProperty(navigator.clipboard, "writeText", { configurable: true, value: () => new Promise((r) => setTimeout(r, 1500)) }));
+    await page.evaluate(() => document.querySelector("#initiation [data-copy]").scrollIntoView({ block: "center" }));
+    await wait(page, 600);
+    await page.click("#initiation [data-copy]");
+    await wait(page, 60);
+    const optimistic = await page.textContent("#initiation [data-copy]");
+    dt(6, "Optimistic update: 'Copied' shows instantly, before the copy finishes", optimistic.includes("Copied"), "label after 60ms of a 1.5s copy");
+  } else skip("D06 Optimistic update: 'Copied' shows instantly, before the copy finishes");
   await page.keyboard.press("Escape");
   await wait(page, 600);
   const cls = await page.evaluate(() => window.__cls);
@@ -1003,10 +1020,22 @@ const instrument = () => {
   await wait(calm, 1500);
   check("Reduced-motion users skip the show and see content", await calm.evaluate(() => +getComputedStyle(document.querySelector("[data-loader]")).opacity === 0));
 
+  // While SHOW_EMAIL is off, the address must not appear as text anywhere (the Gmail buttons still work)
+  if (!hasCopy) {
+    const seen = [];
+    for (const path of ["/", "/contact", "/services", "/pricing", "/book", "/privacy", "/terms", "/legal-contact"]) {
+      await calm.goto(BASE + path);
+      await wait(calm, 800);
+      if ((await calm.evaluate(() => document.body.innerText)).includes("john7000")) seen.push(path);
+    }
+    check("Email hidden for now: the address is not shown on any page", seen.length === 0, seen.length ? `still on ${seen.join(", ")}` : "8 pages checked");
+  }
+
   await browser.close();
 
-  const pass = results.filter((r) => r.ok).length;
-  for (const r of results) console.log(`${r.ok ? "PASS" : "FAIL"}  ${r.name}${r.detail ? `   (${r.detail})` : ""}`);
-  console.log(`\n${pass}/${results.length} checks passed against ${BASE}`);
-  process.exit(pass === results.length ? 0 : 1);
+  const pass = results.filter((r) => r.ok && !r.skipped).length;
+  const nSkip = results.filter((r) => r.skipped).length;
+  for (const r of results) console.log(`${r.skipped ? "SKIP" : r.ok ? "PASS" : "FAIL"}  ${r.name}${r.detail ? `   (${r.detail})` : ""}`);
+  console.log(`\n${pass}/${results.length - nSkip} checks passed against ${BASE}${nSkip ? ` (${nSkip} skipped)` : ""}`);
+  process.exit(pass === results.length - nSkip ? 0 : 1);
 })();

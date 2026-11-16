@@ -8,7 +8,7 @@ import { TopicCombobox } from "@/components/TopicCombobox";
 import { Plus } from "@/components/Plus";
 import { SiteFooter } from "@/components/SiteFooter";
 import { WorkflowGraph } from "@/components/WorkflowGraph";
-import { EMAIL, GMAIL } from "@/lib/contact";
+import { EMAIL, GMAIL, SHOW_EMAIL } from "@/lib/contact";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 import { onReveal } from "@/lib/intro";
 
@@ -203,13 +203,15 @@ export default function Home() {
           <ContactMenu topic={topic} />
         </div>
 
-        <dl className="quiet mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 md:mt-14">
-          <dt className="self-center font-label text-flag">Email</dt>
-          <dd className="flex flex-wrap items-center gap-x-6 gap-y-3">
-            <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="hit text-lead break-all text-beige">{EMAIL}&nbsp;<Arrow /><span className="sr-only"> (opens Gmail in a new tab)</span></a>
-            <CopyEmail />
-          </dd>
-        </dl>
+        {SHOW_EMAIL && (
+          <dl className="quiet mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 md:mt-14">
+            <dt className="self-center font-label text-flag">Email</dt>
+            <dd className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="hit text-lead break-all text-beige">{EMAIL}&nbsp;<Arrow /><span className="sr-only"> (opens Gmail in a new tab)</span></a>
+              <CopyEmail />
+            </dd>
+          </dl>
+        )}
 
         <SiteFooter />
       </section>

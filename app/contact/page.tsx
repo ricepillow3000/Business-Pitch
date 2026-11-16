@@ -4,7 +4,7 @@ import { pageMeta } from "@/lib/site";
 import { ContactForm } from "@/components/ContactForm";
 import { CopyEmail } from "@/components/CopyEmail";
 import { SitePage } from "@/components/SitePage";
-import { EMAIL, GMAIL } from "@/lib/contact";
+import { EMAIL, GMAIL, SHOW_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = pageMeta(
   "Contact | JIDO",
@@ -26,17 +26,19 @@ export default function Contact() {
               <a href="/book" className="text-beige">Book a discovery call</a>.
             </p>
           </div>
-          <div className="space-y-3">
-            <h2 className="font-label text-beige">// Email</h2>
-            <p className="break-all text-flag">
-              <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-beige">
-                {EMAIL}
-                &nbsp;<Arrow />
-                <span className="sr-only"> (opens Gmail in a new tab)</span>
-              </a>
-            </p>
-            <CopyEmail />
-          </div>
+          {SHOW_EMAIL && (
+            <div className="space-y-3">
+              <h2 className="font-label text-beige">// Email</h2>
+              <p className="break-all text-flag">
+                <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center text-beige">
+                  {EMAIL}
+                  &nbsp;<Arrow />
+                  <span className="sr-only"> (opens Gmail in a new tab)</span>
+                </a>
+              </p>
+              <CopyEmail />
+            </div>
+          )}
           <div className="space-y-3">
             <h2 className="font-label text-beige">// Privacy requests</h2>
             <p className="text-flag">
