@@ -644,7 +644,7 @@ const instrument = () => {
   /* ── INNER PAGES: Services, Pricing, Book a call, Contact ─────────── */
   const siteSrc = require("fs").readFileSync(require("path").join(__dirname, "../lib/site.ts"), "utf8");
   const endpoint = (siteSrc.match(/contactEndpoint:\s*"([^"]+)"/) || [])[1] || null;
-  const booking = (siteSrc.match(/bookingUrl:\s*"([^"]+)"/) || [])[1] || null;
+  const booking = (siteSrc.match(/bookingUrl:\s*["'`]([^"'`]+)/) || [])[1] || null;
   const innerPages = [
     ["/services", "SERVICES", "What we automate."],
     ["/pricing", "PRICING", "Clear prices, agreed in writing."],
@@ -681,9 +681,14 @@ const instrument = () => {
       check("Pricing: plain 'from' prices only (no tier cards), terms agreed in writing", prices.length === 2 && /Setup from \$399/.test(ip.text) && /Plans from \$199 a month/.test(ip.text) && /written agreement/i.test(ip.text), prices.join(" "));
     }
     if (path === "/book") {
-      const b = await page.evaluate(() => ({ iframe: !!document.querySelector("iframe"), mode: document.querySelector("[data-booking]")?.dataset.booking, href: document.querySelector('[data-booking="request"] a')?.href || "" }));
-      const ok = booking ? b.mode === "consent" && !b.iframe : b.mode === "request" && decodeURIComponent(b.href).includes("Discovery call request");
-      check("Book a call: Google is not contacted until you ask; email request until the booking link is set", ok && !b.iframe && googleCalls.length === 0, JSON.stringify({ ...b, googleCalls: googleCalls.length, bookingUrlSet: !!booking }));
+      const b = await page.evaluate(() => {
+        const box = document.querySelector("[data-booking]");
+        return { iframe: !!document.querySelector("iframe"), mode: box?.dataset.booking, days: [...box.querySelectorAll("[data-day]")].map((d) => d.dataset.day).join(" "), off: [...box.querySelectorAll("[data-day][data-off]")].map((d) => d.dataset.day).join(" "),
+          gmail: !!document.querySelector('main a[href*="mail.google.com"]'), preferToWrite: /Prefer to write/.test(document.querySelector("main").innerText) };
+      });
+      const daysOff = JSON.parse(((siteSrc.match(/bookingDaysOff:\s*(\[[^\]]*\])/) || [])[1] || "[]").replace(/'/g, '"')).join(" ");
+      const ok = b.mode === (booking ? "consent" : "soon") && b.days === "Mon Tue Wed Thu Fri Sat Sun" && b.off === daysOff && !b.gmail && !b.preferToWrite;
+      check(`Book a call: a Mon to Sun calendar (${daysOff || "no days"} off), no Gmail detour; Google is not contacted until you ask`, ok && !b.iframe && googleCalls.length === 0, JSON.stringify({ ...b, googleCalls: googleCalls.length, bookingUrlSet: !!booking }));
     }
     if (path === "/contact") {
       await page.click("[data-contact-form] button[type=submit]");

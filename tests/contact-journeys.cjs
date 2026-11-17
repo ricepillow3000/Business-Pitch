@@ -132,12 +132,11 @@ const gmail = (href) => {
   }
   await page.unroute(ENDPOINT);
 
-  // 12: Book a discovery call (no booking link yet) -> Gmail call request
+  // 12: Book a discovery call -> the booking calendar on the page itself (no Gmail detour)
   await page.goto(BASE + "/book");
   await wait(page, 2500);
-  const book = await page.evaluate(() => ({ mode: document.querySelector("[data-booking]")?.dataset.booking, href: document.querySelector('[data-booking] a[href*="mail.google.com"]')?.href }));
-  const bm = book.href ? gmail(book.href) : {};
-  check("Book a discovery call: opens a Gmail call request to JIDO", book.mode === "request" && bm.to === EMAIL && /call/i.test(bm.su), `subject "${bm.su}"`);
+  const book = await page.evaluate(() => ({ mode: document.querySelector("[data-booking]")?.dataset.booking, gmail: !!document.querySelector('main a[href*="mail.google.com"]') }));
+  check("Book a discovery call: books on the page in the calendar, never sends you to Gmail", ["soon", "consent", "calendar"].includes(book.mode) && !book.gmail, JSON.stringify(book));
 
   // 13: every plain email link on the site goes to Gmail compose for the same address (never mailto/Outlook)
   const emailLinks = [];

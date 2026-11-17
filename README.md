@@ -55,8 +55,10 @@ node tests/contact-journeys.cjs http://localhost:3000
 - the Contact page directly
 - server-side field errors
 - the Gmail fallback when sending fails or n8n is unreachable
-- the booking request
+- the booking page (books on the page, never via Gmail)
 - every email link (all Gmail compose, no mailto)
+
+`tests/booking-journey.cjs` walks a visitor from the home page to a booked call (5 clicks). It needs a build with `bookingUrl` set; Google is answered by a clearly labelled stand-in, so nothing real is booked.
 
 The form's request is intercepted, so nothing is sent.
 
@@ -75,7 +77,8 @@ node tests/hero-spacing.cjs http://localhost:3000
 | Setting | Now | What it does |
 |---|---|---|
 | `url` | `null` | The real domain once owned. Adds canonical links and the share image (`public/og.png`). |
-| `bookingUrl` | `null` | Google Calendar appointment page. While empty, `/book` offers an email request. |
+| `bookingUrl` | `null` | Google Calendar appointment schedule (Share → Website embed → Inline → copy the `src` address). Shown as the week calendar on `/book`, where visitors pick a time and book on the page. While empty, `/book` shows the week saying online booking opens soon. |
+| `bookingDaysOff` | Thu, Sat, Sun | Days hatched as unavailable on the `/book` week before the live calendar loads. Keep in step with Google Calendar, which decides what can really be booked. |
 | `contactEndpoint` | n8n webhook | The contact form posts here. The n8n workflow is **not published yet**, so the form falls back to a Gmail draft. |
 | `prices` | from $399 / $199 a month | Shown as plain "from" text on `/pricing`. Exact terms: `docs/business/PRICING-PROPOSAL.md`. |
 

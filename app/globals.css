@@ -69,6 +69,10 @@
   padding-left: max(clamp(1.25rem, 5vw, 6rem), env(safe-area-inset-left));
   padding-right: max(clamp(1.25rem, 5vw, 6rem), env(safe-area-inset-right));
 }
+/* "unavailable" hatching: thin diagonal hairlines (an SVG tile, not a gradient) */
+@utility hatch {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath d='M-1 11L11 -1' stroke='%236e9bf0' stroke-opacity='.22'/%3E%3C/svg%3E");
+}
 /* Marathon chamfer */
 @utility chamfer {
   clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));

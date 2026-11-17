@@ -16,11 +16,11 @@ export default function Book() {
       title="Book a discovery call."
       intro={<p>A short call. You tell us where time goes each week; we tell you honestly what can be automated, and what cannot.</p>}
     >
-      <div className="grid gap-16 md:grid-cols-12">
-        <div className="md:col-span-7">
-          <BookingEmbed url={SITE.bookingUrl} />
+      <div className="grid gap-16 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <BookingEmbed url={SITE.bookingUrl} daysOff={SITE.bookingDaysOff} />
         </div>
-        <div className="quiet space-y-4 md:col-span-4 md:col-start-9">
+        <div className="quiet space-y-4 lg:col-span-3 lg:col-start-10">
           <h2 className="font-wide text-[clamp(1.125rem,1.6vw,1.5rem)] text-beige">On the call.</h2>
           <ul className="space-y-3 text-flag">
             {["Which tasks take the most time.", "The tools you already use.", "What a first project could look like.", "Clear next steps."].map((t) => (
@@ -29,9 +29,6 @@ export default function Book() {
               </li>
             ))}
           </ul>
-          <p className="pt-4 text-flag">
-            Prefer to write? <a href="/contact" className="text-beige">Send a message</a>.
-          </p>
         </div>
       </div>
     </SitePage>

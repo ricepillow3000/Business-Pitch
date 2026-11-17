@@ -92,6 +92,14 @@ export function Cursor() {
     const onOver = (e: PointerEvent) => {
       if (isTouch(e)) return; // touches are handled on pointerdown
       const el = e.target as Element;
+      // an embedded page (the Google booking calendar) has its own pointer: step aside until
+      // the pointer comes back out, so no frozen dot is left at the frame's edge
+      if (el.tagName === "IFRAME") {
+        target = null;
+        shown = false;
+        gsap.to([d, f], { autoAlpha: 0, duration: 0.15, overwrite: "auto" });
+        return;
+      }
       const next = el.closest<HTMLElement>(INTERACTIVE);
       const nowTyping = !!el.closest(TEXT);
       if (next === target && nowTyping === typing) return;

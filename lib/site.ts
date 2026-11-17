@@ -10,10 +10,20 @@ export const SITE = {
   url: null as string | null,
 
   /**
-   * Google Calendar appointment schedule link for discovery calls
-   * (Google Calendar → Create → Appointment schedule → Share → Booking page link).
-   * While null, /book offers an email request instead.
+   * Google Calendar appointment schedule for discovery calls, shown as the week calendar on /book.
+   * In Google Calendar: open the appointment schedule → Share → Website embed → Inline → Copy,
+   * then paste its https://calendar.google.com/calendar/appointments/schedules/… address here
+   * (pasting the whole <iframe …> code also works: wrap it in `backticks`).
+   * Opening hours, busy times and days off are all set inside Google Calendar.
+   * While null, /book shows an empty week saying online booking opens soon.
    */
+  /**
+   * Days with no discovery calls, shown greyed out on the /book week before the live calendar loads.
+   * Keep in step with the appointment schedule's hours in Google Calendar (Google's calendar is the
+   * one that decides what can actually be booked).
+   */
+  bookingDaysOff: ["Thu", "Sat", "Sun"] as string[],
+
   bookingUrl: null as string | null,
 
   /**
