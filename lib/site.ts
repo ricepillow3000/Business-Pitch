@@ -24,7 +24,7 @@ export const SITE = {
    */
   bookingDaysOff: ["Thu", "Sat", "Sun"] as string[],
 
-  bookingUrl: null as string | null,
+  bookingUrl: "https://calendar.google.com/calendar/appointments/schedules/AcZssZ2bQ37qEV638kId5nZ06uV1wSsIFSkd4-pjchDDv7SUFrKZDbzvjG1aKTgPAn_yJLP-AwcbN1l9" as string | null,
 
   /**
    * n8n webhook that receives the contact form (workflow "[TEST] JIDO Website - Contact Form").
