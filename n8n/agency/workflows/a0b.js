@@ -45,7 +45,7 @@ const readStruct = node({
     name: "Read CRM Structure",
     parameters: {
       method: 'GET',
-      url: expr("https://sheets.googleapis.com/v4/spreadsheets/{{ $(\"Load Agency Config\").first().json.crmId }}?fields=sheets.properties(sheetId,title)"),
+      url: expr("https://sheets.googleapis.com/v4/spreadsheets/{{ $(\"Load Agency Config\").first().json.crmId }}?fields=sheets.properties(sheetId,title,gridProperties(columnCount))"),
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'googleSheetsOAuth2Api',
       options: { timeout: 30000 }
@@ -61,7 +61,7 @@ const readVals = node({
     name: "Read Headings And Settings",
     parameters: {
       method: 'GET',
-      url: expr("https://sheets.googleapis.com/v4/spreadsheets/{{ $(\"Load Agency Config\").first().json.crmId }}/values:batchGet?ranges=Settings!A:A&ranges=%27Send%20Ledger%27!1:1&ranges=Leads!1:1"),
+      url: expr("https://sheets.googleapis.com/v4/spreadsheets/{{ $(\"Load Agency Config\").first().json.crmId }}/values:batchGet?ranges=Settings!A:A&ranges=%27Send%20Ledger%27!1:1&ranges=Leads!1:1{{ ['Outreach Drafts', 'Draft History', 'Unsubscribe Requests'].filter((t) => ($('Read CRM Structure').first().json.sheets || []).some((x) => (x.properties || {}).title === t)).map((t) => '&ranges=' + encodeURIComponent(String.fromCharCode(39) + t + String.fromCharCode(39) + '!1:1')).join('') }}"),
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'googleSheetsOAuth2Api',
       options: { timeout: 30000 }
@@ -82,12 +82,17 @@ const vals = $input.first().json || {};
 if (meta.error || vals.error) throw new Error('A0b could not read the CRM structure');
 const sheets = (meta.sheets || []).map((s) => s.properties || {});
 const byTitle = {};
-sheets.forEach((p) => { byTitle[p.title] = p.sheetId; });
+const colsOf = {};
+sheets.forEach((p) => { byTitle[p.title] = p.sheetId; colsOf[p.title] = Number((p.gridProperties || {}).columnCount) || 0; });
 const ranges = vals.valueRanges || [];
 const rangeVals = (i) => ((ranges[i] || {}).values || []);
 const settingsKeys = rangeVals(0).map((r) => clean(r[0]));
 const ledgerHeader = (rangeVals(1)[0] || []).map(clean);
 const leadsHeader = (rangeVals(2)[0] || []).map(clean);
+// Header rows of the Phase C tabs that already exist are read after the first 3 ranges, in this fixed order.
+const PHASE_C_TITLES = ['Outreach Drafts', 'Draft History', 'Unsubscribe Requests'];
+const existingHead = {};
+PHASE_C_TITLES.filter((t) => byTitle[t] !== undefined).forEach((t, i) => { existingHead[t] = (rangeVals(3 + i)[0] || []).map(clean).filter(Boolean); });
 const NEW_TABS = [
   { id: 1300, title: 'Outreach Drafts', headers: ['Draft ID', 'Lead ID', 'Step', 'Version', 'Created At', 'Updated At', 'Business Name', 'To Email', 'Subject', 'Body', 'Evidence Used', 'Research Sources', 'Removed Claims', 'Draft Hash', 'Review Status', 'Reviewed By', 'Reviewed At', 'Approved Hash', 'Approved At', 'Review Notes', 'Send Status', 'Ledger Row ID', 'Gmail Message ID', 'Gmail Thread ID', 'Sent At', 'Unsubscribe Token', 'Last Error'] },
   { id: 1400, title: 'Draft History', headers: ['Time', 'Draft ID', 'Version', 'Event', 'Draft Hash', 'Subject', 'Body', 'By'] },
@@ -112,12 +117,21 @@ const colLetter = (n) => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 
 const q = (t) => "'" + t + "'";
 const dropdown = (sheetId, col, values) => ({ setDataValidation: { range: { sheetId, startRowIndex: 1, endRowIndex: 5000, startColumnIndex: col, endColumnIndex: col + 1 }, rule: { condition: { type: 'ONE_OF_LIST', values: values.map((v) => ({ userEnteredValue: v })) }, showCustomUi: true, strict: false } } });
 const added = [];
+// Make sure a tab is wide enough before writing into a column (Google rejects writes past the last column).
+const widen = (title, needCols) => { if (colsOf[title] && needCols > colsOf[title]) { requests.push({ appendDimension: { sheetId: byTitle[title], dimension: 'COLUMNS', length: needCols - colsOf[title] } }); colsOf[title] = needCols; } };
 NEW_TABS.forEach((t) => {
-  if (byTitle[t.title] !== undefined) return;
-  requests.push({ addSheet: { properties: { sheetId: t.id, title: t.title, gridProperties: { rowCount: 1000, columnCount: t.headers.length, frozenRowCount: 1 } } } });
+  if (byTitle[t.title] === undefined) {
+    requests.push({ addSheet: { properties: { sheetId: t.id, title: t.title, gridProperties: { rowCount: 1000, columnCount: t.headers.length, frozenRowCount: 1 } } } });
+    byTitle[t.title] = t.id;
+    colsOf[t.title] = t.headers.length;
+    added.push('tab ' + t.title);
+  } else if ((existingHead[t.title] || []).length) {
+    return;
+  } else {
+    widen(t.title, t.headers.length);
+    added.push('headings for empty tab ' + t.title);
+  }
   data.push({ range: q(t.title) + '!A1:' + colLetter(t.headers.length - 1) + '1', values: [t.headers] });
-  byTitle[t.title] = t.id;
-  added.push('tab ' + t.title);
 });
 const draftsId = byTitle['Outreach Drafts'];
 requests.push(dropdown(draftsId, 14, ['Pending review', 'Approved', 'Rejected']));
@@ -126,6 +140,7 @@ if (byTitle['Send Ledger'] === undefined || byTitle.Settings === undefined || by
 const missingLedger = LEDGER_EXTRA.filter((h) => ledgerHeader.indexOf(h) === -1);
 if (missingLedger.length) {
   const start = ledgerHeader.length;
+  widen('Send Ledger', start + missingLedger.length);
   data.push({ range: q('Send Ledger') + '!' + colLetter(start) + '1:' + colLetter(start + missingLedger.length - 1) + '1', values: [missingLedger] });
   added.push('Send Ledger columns: ' + missingLedger.join(', '));
 }

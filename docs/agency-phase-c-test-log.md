@@ -120,3 +120,31 @@ Plus: every workflow is inactive (no schedule), and in DEMO mode C3 refuses any 
 1. A regular-expression pattern used a backslash, which the n8n workflow format doesn't allow. It was rewritten without one.
 2. The "result recording" step had a confusing rule for when a crashed send counts as "uncertain". It was simplified and tested.
 3. A test expected no "http" anywhere in the finished email, but the footer rightly contains the agency website and unsubscribe link. The test was corrected to check the unsubscribe link instead. The claim filter itself only ever cleans the AI's text.
+
+## CRM setup: `Agency CRM - DEMO` created and verified (2026-11-17)
+
+**Why the CRM was missing:**
+- n8n's "Google Sheets account" login was set to block "HTTP Request" steps.
+- A0 and A0b both use HTTP Request steps, so the earlier A0 runs (34 and 116) were refused before reaching Google. No sheet was created, so there are no duplicates.
+- **You changed the login's "Allowed HTTP Request Domains" setting.** That fixed it.
+- That login can read and create spreadsheets, but not search Drive. That's a narrower permission, which is fine.
+
+| Run | What | Result |
+|---|---|---|
+| 115 | A0 dry run (Google steps faked) | Pass: A0's own code works |
+| 119 | Read-only check through n8n's Google login | Showed the cause: "credential is configured to prevent use within an HTTP Request node" |
+| 124 | **A0 run once for real**, then the sheet read back by its ID | **Created** `Agency CRM - DEMO`, 13 tabs |
+| 127 | H0 with the new CRM link, reading the real Settings tab (read-only) | ok = true, DEMO, OUTREACH_PAUSED = YES, 21 settings |
+| 129 | **A0b run once** | Partly failed. The 3 new tabs were added (each once), but writing the headings failed: "Bad request" (see bug 4) |
+| 133 | Read-only check of the sheet | Confirmed the half-finished state: 16 tabs, no duplicates, new tabs empty, Settings unchanged |
+| 136 | **A0b run again after the fix** | **Pass**: headings in the 3 tabs (27/8/7 columns), 4 Send Ledger columns, 10 new Settings rows. No duplicate tabs or keys. GMAIL_SENDING_ENABLED = NO, ONE_CLICK_UNSUBSCRIBE_VERIFIED = NO, OUTREACH_PAUSED = YES |
+
+To see results my connection can't otherwise read, each check used a temporary runner: it called the workflow as a sub-workflow and reported the result as an error message. Afterwards, all temporary runners and check workflows were archived, and the temporary start points added to A0 and A0b were removed.
+
+**Bug 4 (found in run 129, fixed):**
+- A0 creates each tab exactly as wide as its headings, so the Send Ledger was only 9 columns wide. A0b tried to write 4 new headings into columns J–M, so Google refused the whole write.
+- A0b also only wrote headings into tabs it had just created, so a second run would have left the empty tabs blank.
+- **Fix:** A0b now reads each tab's width and widens it first. It also fills headings into any of its tabs that are still empty.
+- Four new local tests cover this, including the exact half-finished state from run 129. Phase C now has 90 tests; 180 in total, all passing.
+
+The CRM link is stored only in n8n (H0 → CRM Location), not in this repository.
