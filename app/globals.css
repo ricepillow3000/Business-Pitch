@@ -165,6 +165,9 @@ html.lenis, html.lenis body { height: auto; }
 .has-cursor, .has-cursor * { cursor: none !important; }
 /* …except text fields, which keep the native I-beam so typing feels normal */
 .has-cursor :is(input, textarea, [contenteditable]) { cursor: text !important; }
+/* normal-pointer zones (the Google booking calendar and its frame): the system pointer comes back */
+.has-cursor [data-native-cursor], .has-cursor [data-native-cursor] * { cursor: default !important; }
+.has-cursor [data-native-cursor] :is(a, button) { cursor: pointer !important; }
 
 /* Automation graph: data packets travel along each connector forever */
 @keyframes packet { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }

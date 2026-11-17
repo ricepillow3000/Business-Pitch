@@ -58,6 +58,8 @@ node tests/contact-journeys.cjs http://localhost:3000
 - the booking page (books on the page, never via Gmail)
 - every email link (all Gmail compose, no mailto)
 
+`tests/booking-cursor.cjs` checks the normal mouse pointer over the Google calendar (no JIDO cursor trailing) and the JIDO cursor everywhere else.
+
 `tests/booking-journey.cjs` walks a visitor from the home page to a booked call (5 clicks). It needs a build with `bookingUrl` set; Google is answered by a clearly labelled stand-in, so nothing real is booked.
 
 The form's request is intercepted, so nothing is sent.

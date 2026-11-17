@@ -5,6 +5,9 @@ import { gsap, useGSAP } from "@/lib/gsap";
 
 const INTERACTIVE = "a, button, summary, [data-cursor]";
 const TEXT = "input, textarea, [contenteditable]";
+/** Zones that keep the normal mouse pointer: embedded pages (the Google booking calendar) and
+ *  anything marked data-native-cursor. The JIDO cursor steps aside there, with no trail left behind. */
+const NATIVE = "[data-native-cursor], iframe";
 const PAD = 8; // viewfinder breathing room around a target
 const IDLE = 38; // viewfinder size when it is not locked onto anything
 
@@ -17,6 +20,7 @@ const IDLE = 38; // viewfinder size when it is not locked onto anything
  *            on any background). It is glued around the dot too, and only animates when it
  *            boxes a link or button (the dot steps aside) or lets go of one. On press it tightens.
  * Nothing on the page moves toward the pointer. Text fields get the native I-beam back.
+ * Over the Google booking calendar (and its frame) it steps aside for the normal pointer.
  *
  * One cursor for every input. The mode is decided by each pointer event (pointerType), never
  * by a one-time media query, so phones, Chrome DevTools phone mode and touchscreen laptops
@@ -43,6 +47,7 @@ export function Cursor() {
     let target: HTMLElement | null = null;
     let typing = false;
     let shown = false;
+    let native = false; // pointer is over a normal-pointer zone (the booking calendar)
     let releasing = 0; // after letting go of a target, ease back for a moment, then glue to the pointer
     let touch = false; // was the last input a finger?
     let fade: ReturnType<typeof setTimeout> | undefined;
@@ -61,6 +66,19 @@ export function Cursor() {
       gsap.to(f, { autoAlpha: typing ? 0 : 1, duration: 0.25, overwrite: "auto" });
     };
 
+    // step aside (or come back) for normal-pointer zones. Decided from the element under the pointer
+    // on every move, so it never depends on a single enter/leave event (which a cross-site iframe can swallow)
+    const setNative = (on: boolean) => {
+      if (on === native) return;
+      native = on;
+      if (on) {
+        target = null;
+        shown = false;
+        gsap.to([d, f], { autoAlpha: 0, duration: 0.12, overwrite: "auto" });
+      }
+    };
+    const away = () => { shown = false; gsap.to([d, f], { autoAlpha: 0, duration: 0.12, overwrite: "auto" }); };
+
     const onMove = (e: PointerEvent) => {
       if (isTouch(e)) {
         // finger dragging: the cursor follows it until it lifts
@@ -72,6 +90,8 @@ export function Cursor() {
       useMouse();
       pointer.x = e.clientX;
       pointer.y = e.clientY;
+      setNative(!!(e.target as Element).closest?.(NATIVE));
+      if (native) return;
       if (!shown) {
         shown = true;
         gsap.set(d, { x: pointer.x, y: pointer.y });
@@ -91,15 +111,11 @@ export function Cursor() {
 
     const onOver = (e: PointerEvent) => {
       if (isTouch(e)) return; // touches are handled on pointerdown
-      const el = e.target as Element;
-      // an embedded page (the Google booking calendar) has its own pointer: step aside until
-      // the pointer comes back out, so no frozen dot is left at the frame's edge
-      if (el.tagName === "IFRAME") {
-        target = null;
-        shown = false;
-        gsap.to([d, f], { autoAlpha: 0, duration: 0.15, overwrite: "auto" });
-        return;
-      }
+      over(e.target as Element);
+    };
+    const over = (el: Element) => {
+      setNative(!!el.closest(NATIVE));
+      if (native) return;
       const next = el.closest<HTMLElement>(INTERACTIVE);
       const nowTyping = !!el.closest(TEXT);
       if (next === target && nowTyping === typing) return;
@@ -110,6 +126,13 @@ export function Cursor() {
     };
 
     const tick = () => {
+      // the boxed element was removed (e.g. "Show available times" swapped for the calendar while the
+      // pointer sat still): look again at what is under the pointer now
+      if (target && !target.isConnected) {
+        target = null;
+        const el = document.elementFromPoint(pointer.x, pointer.y);
+        if (el) over(el);
+      }
       if (target) {
         const r = target.getBoundingClientRect();
         fx(r.left - PAD); fy(r.top - PAD); fw(r.width + PAD * 2); fh(r.height + PAD * 2);
@@ -120,9 +143,16 @@ export function Cursor() {
 
     const hide = (e: PointerEvent) => {
       if (isTouch(e)) return; // a lifted finger fades on its own schedule
-      shown = false;
-      gsap.to([d, f], { autoAlpha: 0, duration: 0.2, overwrite: "auto" });
+      away();
     };
+    // the pointer went somewhere this page cannot see: into an embedded page, or out of the window
+    const onOut = (e: PointerEvent) => {
+      if (isTouch(e)) return;
+      const to = e.relatedTarget as Element | null;
+      if (!to || to.tagName === "IFRAME") away();
+    };
+    // a click inside the embedded calendar moves focus into it
+    const onBlur = () => away();
 
     // finger down: show the cursor at the touch, and box the button under it
     const touchDown = (e: PointerEvent) => {
@@ -131,6 +161,7 @@ export function Cursor() {
       root.classList.remove("has-cursor");
       pointer.x = e.clientX; pointer.y = e.clientY;
       const el = e.target as Element;
+      if (el.closest(NATIVE)) return; // the calendar handles its own taps
       target = el.closest<HTMLElement>(INTERACTIVE);
       typing = !!el.closest(TEXT);
       gsap.set(d, { x: pointer.x, y: pointer.y });
@@ -161,6 +192,8 @@ export function Cursor() {
     addEventListener("pointerdown", press);
     addEventListener("pointerup", release);
     addEventListener("pointercancel", release); // e.g. the finger started scrolling
+    addEventListener("pointerout", onOut);
+    addEventListener("blur", onBlur);
     root.addEventListener("pointerleave", hide);
     gsap.ticker.add(tick);
 
@@ -172,6 +205,8 @@ export function Cursor() {
       removeEventListener("pointerdown", press);
       removeEventListener("pointerup", release);
       removeEventListener("pointercancel", release);
+      removeEventListener("pointerout", onOut);
+      removeEventListener("blur", onBlur);
       root.removeEventListener("pointerleave", hide);
       gsap.ticker.remove(tick);
     };

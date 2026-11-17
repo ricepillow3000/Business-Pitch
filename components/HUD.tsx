@@ -127,7 +127,7 @@ export function HUD() {
         SYS.LINK // STABLE &nbsp;·&nbsp; 0x7F3A-02C9 &nbsp;·&nbsp; E1B4 9C07 33AF
       </p>
       <p data-fade className="absolute top-1/2 right-6 hidden -translate-y-1/2 font-hud whitespace-nowrap opacity-60 [writing-mode:vertical-rl] lg:block">
-        JIDO.AI // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.7.1
+        JIDO.AI // AUTOMATION SYSTEMS &nbsp;·&nbsp; 4C1D-A8E2 &nbsp;·&nbsp; BUILD 1.7.2
       </p>
     </div>
   );

@@ -35,6 +35,9 @@ export function BookingEmbed({ url, daysOff = [] }: { url: string | null; daysOf
 
   return (
     <div className="space-y-4">
+      {/* once the live calendar is showing, this whole area (plus a 2rem margin, so even a fast mouse
+          is caught before it reaches Google's calendar) keeps the normal mouse pointer */}
+      <div data-native-cursor={mode === "calendar" || undefined} className={mode === "calendar" ? "-m-8 p-8" : ""}>
       <div data-booking={mode} className="relative border border-slate-line">
         {/* viewfinder corners, the same shape as the cursor */}
         {["top-0 left-0 border-t-2 border-l-2", "top-0 right-0 border-t-2 border-r-2", "bottom-0 left-0 border-b-2 border-l-2", "right-0 bottom-0 border-r-2 border-b-2"].map((c) => (
@@ -108,6 +111,7 @@ export function BookingEmbed({ url, daysOff = [] }: { url: string | null; daysOf
             </div>
           </div>
         )}
+      </div>
       </div>
 
       {mode === "calendar" && (
