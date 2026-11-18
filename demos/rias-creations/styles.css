@@ -234,7 +234,7 @@ section { padding: clamp(88px, 11vw, 144px) 0; }
 }
 .arch-glow { position: relative; }
 .arch-glow::before { /* the LED halo around her mirrors, kept faint */
-  content: ""; position: absolute; inset: -1px; border-radius: 999px 999px var(--r-sm) var(--r-sm);
+  content: ""; position: absolute; inset: -1px; border-radius: 999px 999px var(--r-sm) var(--r-sm); opacity: var(--glow, 1);
   box-shadow: 0 0 0 1px rgb(214 188 138 / .35), 0 0 48px 2px rgb(214 188 138 / .16), 0 30px 80px -30px rgb(0 0 0 / .6);
 }
 .hero .olive { width: 190px; height: 190px; left: -128px; bottom: -22px; transform: scaleX(-1); opacity: .9; }
@@ -273,17 +273,21 @@ section { padding: clamp(88px, 11vw, 144px) 0; }
   .fact:nth-child(3) { grid-column: 1 / -1; }
 }
 
-/* One orchestrated page-load moment; nothing else animates on its own. */
+/* One orchestrated page-load moment; nothing else animates on its own.
+   anime.js plays it (app.js, heroIntro). Until it starts, the pieces wait hidden so
+   nothing flashes. If anime.js can't load, .intro-css plays this CSS version instead. */
+.js:not(.intro-run):not(.intro-css) .hero :is(h1, .lede, .arch-glow, .hero-bar) { visibility: hidden; }
+.hero h1 .ln > span > span { display: inline-block; }      /* split words and letters can move */
 @media (prefers-reduced-motion: no-preference) {
-  .hero h1 .ln > span { animation: rise 1100ms var(--ease-out) both; }
-  .hero h1 .ln:nth-child(2) > span { animation-delay: 90ms; }
-  .hero .lede { animation: fade 900ms var(--ease-out) 380ms both; }
-  .hero .arch { animation: unveil 1500ms var(--ease-out) 120ms both; }
-  .hero .arch img { animation: settle 2200ms var(--ease-out) 120ms both; }
-  .hero .arch-glow::before { animation: fade 1200ms var(--ease-out) 700ms both; }
-  .hero .olive .stem { stroke-dasharray: 1; animation: draw 1600ms var(--ease-out) 700ms both; }
-  .hero .olive .leaf { animation: leaf 700ms var(--ease-out) both; animation-delay: calc(900ms + var(--i) * 55ms); }
-  .hero-bar { animation: fade 900ms var(--ease-out) 650ms both; }
+  .intro-css .hero h1 .ln > span { animation: rise 1100ms var(--ease-out) both; }
+  .intro-css .hero h1 .ln:nth-child(2) > span { animation-delay: 90ms; }
+  .intro-css .hero .lede { animation: fade 900ms var(--ease-out) 380ms both; }
+  .intro-css .hero .arch { animation: unveil 1500ms var(--ease-out) 120ms both; }
+  .intro-css .hero .arch img { animation: settle 2200ms var(--ease-out) 120ms both; }
+  .intro-css .hero .arch-glow::before { animation: fade 1200ms var(--ease-out) 700ms both; }
+  .intro-css .hero .olive .stem { stroke-dasharray: 1; animation: draw 1600ms var(--ease-out) 700ms both; }
+  .intro-css .hero .olive .leaf { animation: leaf 700ms var(--ease-out) both; animation-delay: calc(900ms + var(--i) * 55ms); }
+  .intro-css .hero-bar { animation: fade 900ms var(--ease-out) 650ms both; }
 }
 @keyframes rise   { from { transform: translateY(104%); } }
 @keyframes fade   { from { opacity: 0; transform: translateY(8px); } }

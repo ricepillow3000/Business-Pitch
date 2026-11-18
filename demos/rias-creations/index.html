@@ -14,6 +14,8 @@
     try { t = localStorage.getItem("ria-theme"); } catch (e) {}
     if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     d.dataset.theme = t;
+    /* failsafe: if the scripts never run, show the hero with the CSS intro instead of leaving it hidden */
+    setTimeout(function () { if (!/intro-(run|css)/.test(d.className)) d.classList.add("intro-css"); }, 2500);
   })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,6 +23,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..500&family=Jost:wght@400..500&display=swap" rel="stylesheet">
 <link rel="preload" as="image" href="images/studio.webp" fetchpriority="high">
 <link rel="stylesheet" href="styles.css">
+<script src="vendor/anime.hero.min.js" defer></script>
 <script src="app.js" defer></script>
 </head>
 <body>
@@ -59,7 +62,7 @@
     <div class="wrap hero-main">
       <div>
         <h1><span class="ln"><span>Leave feeling</span></span><span class="ln"><span>beautifully you.</span></span></h1>
-        <p class="lede">Haircuts, brows, facials, waxing and massage at Lilburn Corner. Walk-ins are always welcome.</p>
+        <p class="lede">A full service salon at Lilburn Corner: haircuts, keratin, threading, waxing, facials and massage. Walk-ins are always welcome.</p>
       </div>
       <div class="arch-glow">
         <div class="arch">
@@ -99,8 +102,8 @@
   <section class="about" id="about">
     <div class="wrap">
       <div>
-        <h2>A calm chair and a careful hand.</h2>
-        <p class="lede">Ria's Creations is a neighborhood salon inside Lilburn Corner. Bring a photo or just an idea. Ria listens first, then cuts, shapes and finishes until it is exactly what you asked for.</p>
+        <h2>Enhancing beauty.</h2>
+        <p class="lede">Ria's Creations is a full service neighborhood salon inside Lilburn Corner. Bring a photo or just an idea. Ria listens first, then cuts, shapes and finishes until it is exactly what you asked for.</p>
         <p class="lede">Kids are welcome, and so is walking in without an appointment.</p>
       </div>
       <figure>
@@ -137,6 +140,7 @@
           <li><h3>Long layers and face framing</h3><span class="price">$45</span><p>Soft movement that grows out well.</p></li>
           <li><h3>Men's haircut</h3><span class="price">$20</span><p>Clean, sharp and quick.</p></li>
           <li><h3>Kids' haircut</h3><span class="price">$15</span><p>Patient and gentle, ages 12 and under.</p></li>
+          <li><h3>Keratin treatment</h3><span class="price">$150</span><p>Smooth, frizz-free hair that lasts for weeks.</p></li>
           <li><h3>Blowout and style</h3><span class="price">$30</span><p>Smooth, full and ready for the weekend.</p></li>
           <li><h3>Trim</h3><span class="price">$18</span><p>Tidy the ends and keep the length.</p></li>
         </ul>
@@ -230,7 +234,7 @@
               <label class="field full" id="f-service"><span>Service</span>
                 <select name="service" aria-describedby="e-service">
                   <option value="">Choose a service</option>
-                  <optgroup label="Hair"><option>Women's haircut</option><option>Long layers and face framing</option><option>Men's haircut</option><option>Kids' haircut</option><option>Blowout and style</option><option>Trim</option></optgroup>
+                  <optgroup label="Hair"><option>Women's haircut</option><option>Long layers and face framing</option><option>Men's haircut</option><option>Kids' haircut</option><option>Keratin treatment</option><option>Blowout and style</option><option>Trim</option></optgroup>
                   <optgroup label="Brows and face"><option>Eyebrow threading</option><option>Brow tint</option><option>Upper lip</option><option>Full face threading</option></optgroup>
                   <optgroup label="Facials"><option>Signature facial</option><option>Express facial</option><option>Deep-cleansing facial</option><option>Facial and brows</option></optgroup>
                   <optgroup label="Wax and massage"><option>Brazilian wax</option><option>Full-body wax</option><option>Underarm wax</option><option>Relaxing massage</option></optgroup>

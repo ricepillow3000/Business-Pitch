@@ -44,6 +44,60 @@
   const olive = $("#oliveTpl").content;
   $$("[data-olive]").forEach((el) => el.appendChild(olive.cloneNode(true)));
 
+  /* ── Hero intro, played by anime.js ──────────────────────────
+     One timeline: the headline rises letter by letter, the arched mirror unveils,
+     its gold glow warms up, the olive branch draws itself, then the bar and the
+     Call / Book buttons arrive last. */
+  function heroIntro() {
+    const A = window.anime;
+    if (reduced) { root.classList.add("intro-run"); return; }
+    if (!A) { root.classList.add("intro-css"); return; }        // library missing: CSS fallback
+    const split = $$(".hero h1 .ln > span").map((el) => A.splitText(el, { chars: true }));
+    const chars = split.flatMap((s) => s.chars);
+    const arch = $(".hero .arch"), img = $(".hero .arch img"), glow = $(".hero .arch-glow"), lede = $(".hero .lede");
+    const stem = A.createDrawable(".hero .olive .stem"), leaves = $$(".hero .olive .leaf");
+    const facts = $$(".hero-bar .fact"), stars = $$(".hero-bar .stars svg"), ctas = $$(".hero-cta .btn");
+    const rating = $('.hero-bar [data-swr="rating"]'), target = parseFloat(rating.textContent) || 4.5, count = { v: 0 };
+
+    // starting poses, set before anything is revealed so nothing flashes
+    A.set(chars, { y: "108%" });
+    A.set(lede, { opacity: 0, y: 14 });
+    A.set(arch, { clipPath: "inset(100% 0% 0% 0%)" });
+    A.set(img, { scale: 1.12 });
+    A.set(glow, { "--glow": 0 });
+    A.set(stem, { draw: "0 0" });
+    A.set(leaves, { opacity: 0 });
+    A.set([...facts, ...ctas], { opacity: 0, y: 12 });
+    A.set(stars, { opacity: 0, scale: 0.6 });
+    rating.textContent = "0.0";
+    rating.dataset.counting = "1";                            // the rating refresh waits for the count-up
+    root.classList.add("intro-run");
+
+    const tl = A.createTimeline({ defaults: { ease: "out(4)" } });
+    tl.add(chars, { y: "0%", duration: 1100, delay: A.stagger(18) }, 0)
+      .add(arch, { clipPath: "inset(0% 0% 0% 0%)", duration: 1500, ease: "out(3)" }, 120)
+      .add(img, { scale: 1, duration: 2200, ease: "out(3)" }, 120)
+      .add(lede, { opacity: 1, y: 0, duration: 900 }, 420)
+      .add(glow, { "--glow": 1, duration: 1400, ease: "out(2)" }, 700)
+      .add(stem, { draw: "0 1", duration: 1500, ease: "inOut(2)" }, 650)
+      .add(leaves, { opacity: 1, duration: 600, delay: A.stagger(55) }, 950)
+      .add(facts, { opacity: 1, y: 0, duration: 800, delay: A.stagger(90) }, 750)
+      .add(stars, { opacity: 1, scale: 1, duration: 600, delay: A.stagger(60), ease: "out(3)" }, 950)
+      .add(count, { v: target, duration: 1000, ease: "out(3)", onUpdate: () => (rating.textContent = count.v.toFixed(1)) }, 900)
+      .add(ctas, { opacity: 1, y: 0, duration: 700, delay: A.stagger(80) }, 1150)
+      .then(() => {
+        delete rating.dataset.counting;
+        rating.textContent = String(store.get(PLACE_KEY)?.data?.rating ?? target);
+        // hand the elements back to CSS so hover, press and theme styles work normally
+        [lede, arch, img, ...facts, ...stars, ...ctas].forEach((el) => {
+          ["transform", "opacity", "clip-path", "translate", "scale"].forEach((p) => el.style.removeProperty(p));
+        });
+        glow.style.removeProperty("--glow");
+        root.classList.add("intro-done");
+      });
+  }
+  heroIntro();
+
   /* ── BlurHash placeholders ──────────────────────────────────── */
   const B83 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~";
   const d83 = (s) => [...s].reduce((v, c) => v * 83 + B83.indexOf(c), 0);
@@ -784,7 +838,7 @@
   function renderPlace(d, fresh) {
     $$("[data-swr]").forEach((el) => {
       const v = String(d[el.dataset.swr]);
-      if (el.textContent === v) return;
+      if (el.textContent === v || el.dataset.counting) return;
       el.textContent = v;
       if (fresh && !reduced) { el.classList.remove("swr-fresh"); void el.offsetWidth; el.classList.add("swr-fresh"); }
     });

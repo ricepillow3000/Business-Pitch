@@ -17,7 +17,8 @@ used only once, so until that file exists the lounge card stays hidden.
 |---|---|
 | `index.html` | All content, already rendered (works before the script loads) |
 | `styles.css` | Colors, type, layout, motion |
-| `app.js` | Interactions (plain JS, no libraries) |
+| `app.js` | Interactions (plain JS) |
+| `vendor/anime.hero.min.js` | Anime.js v4.5.0 (MIT), a slim build used only for the hero intro. If it fails to load, a CSS version of the intro plays instead |
 | `images/` | One photo per spot |
 
 ## Things to try
