@@ -13,16 +13,19 @@ node demos/rias-creations/tests/audit.cjs "$PWD/demos/rias-creations" /tmp
 PASS  No gradients in code  (0 found)
 PASS  No glassmorphism (backdrop-filter)
 PASS  No italic type
-PASS  All caps only in the logo (her real logo uses them)
+PASS  All caps only in the logo (her sign uses them)
 PASS  No emojis  (©)
 PASS  Consistent icon stroke  (stroke-width="1.5")
 PASS  Favicon + social meta tags
-PASS  Every text passes WCAG AA contrast  (161 text elements checked)
+PASS  Entry walk-in plays, then hands over to the hero
+PASS  Entry plays once per visit (not again on reload)
+PASS  Every text passes WCAG AA contrast  (188 text elements checked)
 PASS  No gradient backgrounds (computed)
 PASS  No glass (computed)
 PASS  No italic text (computed)
-PASS  Sharp corners (only the arch mirrors and status dots are round)  (arch:999px, photo-btn:999px)
-PASS  Readable labels (smallest text ≥ 12px)  (12px)
+PASS  Subtle corners only (4 to 16px; arches and dots aside)  (4px, 999px, 16px, 10px)
+PASS  Outer radius = inner radius + padding (concentric)  (true, true)
+PASS  Readable labels (smallest text ≥ 12px)  (12.48px)
 PASS  One highlighted word
 PASS  Single-button hero  (1 button(s))
 PASS  Every photo used once  (7 photos)
@@ -42,15 +45,15 @@ PASS  No sideways scroll on phone
 | Rule | Where it stands |
 |---|---|
 | Real photos, each used once | 7 of her own photos; nothing repeats |
-| Real logo | Script "Ria's" over "Creations Salon", matched to her flyer |
+| Real logo | Her storefront sign rebuilt in type: "Ria's Creations" stacked beside a big SALON |
 | Her own colors | Espresso, white, gold and a hint of blush, taken from the salon |
 | One highlighted word | "beautifully" in gold, upright (not italic) |
-| Sharp corners, matched radii | Every corner is square; only the arched mirror shape is round |
-| Solid cards, no colored borders | Flat white cards with a thin neutral edge |
+| Subtle corners, matched radii | 4px buttons and photos, 10px cards, 16px shells; each outer radius = inner + padding |
+| Solid cards, soft shadows, hairlines | White cards with a thin neutral edge and a soft, uncolored shadow; 1px hairlines between sections |
 | No gradients, glows, glass or orbs | None in the code or on screen |
 | Readable labels, less all caps | Smallest text 12px; caps only in the logo |
 | No pill badges, consistent icons, no emoji | Square tags; one icon stroke width (1.5) |
-| Single-button hero, no headline badge, no stat banner | One "Book a visit" button under a single sentence |
+| Single-button hero, no headline badge, no stat banner | One "Book a visit" button under a single sentence; "Book now" in the sticky nav |
 | No 1-2-3 steps | None; booking progress is three unnumbered segments |
 | No bounce | Springs are critically damped |
 | 3-word captions | Every photo caption is three words or fewer |
@@ -61,6 +64,10 @@ PASS  No sideways scroll on phone
 | Progress, skeletons, semantic colors | Only in the booking flow and the map; green good, amber waiting, red problem |
 | Reviews with proof | 5 reviews, each linked to Google or Yelp |
 | Privacy and terms | `privacy.html` and `terms.html` (drafts for Ria to review) |
+
+| Feels like a salon | Full-bleed photo of her salon floor, headline names hair, brows and lashes |
+| Entry walk-in | Loads on a blush screen with her salon in the arched doorway, then walks you in; plays once per visit |
+| Hero text over the photo | Worst-case contrast measured on the brightest 5% of pixels behind each line: 5.1 to 6.1 |
 
 ## Not applicable to a website
 

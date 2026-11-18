@@ -45,11 +45,12 @@
   --ease-in-out: cubic-bezier(.77, 0, .175, 1);
   --ease-in: cubic-bezier(.4, 0, 1, 1);
 
-  /* Sharp corners everywhere. Inner and outer radii match because they are all 0. */
-  --r-sm: 0;
-  --r-md: 0;
-  --r-lg: 0;
-  --r-xl: 0;
+  /* Subtle rounded corners, concentric: each outer radius = the inner radius + the padding between them. */
+  --r-sm: 4px;    /* buttons, inputs, tags, photos */
+  --r-md: 6px;    /* list items, tooltip */
+  --r-lg: 10px;   /* popover, card       = r-md + 4px padding */
+  --r-xl: 16px;   /* shell, sheet        = r-lg + 6px padding */
+  --shadow-soft: 0 1px 2px rgb(var(--shadow) / .05), 0 16px 36px -22px rgb(var(--shadow) / .28);
   --field-line: rgb(36 25 20 / .5);   /* input borders: 3:1 or better, as WCAG asks for controls */
 
   /* safe insets: notches and home indicators on phones */
@@ -176,12 +177,16 @@ section { padding: clamp(80px, 9vw, 120px) 0; }
   color: #f4ede6; border-bottom: 1px solid transparent;
   transition: background-color 240ms var(--ease-out), color 240ms var(--ease-out), border-color 240ms var(--ease-out);
 }
-.nav.solid { background: var(--bg); color: var(--ink); border-color: var(--line); }
+.nav.solid { background: var(--bg); color: var(--ink); border-color: var(--line); box-shadow: 0 8px 24px -20px rgb(var(--shadow) / .3); }
+/* Book now: always one tap away. Gold over the dark hero, espresso on light pages. */
+.nav-book { min-height: 40px; padding: 0 18px; font-size: .9rem; }
+.nav:not(.solid) .nav-book { --btn-bg: var(--gold); --btn-fg: var(--espresso); --btn-hi: rgb(255 255 255 / .35); }
 .nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-/* Her real logo: a handwritten "Ria's" over spaced capitals (the one place caps are used, because the logo uses them). */
-.logo { display: grid; justify-items: center; line-height: 1; }
-.logo-script { font: 400 2.3rem/0.9 "Allura", "Snell Roundhand", cursive; letter-spacing: 0; }
-.logo small { display: block; font: 500 .75rem/1 var(--sans); letter-spacing: .26em; text-transform: uppercase; margin-top: 2px; opacity: .85; padding-left: .26em; }
+/* Her storefront sign: "Ria's Creations" stacked in a soft, bold serif beside a big SALON.
+   The one place capitals are used, because her sign uses them. */
+.logo { display: inline-flex; align-items: center; gap: 10px; line-height: 1; }
+.logo-name { font: 700 1.02rem/0.98 "Fraunces", "Cooper Black", Georgia, serif; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.005em; }
+.logo-salon { font: 600 2.1rem/0.9 var(--sans); text-transform: uppercase; letter-spacing: .04em; }
 .nav-right { display: flex; align-items: center; gap: 24px; }
 .nav-links { display: flex; align-items: center; gap: 28px; font-size: .95rem; }
 .nav-links > a, .nav-links > button { position: relative; padding: 6px 0; display: inline-flex; align-items: center; gap: 6px; }
@@ -205,18 +210,26 @@ section { padding: clamp(80px, 9vw, 120px) 0; }
 .nav-tools { display: flex; gap: 4px; margin-right: -10px; }
 #menuBtn { display: none; }
 @media (max-width: 900px) { .nav-links, .search-btn { display: none; } #menuBtn { display: grid; } }
+@media (max-width: 520px) { #themeBtn { display: none; } .nav-right { gap: 8px; } .nav-book { padding: 0 14px; } }   /* theme switch lives in the search menu on phones */
 
 /* ── Hero ──────────────────────────────────────────────────────── */
 .hero { min-height: 100svh; display: flex; flex-direction: column; padding: 0; position: relative; overflow-x: clip; }
+/* Full-bleed salon interior: the first thing you see is the room, chairs, mirrors and light. */
+.hero-bg { position: absolute; inset: 0; overflow: hidden; background: var(--espresso); }
+.hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
+.hero-scrim { position: absolute; inset: 0; background: rgb(18 13 11 / .6); }   /* one flat tone, no gradient */
+.hero-main, .hero-bar { position: relative; z-index: 1; }
 .hero-main {
-  flex: 1; display: grid; grid-template-columns: 1fr minmax(300px, 430px); gap: clamp(40px, 7vw, 110px);
-  align-items: center; padding: calc(var(--nav-h) + 48px) 0 56px;
+  flex: 1; display: grid; grid-template-columns: minmax(0, 860px);
+  align-items: end; padding: calc(var(--nav-h) + 48px) 0 64px;
 }
 .hero h1 { font-size: clamp(3rem, 6.1vw, 6rem); line-height: .98; letter-spacing: -.025em; }
 .hero h1 .ln { display: block; overflow: clip; padding-bottom: .08em; margin-bottom: -.08em; }
 .hero h1 .ln > span { display: block; }
 .hero h1 em { font-style: normal; color: var(--gold); }   /* the one highlighted word on the page */
-.hero .lede { margin-top: 28px; font-size: 1.125rem; max-width: 27em; }
+.hero .lede { margin-top: 28px; font-size: 1.125rem; max-width: 30em; color: rgb(244 237 230 / .9); }
+.hero .hero-note { color: rgb(244 237 230 / .88); }
+.hero-bar { border-top-color: rgb(244 237 230 / .2); }
 
 /* The signature: Ria's lit arched mirror. Inner hairline inset 12px; with both radii
    at "half the width", the inner arch radius is exactly outer minus 12px (concentric). */
@@ -235,7 +248,6 @@ section { padding: clamp(80px, 9vw, 120px) 0; }
   content: ""; position: absolute; inset: -1px; border-radius: 999px 999px var(--r-sm) var(--r-sm); opacity: var(--glow, 1);
   box-shadow: 0 0 0 1px rgb(214 188 138 / .35);
 }
-.hero .olive { width: 190px; height: 190px; left: -128px; bottom: -22px; transform: scaleX(-1); opacity: .9; }
 
 /* CTAs live at the bottom of the hero, in a quiet information bar. */
 .hero-bar { border-top: 1px solid var(--line); }
@@ -253,25 +265,19 @@ section { padding: clamp(80px, 9vw, 120px) 0; }
 
 @media (max-width: 560px) { .hero-cta, .hero-cta .btn { width: 100%; } }
 @media (max-width: 820px) {
-  .hero-main { grid-template-columns: 1fr; padding-top: calc(var(--nav-h) + 28px); gap: 36px; }
-  .hero-main .arch-glow { width: min(82%, 360px); }
-  .hero .olive { width: 130px; height: 130px; left: auto; right: -34px; bottom: -14px; transform: none; }
+  .hero-main { padding-top: calc(var(--nav-h) + 28px); padding-bottom: 40px; }
 }
 
 /* One orchestrated page-load moment; nothing else animates on its own.
    anime.js plays it (app.js, heroIntro). Until it starts, the pieces wait hidden so
    nothing flashes. If anime.js can't load, .intro-css plays this CSS version instead. */
-.js:not(.intro-run):not(.intro-css) .hero :is(h1, .lede, .arch-glow, .hero-bar) { visibility: hidden; }
+.js:not(.intro-run):not(.intro-css) .hero :is(h1, .lede, .hero-bar) { visibility: hidden; }
 .hero h1 .ln > span > span { display: inline-block; }      /* split words and letters can move */
 @media (prefers-reduced-motion: no-preference) {
   .intro-css .hero h1 .ln > span { animation: rise 1100ms var(--ease-out) both; }
   .intro-css .hero h1 .ln:nth-child(2) > span { animation-delay: 90ms; }
   .intro-css .hero .lede { animation: fade 900ms var(--ease-out) 380ms both; }
-  .intro-css .hero .arch { animation: unveil 1500ms var(--ease-out) 120ms both; }
-  .intro-css .hero .arch img { animation: settle 2200ms var(--ease-out) 120ms both; }
-  .intro-css .hero .arch-glow::before { animation: fade 1200ms var(--ease-out) 700ms both; }
-  .intro-css .hero .olive .stem { stroke-dasharray: 1; animation: draw 1600ms var(--ease-out) 700ms both; }
-  .intro-css .hero .olive .leaf { animation: leaf 700ms var(--ease-out) both; animation-delay: calc(900ms + var(--i) * 55ms); }
+  .intro-css .hero-bg img { animation: settle 2400ms var(--ease-out) both; }
   .intro-css .hero-bar { animation: fade 900ms var(--ease-out) 650ms both; }
 }
 @keyframes rise   { from { transform: translateY(104%); } }
@@ -283,7 +289,7 @@ section { padding: clamp(80px, 9vw, 120px) 0; }
 
 /* ── About ─────────────────────────────────────────────────────── */
 .about .wrap { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(40px, 8vw, 120px); align-items: center; }
-.about .ph { border-radius: var(--r-sm); aspect-ratio: 4 / 3; }
+.about-arch { aspect-ratio: 4 / 5; max-width: 440px; }
 .about .ph img {
   width: 100%; height: 100%; object-fit: cover; object-position: 60% 22%;
   outline: 1px solid rgb(0 0 0 / .08); outline-offset: -1px; /* alpha edge so the photo never bleeds into the page */
@@ -319,11 +325,12 @@ section { padding: clamp(80px, 9vw, 120px) 0; }
 .menu li { display: grid; grid-template-columns: 1fr auto; gap: 2px 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--line); }
 .menu h3 { font-size: 1.35rem; line-height: 1.25; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .menu p { grid-column: 1; color: var(--muted); font-size: .95rem; }
+.menu .dur { grid-column: 2; justify-self: end; font-size: .88rem; color: var(--muted); white-space: nowrap; }
 .price small { font-size: .85rem; color: var(--muted); }
 .price { font-size: 1.05rem; font-variant-numeric: tabular-nums lining-nums; min-width: 3.2ch; text-align: right; }
 .tag {
   font: 500 .8rem/1 var(--sans); letter-spacing: .01em; color: var(--ink);
-  padding: 5px 8px; border-radius: 0; box-shadow: inset 0 0 0 1px var(--line-strong); cursor: help;
+  padding: 5px 8px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px var(--line-strong); cursor: help;
 }
 .fineprint { margin-top: 26px; font-size: .82rem; color: var(--muted); }
 @media (max-width: 760px) {
@@ -363,7 +370,7 @@ section { padding: clamp(80px, 9vw, 120px) 0; }
 .book-notes { list-style: none; margin-top: 32px; border-top: 1px solid var(--line); }
 .book-notes li { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: .98rem; }
 /* Layered structure: tinted shell → 6px gap → card or photo. Concentric. */
-.shell { padding: 6px; border-radius: var(--r-xl); background: var(--tint); box-shadow: inset 0 0 0 1px var(--line); }
+.shell { padding: 6px; border-radius: var(--r-xl); background: var(--tint); box-shadow: inset 0 0 0 1px var(--line), var(--shadow-soft); }
 .card {
   border-radius: var(--r-lg); background: var(--surface); padding: clamp(24px, 4vw, 40px);
   box-shadow: 0 0 0 1px var(--line);
@@ -460,7 +467,7 @@ form .btn { width: 100%; margin-top: 8px; }
 }
 
 footer.site { padding: 28px 0 32px; font-size: .85rem; }
-footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 28px; color: var(--muted); }
+
 
 /* ── Popovers: origin-aware, scale from .97 ─────────────────────── */
 .pop {
@@ -579,20 +586,6 @@ dialog.dragging::backdrop { transition: none; }
 .toast.leaving { opacity: 0; transform: translateY(8px) scale(.97); }
 @keyframes toast-in { from { opacity: 0; transform: translateY(10px) scale(.97); } }
 
-/* ── Mobile action bar ─────────────────────────────────────────── */
-.mbar { display: none; }
-@media (max-width: 820px) {
-  .mbar {
-    display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; position: fixed; z-index: 30; inset: auto 0 0;
-    padding: 10px calc(16px + var(--safe-r)) calc(10px + var(--safe-b)) calc(16px + var(--safe-l));
-    border-top: 1px solid rgb(244 237 230 / .12);
-    transform: translateY(105%); transition: transform 320ms var(--ease-in);
-  }
-  .mbar.show { transform: none; transition: transform 420ms var(--ease-out); }
-  .mbar .btn { min-height: 48px; }
-  .mbar.show ~ .toasts { bottom: calc(86px + var(--safe-b)); }
-  footer.site { padding-bottom: 100px; }
-}
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -696,3 +689,96 @@ dialog.dragging::backdrop { transition: none; }
 .doc p, .doc li { margin-top: 14px; color: var(--muted); }
 .doc ul { padding-left: 1.2em; }
 .doc .note { margin-top: 20px; padding: 14px 16px; box-shadow: inset 0 0 0 1px var(--line-strong); font-size: .92rem; }
+
+/* ── Entry: the salon through its arched doorway ──────────────
+   Plays once per visit. Counts to 100% while the page really loads,
+   then the doorway grows past you and the room becomes the hero. */
+.entry { display: none; position: fixed; inset: 0; z-index: 200; background: var(--tint); color: var(--ink); overflow: hidden; }
+.js:not(.no-entry) .entry { display: block; }
+.js:not(.no-entry) body { overflow: hidden; }
+.entry-logo { position: absolute; top: 24px; left: 0; right: 0; display: flex; justify-content: center; }
+.entry-portal {
+  position: absolute; left: 50%; top: 45%; width: min(300px, 58vw); aspect-ratio: 3 / 4;
+  transform: translate(-50%, -50%); transform-origin: 50% 50%;
+}
+.entry-door {
+  position: absolute; inset: 0; border-radius: 999px 999px 0 0; overflow: hidden; background: var(--espresso-2);
+  box-shadow: 0 0 0 1px rgb(156 122 69 / .35);
+}
+.entry-ring { position: absolute; left: -14px; top: -14px; width: calc(100% + 28px); height: calc(100% + 28px); overflow: visible; pointer-events: none; }
+.entry-ring path { fill: none; vector-effect: non-scaling-stroke; stroke-linecap: square; }
+.ring-track { stroke: rgb(36 25 20 / .12); stroke-width: 1; }
+.ring-line { stroke: var(--gold-ink); stroke-width: 1.5; stroke-dasharray: 100; stroke-dashoffset: 100; }
+:root[data-theme="dark"] .ring-line { stroke: var(--gold); }
+:root[data-theme="dark"] .ring-track { stroke: rgb(242 234 227 / .14); }
+.entry-door img { display: block; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 50%; }
+.entry-door::after {   /* the gold mirror line, concentric with the doorway */
+  content: ""; position: absolute; inset: 10px; border-radius: 999px 999px 0 0; pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgb(214 188 138 / .75);
+}
+.entry-status { position: absolute; left: 0; right: 0; top: calc(45% + min(200px, 38.67vw) + 30px); display: grid; justify-items: center; gap: 10px; }
+.entry-count { font: 400 clamp(2.6rem, 6vw, 3.6rem)/1 var(--serif); font-variant-numeric: tabular-nums lining-nums; }
+.entry-line { display: inline-flex; align-items: center; gap: 10px; font-size: .95rem; color: var(--muted); min-height: 1.6em; }
+.entry-line span { display: inline-block; transition: opacity 220ms var(--ease-out), transform 220ms var(--ease-out); }
+.entry-line span.swap { opacity: 0; transform: translateY(6px); }
+.entry-snips { width: 20px; height: 20px; color: var(--accent); overflow: visible; }
+.entry-snips g { transform-box: view-box; transform-origin: 8px 12px; }
+@media (prefers-reduced-motion: no-preference) {
+  .entry-snips .blade-a { animation: snip-a 560ms var(--ease-in-out) infinite alternate; }
+  .entry-snips .blade-b { animation: snip-b 560ms var(--ease-in-out) infinite alternate; }
+}
+@keyframes snip-a { to { transform: rotate(-14deg); } }
+@keyframes snip-b { to { transform: rotate(14deg); } }
+.entry-count small { font: 400 1rem/1 var(--sans); color: var(--muted); margin-left: 4px; vertical-align: .9em; }
+.entry-words { position: absolute; left: 0; right: 0; top: 45%; transform: translateY(-50%); overflow: hidden; pointer-events: none; }
+.entry-words-track {
+  display: flex; width: max-content; white-space: nowrap;
+  font: 400 clamp(5rem, 15vw, 14rem)/1 var(--serif); letter-spacing: -.02em; color: rgb(36 25 20 / .06);
+}
+.entry-words-track span { padding-right: .45em; }
+:root[data-theme="dark"] .entry-words-track { color: rgb(242 234 227 / .06); }
+@media (prefers-reduced-motion: no-preference) { .entry-words-track { animation: drift 48s linear infinite; } }
+@keyframes drift { to { transform: translateX(-50%); } }
+.entry-portal { z-index: 1; }
+.entry-corner { position: absolute; bottom: calc(22px + var(--safe-b)); font-size: .85rem; color: var(--muted); }
+.entry-corner-l { left: 24px; }
+.entry-corner-r { right: 24px; }
+.entry-logo, .entry-status, .entry-words, .entry-corner { transition: opacity 320ms var(--ease-out), translate 320ms var(--ease-out); }
+.entry.walking .entry-logo, .entry.walking .entry-status, .entry.walking .entry-words, .entry.walking .entry-corner { opacity: 0; translate: 0 -8px; }
+
+/* ── Hairlines between light sections ── */
+main > section:not(.on-dark):not(.reviews) + section:not(.on-dark) { border-top: 1px solid var(--line); }
+
+/* ── Meet Ria: what she is known for ── */
+.skills { list-style: none; display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; border-top: 1px solid var(--line); }
+.skills li { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 1rem; }
+.skills li:nth-child(odd) { padding-right: 16px; }
+.about .lede + .skills + .lede { margin-top: 24px; }
+
+/* ── Soft lift on photos ── */
+.rail .ph, .about-arch { box-shadow: var(--shadow-soft); }
+.rail .ph { border-radius: var(--r-sm); }
+
+/* ── Footer: address, hours, phone ── */
+footer.site { padding: 56px 0 28px; }
+footer.site .wrap.foot { display: grid; grid-template-columns: 1.3fr 1fr 1fr 1fr; gap: 32px; border-top: 1px solid var(--line); padding-top: 40px; color: var(--muted); }
+.foot h3 { font: 500 .9rem/1.3 var(--sans); color: var(--ink); margin-bottom: 8px; }
+.foot p { font-size: .95rem; line-height: 1.7; }
+.foot a:hover { color: var(--ink); }
+.foot-brand .logo { color: var(--ink); margin-bottom: 14px; }
+footer.site .wrap.foot-legal { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+@media (max-width: 820px) { footer.site .wrap.foot { grid-template-columns: 1fr 1fr; } .foot-brand { grid-column: 1 / -1; } }
+
+/* nav over the dark Location band: solid espresso, so nothing scrolls under the logo */
+.nav.solid.over-dark { background: var(--espresso); color: #f4ede6; border-color: rgb(244 237 230 / .14); }
+.nav.over-dark .nav-book { --btn-bg: var(--gold); --btn-fg: var(--espresso); --btn-hi: rgb(255 255 255 / .35); }
+/* the footer sits inside the Location band; keep that band's centred two-column grid out of it */
+footer.site .wrap.foot { align-items: start; }
+
+.nowrap { white-space: nowrap; }
+.nav-book { white-space: nowrap; }
+@media (max-width: 520px) {   /* phones: the sign lockup and Book now share one row */
+  .logo-name { font-size: .82rem; }
+  .logo-salon { font-size: 1.62rem; }
+  .nav .logo { gap: 7px; }
+}

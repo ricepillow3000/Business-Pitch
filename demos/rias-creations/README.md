@@ -25,6 +25,9 @@ used only once, so until that file exists the lounge card stays hidden.
 
 ## Things to try
 
+- Open the page fresh: it counts to 100% with her salon in the arched doorway, then walks you inside.
+  It plays once per visit (close the tab to see it again); links like `index.html#book` skip it.
+
 - Hover **Services** in the top bar. Move diagonally into the list; the category won't flip on the way (safe triangle).
 - Press **Ctrl K** (or **⌘K**, or **/**) for the search menu. **T** switches day/evening. **B** jumps to booking.
 - Click a photo. It grows into a viewer; drag it up or down to close.

@@ -44,29 +44,104 @@
   const olive = $("#oliveTpl").content;
   $$("[data-olive]").forEach((el) => el.appendChild(olive.cloneNode(true)));
 
+  /* ── Entry: walk through the arched doorway into the salon ───
+     The counter follows real loading (fonts, the hero photo, the page) with a short
+     minimum so it can be read. At 100% the doorway grows past the edges of the screen
+     while the room inside grows more slowly, like stepping through a door. The photo
+     lands exactly where the hero shows it, so the hand-off has no visible cut. */
+  function runEntry(done) {
+    const entry = $("#entry"), heroImg = $("#heroImg");
+    if (!entry || root.classList.contains("no-entry")) { entry?.remove(); return done(); }
+    root.classList.add("entry-playing");
+    if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+    scrollTo(0, 0);
+    const door = $("#entryDoor"), dimg = $("#entryImg"), count = $("#entryCount"), ring = $("#entryRing"), line = $("#entryLine");
+    // a little story while the page loads, then the door opens
+    const LINES = [[0, "Warming up the dryers"], [25, "Laying out fresh towels"], [50, "Polishing the mirrors"], [75, "Saving you the best chair"], [100, "Come on in"]];
+    let lineIdx = 0;
+    const setLine = (pct) => {
+      let i = 0; LINES.forEach(([at], k) => { if (pct >= at) i = k; });
+      if (i === lineIdx) return;
+      lineIdx = i; line.classList.add("swap");
+      setTimeout(() => { line.textContent = LINES[i][1]; line.classList.remove("swap"); }, 200);
+    };
+    heroImg.style.transform = "scale(1.04)";                  // the hero's starting pose, so the landing matches it
+    const scrim = $(".hero-scrim"); scrim.style.opacity = "0";
+    const tasks = [
+      document.fonts ? document.fonts.ready : Promise.resolve(),
+      heroImg.decode ? heroImg.decode().catch(() => {}) : Promise.resolve(),
+      new Promise((r) => (document.readyState === "complete" ? r() : addEventListener("load", r, { once: true }))),
+    ];
+    let ready = 0; tasks.forEach((p) => p.then(() => ready++, () => ready++));
+    const t0 = performance.now(), MIN = 2200, MAX = 6000;
+    let shown = 0;
+    const tick = (now) => {
+      const el = now - t0;
+      const target = el > MAX ? 100 : Math.min((ready / tasks.length) * 100, (el / MIN) * 100);
+      shown += (target - shown) * 0.14;
+      if (target - shown < 0.6) shown = target;
+      count.textContent = String(Math.floor(shown));
+      ring.style.strokeDashoffset = String(100 - shown);       // the mirror light comes on as the page loads
+      setLine(shown);
+      if (shown >= 100) { count.textContent = "100"; ring.style.strokeDashoffset = "0"; setTimeout(walk, 520); return; }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+
+    function walk() {
+      const vw = innerWidth, vh = innerHeight, r = door.getBoundingClientRect();
+      Object.assign(door.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", transform: "none" });
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      // where the hero shows the photo: object-fit cover, positioned 50% 45%, scaled 1.04
+      const hb = heroImg.getBoundingClientRect(), nw = heroImg.naturalWidth || 1530, nh = heroImg.naturalHeight || 2040;
+      const s = Math.max(hb.width / nw, hb.height / nh), cw = nw * s, ch = nh * s;
+      const tx = hb.left + (hb.width - cw) * 0.5 + cw / 2, ty = hb.top + (hb.height - ch) * 0.45 + ch / 2;
+      const I0 = 1.15, I1 = cw / r.width;                        // photo: a slight crop through the door → hero size
+      const D1 = 4 * Math.max(vw / r.width, vh / r.height, I1);   // doorway: grows well past the screen edges
+      entry.classList.add("walking");
+      const dur = 1600, start = performance.now();
+      const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);   // step in, glide through, settle
+      const step = (now) => {
+        const p = Math.min(1, (now - start) / dur), e = ease(p);
+        // equal steps in scale feel like walking at a steady pace; the door outruns the room (depth),
+        // but the room always fills the opening until it is big enough to fill the screen
+        const D = Math.exp(Math.log(D1) * e);
+        const I = Math.min(I1, Math.max(I0 * Math.exp(Math.log(I1 / I0) * e), D));
+        door.style.transform = `translate(${(tx - cx) * e}px, ${(ty - cy) * e}px) scale(${D})`;   // the door drifts to where the photo lands
+        dimg.style.transform = `scale(${I / D})`;
+        if (p < 1) requestAnimationFrame(step);
+        else finish();
+      };
+      requestAnimationFrame(step);
+    }
+    function finish() {
+      try { sessionStorage.setItem("ria-entered", "1"); } catch (e) {}
+      entry.remove();
+      root.classList.add("no-entry"); root.classList.remove("entry-playing");
+      done();
+    }
+  }
+
   /* ── Hero intro, played by anime.js ──────────────────────────
-     One timeline: the headline rises letter by letter, the arched mirror unveils,
-     its gold glow warms up, the olive branch draws itself, then the bar and the
-     Call / Book buttons arrive last. */
+     Picks up where the walk-in ends: the room settles, the light dims a little
+     behind the words, the headline rises, then the bar and the button. */
   function heroIntro() {
-    const A = window.anime;
-    if (reduced) { root.classList.add("intro-run"); return; }
-    if (!A) { root.classList.add("intro-css"); return; }        // library missing: CSS fallback
+    const A = window.anime, heroImg = $("#heroImg"), scrim = $(".hero-scrim");
+    const clean = () => [heroImg, scrim].forEach((el) => { el.style.removeProperty("transform"); el.style.removeProperty("opacity"); });
+    if (reduced) { clean(); root.classList.add("intro-run"); return; }
+    if (!A) { clean(); root.classList.add("intro-css"); return; }        // library missing: CSS fallback
     const split = $$(".hero h1 .ln > span").map((el) => A.splitText(el, { chars: true }));
     const chars = split.flatMap((s) => s.chars);
-    const arch = $(".hero .arch"), img = $(".hero .arch img"), glow = $(".hero .arch-glow"), lede = $(".hero .lede");
-    const stem = A.createDrawable(".hero .olive .stem"), leaves = $$(".hero .olive .leaf");
+    const lede = $(".hero .lede"), nav = $("#nav");
     const facts = $$(".hero-bar .hero-note"), stars = $$(".hero-bar .stars svg"), ctas = $$(".hero-cta .btn");
     const rating = $('.hero-bar [data-swr="rating"]'), target = parseFloat(rating.textContent) || 4.5, count = { v: 0 };
 
     // starting poses, set before anything is revealed so nothing flashes
     A.set(chars, { y: "108%" });
     A.set(lede, { opacity: 0, y: 14 });
-    A.set(arch, { clipPath: "inset(100% 0% 0% 0%)" });
-    A.set(img, { scale: 1.12 });
-    A.set(glow, { "--glow": 0 });
-    A.set(stem, { draw: "0 0" });
-    A.set(leaves, { opacity: 0 });
+    A.set(heroImg, { scale: 1.04 });
+    A.set(scrim, { opacity: 0 });
+    A.set(nav, { opacity: 0 });
     A.set([...facts, ...ctas], { opacity: 0, y: 12 });
     A.set(stars, { opacity: 0, scale: 0.6 });
     rating.textContent = "0.0";
@@ -74,29 +149,26 @@
     root.classList.add("intro-run");
 
     const tl = A.createTimeline({ defaults: { ease: "out(4)" } });
-    tl.add(chars, { y: "0%", duration: 1100, delay: A.stagger(18) }, 0)
-      .add(arch, { clipPath: "inset(0% 0% 0% 0%)", duration: 1500, ease: "out(3)" }, 120)
-      .add(img, { scale: 1, duration: 2200, ease: "out(3)" }, 120)
-      .add(lede, { opacity: 1, y: 0, duration: 900 }, 420)
-      .add(glow, { "--glow": 1, duration: 1400, ease: "out(2)" }, 700)
-      .add(stem, { draw: "0 1", duration: 1500, ease: "inOut(2)" }, 650)
-      .add(leaves, { opacity: 1, duration: 600, delay: A.stagger(55) }, 950)
-      .add(facts, { opacity: 1, y: 0, duration: 800, delay: A.stagger(90) }, 750)
-      .add(stars, { opacity: 1, scale: 1, duration: 600, delay: A.stagger(60), ease: "out(3)" }, 950)
-      .add(count, { v: target, duration: 1000, ease: "out(3)", onUpdate: () => (rating.textContent = count.v.toFixed(1)) }, 900)
+    tl.add(heroImg, { scale: 1, duration: 2600, ease: "out(3)" }, 0)
+      .add(scrim, { opacity: 1, duration: 1000, ease: "out(2)" }, 0)
+      .add(chars, { y: "0%", duration: 1100, delay: A.stagger(16) }, 180)
+      .add(nav, { opacity: 1, duration: 700 }, 300)
+      .add(lede, { opacity: 1, y: 0, duration: 900 }, 560)
+      .add(facts, { opacity: 1, y: 0, duration: 800, delay: A.stagger(90) }, 820)
+      .add(stars, { opacity: 1, scale: 1, duration: 600, delay: A.stagger(60), ease: "out(3)" }, 980)
+      .add(count, { v: target, duration: 1000, ease: "out(3)", onUpdate: () => (rating.textContent = count.v.toFixed(1)) }, 920)
       .add(ctas, { opacity: 1, y: 0, duration: 700, delay: A.stagger(80) }, 1150)
       .then(() => {
         delete rating.dataset.counting;
         rating.textContent = String(store.get(PLACE_KEY)?.data?.rating ?? target);
         // hand the elements back to CSS so hover, press and theme styles work normally
-        [lede, arch, img, ...facts, ...stars, ...ctas].forEach((el) => {
-          ["transform", "opacity", "clip-path", "translate", "scale"].forEach((p) => el.style.removeProperty(p));
+        [lede, heroImg, scrim, nav, ...facts, ...stars, ...ctas].forEach((el) => {
+          ["transform", "opacity", "translate", "scale"].forEach((p) => el.style.removeProperty(p));
         });
-        glow.style.removeProperty("--glow");
         root.classList.add("intro-done");
       });
   }
-  heroIntro();
+  runEntry(heroIntro);
 
   /* ── BlurHash placeholders ──────────────────────────────────── */
   const B83 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~";
@@ -271,20 +343,22 @@
   themeBtn.addEventListener("click", toggleTheme);
 
   /* ── Nav turns solid past the hero; mobile bar shows between hero and booking ── */
-  const nav = $("#nav"), mbar = $("#mbar"), hero = $(".hero"), book = $("#book"), visit = $("#visit");
+  const nav = $("#nav"), mbar = $("#mbar"), hero = $(".hero"), book = $("#book"), visit = $("#visit");   // mbar: optional mobile bar
   const seen = new Map();
   new IntersectionObserver((es) => {
     es.forEach((e) => seen.set(e.target, e.isIntersecting));
-    mbar.classList.toggle("show", seen.size === 3 && !seen.get(hero) && !seen.get(book) && !seen.get(visit));
+    mbar?.classList.toggle("show", seen.size === 3 && !seen.get(hero) && !seen.get(book) && !seen.get(visit));
   }).observe(hero);
   const io2 = new IntersectionObserver((es) => {
     es.forEach((e) => seen.set(e.target, e.isIntersecting));
-    mbar.classList.toggle("show", seen.size === 3 && !seen.get(hero) && !seen.get(book) && !seen.get(visit));
+    mbar?.classList.toggle("show", seen.size === 3 && !seen.get(hero) && !seen.get(book) && !seen.get(visit));
   });
   io2.observe(book); io2.observe(visit);
   const onScroll = () => {
-    const h = nav.offsetHeight;
-    nav.classList.toggle("solid", !(hero.getBoundingClientRect().bottom > h || visit.getBoundingClientRect().top < h));
+    const h = nav.offsetHeight, vr = visit.getBoundingClientRect();
+    const overHero = hero.getBoundingClientRect().bottom > h;            // see-through only over the hero photo
+    nav.classList.toggle("solid", !overHero);
+    nav.classList.toggle("over-dark", !overHero && vr.top < h && vr.bottom > 0);   // a dark bar over the dark Location band
   };
   addEventListener("scroll", onScroll, { passive: true }); onScroll();
 
@@ -406,7 +480,8 @@
     { g: "Suggested", label: themeLabel(), kbd: "T", keys: "theme dark light evening day mode", run: toggleTheme },
     ...SERVICES.map((s) => ({ g: "Book a service", label: s.name, hint: s.price, keys: `${s.cat} ${s.desc}`, run: () => bookService(s.name) })),
     { g: "Go to", label: "Services and prices", keys: "menu cost", run: () => go("#services") },
-    { g: "Go to", label: "Recent work", keys: "photos gallery color hair results", run: () => go("#work") },
+    { g: "Go to", label: "Gallery", keys: "photos recent work color hair results", run: () => go("#work") },
+    { g: "Go to", label: "Meet Ria", keys: "stylist owner about team", run: () => go("#stylist") },
     { g: "Go to", label: "Reviews", keys: "rating google yelp", run: () => go("#reviews") },
     { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card", run: () => go("#visit") },
     { g: "Contact", label: "Copy phone number", keys: "call", run: () => copy("(770) 557-0354", "Phone number") },
