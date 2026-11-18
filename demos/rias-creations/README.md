@@ -34,9 +34,10 @@ used only once, so until that file exists the lounge card stays hidden.
 
 ## Things to confirm with Ria
 
-- Real prices (only the $35 and $65 specials are hers; the rest are placeholders)
-- Full weekly hours (we only know "closes 7:30 PM")
+- The remaining prices (real so far: keratin from $150, eyebrow tint or wax $20, lashes from $40, Brazilian $35, full-body wax $65)
+- The privacy and terms drafts
 - Whether booking requests should text her phone
+- Her logo file, to replace the matched script wordmark
 
 Booking, the text code and the rating refresh are simulated in this demo. A real site
 would send them to a small server (for example, SMS through a texting service and the
