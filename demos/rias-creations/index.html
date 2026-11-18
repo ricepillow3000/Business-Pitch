@@ -35,6 +35,7 @@
       <nav class="nav-links" aria-label="Main">
         <a href="#services" class="slop" id="svcTrigger" data-pop="svcMenu" aria-haspopup="menu" aria-expanded="false" aria-controls="svcMenu">Services
           <svg class="caret" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M2 3.8l3 3 3-3"/></svg></a>
+        <a href="#work" class="slop">Work</a>
         <a href="#reviews" class="slop">Reviews</a>
         <a href="#book" class="slop">Book</a>
         <a href="#visit" class="slop">Visit</a>
@@ -166,6 +167,66 @@
       </div>
       <p class="fineprint">Demo prices. The $35 and $65 specials come from the salon's posters; Ria sets the rest.</p>
     </div>
+  </section>
+
+  <!-- ═══ RECENT WORK ═══ -->
+  <section class="work on-dark" id="work">
+    <div class="wrap work-head">
+      <div>
+        <h2>Recent work</h2>
+        <p class="lede">Color, cuts and styling, straight from Ria's chair.</p>
+      </div>
+      <div class="rail-ctrl">
+        <button class="icon-btn chev-l" id="workPrev" type="button" aria-label="Previous photos" data-tip="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>
+        </button>
+        <button class="icon-btn chev-r" id="workNext" type="button" aria-label="Next photos" data-tip="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <ul class="rail scroller" id="rail" tabindex="0" aria-label="Recent work. Scroll sideways for more.">
+        <li>
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Burgundy color">
+              <span class="ph" data-blurhash="dbJ*6dx]~qn%^%tQRjni-:kWM{Rjs8WWRjs:xtozjFof"><img src="images/work-burgundy.webp" alt="Long hair from behind: burgundy color with glossy, soft-curled ends" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Burgundy color</b><span>Color and soft curls</span></figcaption>
+          </figure>
+        </li>
+        <li>
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Long layers">
+              <span class="ph" data-blurhash="dTHU,,i]-:_2~WM{Rls:S4V@t6RQIVWBn%V[RPS4oKW;"><img src="images/work-layers.webp" alt="Side profile: long dark layers with face-framing pieces and soft highlights" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Long layers</b><span>Cut and face framing</span></figcaption>
+          </figure>
+        </li>
+        <li>
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Soft bob">
+              <span class="ph" data-blurhash="dJGk?_?b9]9u%yNG$*oI0OIV%0adRgngI;IU9bbdsAVs"><img src="images/work-bob.webp" alt="A smiling client with a soft blonde bob and bangs" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Soft bob</b><span>Cut with bangs</span></figcaption>
+          </figure>
+        </li>
+        <li>
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Caramel highlights">
+              <span class="ph" data-blurhash="dJIOOgr_?vtSxpt6WYRj_N%MIBV@xt%MxExaadxtIoRP"><img src="images/work-caramel.webp" alt="Caramel highlights and long face-framing layers, styled in loose waves" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Caramel highlights</b><span>Color and layers</span></figcaption>
+          </figure>
+        </li>
+        <li>
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Honey balayage">
+              <span class="ph" data-blurhash="dKGbYTa$%gbH~q%MIpWA?wRknhIo_NoexZRkt8t7R*Rk"><img src="images/work-balayage.webp" alt="Long hair from behind: honey balayage styled in full curls" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Honey balayage</b><span>Color and curls</span></figcaption>
+          </figure>
+        </li>
+    </ul>
   </section>
 
   <!-- ═══ REVIEWS ═══ -->

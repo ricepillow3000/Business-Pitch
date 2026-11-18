@@ -406,7 +406,8 @@
     { g: "Suggested", label: themeLabel(), kbd: "T", keys: "theme dark light evening day mode", run: toggleTheme },
     ...SERVICES.map((s) => ({ g: "Book a service", label: s.name, hint: s.price, keys: `${s.cat} ${s.desc}`, run: () => bookService(s.name) })),
     { g: "Go to", label: "Services and prices", keys: "menu cost", run: () => go("#services") },
-    { g: "Go to", label: "Reviews", keys: "rating google", run: () => go("#reviews") },
+    { g: "Go to", label: "Recent work", keys: "photos gallery color hair results", run: () => go("#work") },
+    { g: "Go to", label: "Reviews", keys: "rating google yelp", run: () => go("#reviews") },
     { g: "Go to", label: "Hours and directions", keys: "open close address map visit", run: () => go("#visit") },
     { g: "Contact", label: "Copy phone number", keys: "call", run: () => copy("(770) 557-0354", "Phone number") },
     { g: "Contact", label: "Copy address", keys: "where location", run: () => copy("375 Rockbridge Rd NW, Suite 156, Lilburn, GA 30047", "Address") },
@@ -547,6 +548,18 @@
     s.addEventListener("scroll", upd, { passive: true });
     addEventListener("resize", upd); upd();
   });
+
+  /* ── Recent work rail: arrows move one photo at a time ── */
+  const rail = $("#rail"), workPrev = $("#workPrev"), workNext = $("#workNext");
+  const step = () => { const li = $("li", rail); return li.offsetWidth + parseFloat(getComputedStyle(rail).columnGap || 0); };
+  const railEnds = () => {
+    workPrev.disabled = rail.scrollLeft < 4;
+    workNext.disabled = rail.scrollLeft + rail.clientWidth > rail.scrollWidth - 4;
+  };
+  workPrev.addEventListener("click", () => rail.scrollBy({ left: -step() }));
+  workNext.addEventListener("click", () => rail.scrollBy({ left: step() }));
+  rail.addEventListener("scroll", railEnds, { passive: true });
+  addEventListener("resize", railEnds); railEnds();
 
   /* ── Service tabs: directional slides, smooth height, transform-only indicator ── */
   const ink = $(".tab-ink"), wrapP = $("#panels");

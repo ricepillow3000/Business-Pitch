@@ -628,3 +628,32 @@ dialog.dragging::backdrop { transition: none; }
 .track { align-items: flex-start; }
 .viewport { transition: height 420ms var(--ease-in-out); }
 .score-note { margin-top: 6px; font-size: .92rem; color: var(--muted); }
+
+/* ── Recent work: one calm row of results, swipe or use the arrows ── */
+.work-head { display: flex; justify-content: space-between; align-items: end; gap: 24px 48px; flex-wrap: wrap; }
+.work-head .lede { margin-top: 18px; }
+.rail-ctrl { display: flex; gap: 8px; }
+.rail-ctrl .icon-btn { box-shadow: inset 0 0 0 1px var(--line-strong); }
+.rail-ctrl .icon-btn:disabled { opacity: .35; cursor: default; transform: none; }
+.rail {
+  list-style: none; display: grid; grid-auto-flow: column; grid-auto-columns: clamp(250px, 25vw, 320px);
+  gap: clamp(20px, 2.6vw, 32px); margin-top: 56px; padding-bottom: 6px;
+  --edge: max(20px, calc((100% - 1160px) / 2));
+  padding-inline: var(--edge); scroll-padding-inline: var(--edge);
+  scroll-snap-type: x mandatory; scroll-behavior: smooth;
+}
+.rail li { scroll-snap-align: start; }
+.rail .ph { aspect-ratio: 3 / 4; border-radius: var(--r-sm); }
+.rail img {
+  width: 100%; height: 100%; object-fit: cover;
+  outline: 1px solid rgb(255 255 255 / .08); outline-offset: -1px;
+  transition: opacity 600ms var(--ease-out), transform 700ms var(--ease-out);
+}
+@media (hover: hover) { .rail .photo-btn:hover img.loaded { transform: scale(1.03); } }
+.rail figcaption { margin-top: 16px; display: grid; gap: 2px; }
+.rail figcaption b { font-family: var(--serif); font-weight: 400; font-size: 1.25rem; line-height: 1.2; }
+.rail figcaption span { font-size: .88rem; color: var(--muted); }
+@media (max-width: 640px) {
+  .rail { grid-auto-columns: 72vw; margin-top: 40px; }
+  .rail-ctrl { display: none; }   /* phones swipe */
+}
