@@ -38,7 +38,8 @@ if (m.oneClickVerified === true && url.indexOf('https://') === 0) headers.push('
 const bodyB64 = (b64(clean(m.body).split(CR).join('').split(LF).join(CRLF)).match(new RegExp('.{1,76}', 'g')) || []).join(CRLF);
 const raw = headers.join(CRLF) + CRLF + CRLF + bodyB64;
 const meta = { ledgerRowId: clean(m.ledgerRowId), ledgerKey: clean(m.ledgerKey), leadId: clean(m.leadId), draftId: clean(m.draftId), to };
-return [{ json: { raw: problems.length ? '' : b64url(raw), meta, problems } }];` } },
+const threadId = oneLine(m.gmailThreadId);
+return [{ json: { raw: problems.length ? '' : b64url(raw), threadId, meta, problems } }];` } },
   output: [{ raw: 'abc', meta: {}, problems: [] }]
 });
 const msgOk = ifElse({
@@ -69,7 +70,7 @@ const send = node({
       sendBody: true,
       contentType: 'json',
       specifyBody: 'json',
-      jsonBody: expr('{{ JSON.stringify({ raw: $json.raw }) }}'),
+      jsonBody: expr('{{ JSON.stringify($json.threadId ? { raw: $json.raw, threadId: $json.threadId } : { raw: $json.raw }) }}'),
       options: { response: { response: { fullResponse: true, neverError: true, responseFormat: 'json' } }, timeout: 30000 }
     }
   },

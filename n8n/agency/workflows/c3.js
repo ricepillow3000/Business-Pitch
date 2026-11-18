@@ -215,6 +215,17 @@ drafts.forEach((d) => {
   }
   if (cfg.isDemo !== false && !isDemoAddr(to)) { block(d, 'DEMO mode: only fictional .example addresses may be used'); return; }
   if (to !== clean(lead['Public Email']).toLowerCase()) { block(d, 'To address no longer matches the lead email', true); return; }
+  const step0 = clean(d.Step) || 'initial';
+  if (step0 !== 'initial') {
+    const replied = clean(lead['Reply Status']) || (clean(lead['Reply Category']) && clean(lead['Reply Category']).indexOf('Out of office') !== 0);
+    const stage = clean(lead['Pipeline Status']).toLowerCase();
+    if (replied || ['contacted', 'follow-up pending'].indexOf(stage) === -1) {
+      out.draftUpdates.push({ 'Draft ID': draftId, 'Review Status': 'Rejected', 'Approved Hash': '', 'Approved At': '', 'Review Notes': 'Cancelled automatically before sending: the lead has replied or moved on (' + (clean(lead['Reply Category']) || clean(lead['Pipeline Status'])) + ').', 'Updated At': stamp });
+      ev('followup_cancelled', leadId, draftId + ': lead replied or moved on');
+      return;
+    }
+    if (!clean(d['Gmail Thread ID'])) { block(d, 'Follow-up has no Gmail thread to reply in'); return; }
+  }
   const addr = clean(s.AGENCY_MAILING_ADDRESS);
   if (body.indexOf('[MISSING:') !== -1 || !addr || body.indexOf(addr) === -1 || body.indexOf('STOP') === -1 || body.indexOf(clean(s.SENDER_NAME)) === -1) { block(d, 'Footer incomplete (sender, mailing address and STOP opt-out are required)'); return; }
   const step = clean(d.Step) || 'initial';
@@ -228,7 +239,8 @@ drafts.forEach((d) => {
     ledgerKey: key, ledgerRowId: key + '|' + runId, draftId, leadId, step, to, subject: clean(d.Subject), body,
     fromName: clean(s.SENDER_NAME), fromEmail: clean(s.SENDER_EMAIL).toLowerCase(),
     unsubscribeUrl: base.indexOf('https://') === 0 && token ? base + (base.indexOf('?') === -1 ? '?' : '&') + 't=' + token : '',
-    oneClickVerified: clean(s.ONE_CLICK_UNSUBSCRIBE_VERIFIED).toUpperCase() === 'YES'
+    oneClickVerified: clean(s.ONE_CLICK_UNSUBSCRIBE_VERIFIED).toUpperCase() === 'YES',
+    gmailThreadId: step === 'initial' ? '' : clean(d['Gmail Thread ID'])
   });
 });
 return [{ json: out }];` } },
@@ -272,7 +284,19 @@ const writeClaim = node({
         mappingMode: 'autoMapInputData',
         value: {},
         schema: [
-          { id: "Ledger Key", displayName: "Ledger Key", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Lead ID", displayName: "Lead ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Step", displayName: "Step", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "To Email", displayName: "To Email", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Status", displayName: "Status", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Created At", displayName: "Created At", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Updated At", displayName: "Updated At", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Gmail Message ID", displayName: "Gmail Message ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Error", displayName: "Error", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Ledger Row ID", displayName: "Ledger Row ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Draft ID", displayName: "Draft ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Run ID", displayName: "Run ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true } , { id: "Gmail Thread ID", displayName: "Gmail Thread ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true }
+          { id: "Ledger Key", displayName: "Ledger Key", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Lead ID", displayName: "Lead ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Step", displayName: "Step", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "To Email", displayName: "To Email", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Status", displayName: "Status", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Created At", displayName: "Created At", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Updated At", displayName: "Updated At", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Gmail Message ID", displayName: "Gmail Message ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Error", displayName: "Error", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Ledger Row ID", displayName: "Ledger Row ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Draft ID", displayName: "Draft ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Run ID", displayName: "Run ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Gmail Thread ID", displayName: "Gmail Thread ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true }
         ]
       },
       options: { cellFormat: 'RAW', handlingExtraData: 'ignoreIt' }
@@ -409,7 +433,10 @@ const stamp = now.toFormat('yyyy-LL-dd HH:mm');
 const today = now.toFormat('yyyy-LL-dd');
 let next = now;
 let added = 0;
-while (added < 5) { next = next.plus({ days: 1 }); if (next.weekday <= 5) added++; }
+const gap = Math.min(Math.max(Number(clean((cfg.settings || {}).FOLLOWUP_GAP_BUSINESS_DAYS) || 5), 2), 20);
+while (added < gap) { next = next.plus({ days: 1 }); if (next.weekday <= 5) added++; }
+const maxF = Math.min(Math.max(Number(clean((cfg.settings || {}).MAX_FOLLOWUPS) || 2), 0), 2);
+const stepNo = (st) => (clean(st).indexOf('followup') === 0 ? Number(clean(st).slice(8)) || 0 : 0);
 const finals = {};
 $('Final Send Check').all().forEach((i) => { const x = i.json || {}; finals[clean(x.ledgerRowId)] = x; });
 const inputs = $input.all().map((i) => i.json || {});
@@ -427,7 +454,7 @@ results.forEach((r) => {
   if (o === 'sent') {
     Object.assign(led, { Status: 'Sent', 'Gmail Message ID': clean(r.gmailMessageId), 'Gmail Thread ID': clean(r.gmailThreadId), Error: '' });
     out.draftUpdates.push({ 'Draft ID': x.draftId, 'Send Status': 'Sent', 'Ledger Row ID': rowId, 'Gmail Message ID': clean(r.gmailMessageId), 'Gmail Thread ID': clean(r.gmailThreadId), 'Sent At': stamp, 'Updated At': stamp, 'Last Error': '' });
-    out.leadUpdates.push({ 'Lead ID': x.leadId, 'Outreach Status': 'Sent', 'Sent At': stamp, 'Gmail Message ID': clean(r.gmailMessageId), 'Gmail Thread ID': clean(r.gmailThreadId), 'Pipeline Status': 'Contacted', 'Last Contact Date': today, 'Follow-up Count': '0', 'Next Allowed Follow-up': next.toFormat('yyyy-LL-dd'), 'Last Updated': today });
+    out.leadUpdates.push({ 'Lead ID': x.leadId, 'Outreach Status': 'Sent', 'Sent At': stamp, 'Gmail Message ID': clean(r.gmailMessageId), 'Gmail Thread ID': clean(r.gmailThreadId), 'Pipeline Status': 'Contacted', 'Last Contact Date': today, 'Follow-up Count': String(stepNo(x.step)), 'Next Allowed Follow-up': stepNo(x.step) < maxF ? next.toFormat('yyyy-LL-dd') : '', 'Last Updated': today });
     ev('email_sent', x.leadId, x.draftId);
   } else if (o === 'failed') {
     Object.assign(led, { Status: 'Failed', Error: clean(r.error).slice(0, 300) });

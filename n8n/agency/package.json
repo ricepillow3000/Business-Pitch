@@ -3,7 +3,7 @@
   "private": true,
   "description": "Source of the [AGENCY] n8n workflows and their local unit tests. Not part of the website build.",
   "scripts": {
-    "test": "cd tests && node harness.js ../workflows/a1.js ../workflows/a2.js ../workflows/a3.js ../workflows/a10.js ../workflows/h0.js ../workflows/h1.js ../workflows/h4.js ../workflows/h5.js ../workflows/h6.js ../workflows/h7.js ../workflows/h8.js ../workflows/c1.js ../workflows/c2.js ../workflows/c3.js ../workflows/c4.js ../workflows/a0b.js && node test_b1.js && node test_h1.js && node test_a1.js && node test_a2.js && node test_a10.js && node test_c.js"
+    "test": "cd tests && node harness.js ../workflows/a1.js ../workflows/a2.js ../workflows/a3.js ../workflows/a10.js ../workflows/h0.js ../workflows/h1.js ../workflows/h4.js ../workflows/h5.js ../workflows/h6.js ../workflows/h7.js ../workflows/h8.js ../workflows/c1.js ../workflows/c2.js ../workflows/c3.js ../workflows/c4.js ../workflows/a0b.js ../workflows/d1.js ../workflows/d2.js ../workflows/d3.js && node test_b1.js && node test_h1.js && node test_a1.js && node test_a2.js && node test_a10.js && node test_c.js && node test_d.js"
   },
   "dependencies": {
     "luxon": "^3.5.0"

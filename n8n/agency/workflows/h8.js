@@ -24,6 +24,9 @@ const save0 = node({
         matchingColumns: ["Lead ID"],
         schema: [
           { id: "Lead ID", displayName: "Lead ID", required: false, defaultMatch: true, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Temperature", displayName: "Temperature", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Reply Status", displayName: "Reply Status", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Reply Category", displayName: "Reply Category", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
           { id: "Outreach Status", displayName: "Outreach Status", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
           { id: "Email Subject", displayName: "Email Subject", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
           { id: "Email Draft", displayName: "Email Draft", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
@@ -304,6 +307,53 @@ const save6 = node({
   },
   output: [{ ok: true }]
 });
+const split7 = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: { name: "Reply Rows", parameters: { mode: 'runOnceForAllItems', language: 'javaScript', jsCode: `return ($input.first().json.replyRows || []).filter((r) => r && typeof r === 'object').map((r) => ({ json: r }));` } },
+  output: [{ ok: true }]
+});
+const save7 = node({
+  type: 'n8n-nodes-base.googleSheets',
+  version: 4.7,
+  config: {
+    name: "Save Reply Rows",
+    retryOnFail: true,
+    maxTries: 3,
+    waitBetweenTries: 3000,
+    parameters: {
+      resource: 'sheet',
+      operation: 'appendOrUpdate',
+      documentId: { __rl: true, mode: 'url', value: expr('{{ $("When Called With Updates").first().json.crmUrl }}') },
+      sheetName: { __rl: true, mode: 'name', value: "Replies" },
+      columns: {
+        mappingMode: 'autoMapInputData',
+        value: {},
+        matchingColumns: ["Gmail Message ID"],
+        schema: [
+          { id: "Gmail Message ID", displayName: "Gmail Message ID", required: false, defaultMatch: true, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Gmail Thread ID", displayName: "Gmail Thread ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Lead ID", displayName: "Lead ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Received At", displayName: "Received At", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Category", displayName: "Category", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Confidence", displayName: "Confidence", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Summary", displayName: "Summary", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Draft ID", displayName: "Draft ID", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Needs Human", displayName: "Needs Human", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Handled", displayName: "Handled", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Processed At", displayName: "Processed At", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "From Email", displayName: "From Email", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Subject", displayName: "Subject", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Reply Draft", displayName: "Reply Draft", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true },
+          { id: "Rulebook Topics", displayName: "Rulebook Topics", required: false, defaultMatch: false, display: true, type: 'string', canBeUsedToMatch: true }
+        ]
+      },
+      options: { cellFormat: 'RAW', handlingExtraData: 'ignoreIt' }
+    },
+    credentials: { googleSheetsOAuth2Api: newCredential('Google Sheets account') }
+  },
+  output: [{ ok: true }]
+});
 const splitEv = node({
   type: 'n8n-nodes-base.code',
   version: 2,
@@ -325,7 +375,7 @@ const logAct = node({
   },
   output: [{ ok: true }]
 });
-const note = sticky("## H8 Helper: Save CRM Updates\nOne place that writes Phase C changes to the CRM: Leads, Outreach Drafts, Draft History, Send Ledger, Suppression List, Unsubscribe Requests, Review Queue, Activity Log.\n\nRows are matched by **Lead ID / Draft ID / Ledger Row ID** (never by position). Updates only touch the columns given. If a write fails, the calling workflow fails visibly (and A10 logs it once active).", [split0], { color: 6 });
+const note = sticky("## H8 Helper: Save CRM Updates\nOne place that writes outreach and reply changes to the CRM: Leads, Outreach Drafts, Draft History, Send Ledger, Suppression List, Unsubscribe Requests, Review Queue, Replies, Activity Log.\n\nRows are matched by **Lead ID / Draft ID / Ledger Row ID / Gmail Message ID** (never by position). Updates only touch the columns given. If a write fails, the calling workflow fails visibly (and A10 logs it once active).", [split0], { color: 6 });
 
 export default workflow("agency-h8-save-updates", "[AGENCY] H8 Helper: Save CRM Updates")
   .add(whenCalled)
@@ -349,6 +399,9 @@ export default workflow("agency-h8-save-updates", "[AGENCY] H8 Helper: Save CRM 
   .add(whenCalled)
   .to(split6)
   .to(save6)
+  .add(whenCalled)
+  .to(split7)
+  .to(save7)
   .add(whenCalled)
   .to(splitEv)
   .to(logAct)

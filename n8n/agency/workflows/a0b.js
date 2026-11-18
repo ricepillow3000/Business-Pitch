@@ -61,7 +61,7 @@ const readVals = node({
     name: "Read Headings And Settings",
     parameters: {
       method: 'GET',
-      url: expr("https://sheets.googleapis.com/v4/spreadsheets/{{ $(\"Load Agency Config\").first().json.crmId }}/values:batchGet?ranges=Settings!A:A&ranges=%27Send%20Ledger%27!1:1&ranges=Leads!1:1{{ ['Outreach Drafts', 'Draft History', 'Unsubscribe Requests'].filter((t) => ($('Read CRM Structure').first().json.sheets || []).some((x) => (x.properties || {}).title === t)).map((t) => '&ranges=' + encodeURIComponent(String.fromCharCode(39) + t + String.fromCharCode(39) + '!1:1')).join('') }}"),
+      url: expr("https://sheets.googleapis.com/v4/spreadsheets/{{ $(\"Load Agency Config\").first().json.crmId }}/values:batchGet?ranges=Settings!A:A&ranges=%27Send%20Ledger%27!1:1&ranges=Leads!1:1&ranges=Replies!1:1{{ ['Outreach Drafts', 'Draft History', 'Unsubscribe Requests'].filter((t) => ($('Read CRM Structure').first().json.sheets || []).some((x) => (x.properties || {}).title === t)).map((t) => '&ranges=' + encodeURIComponent(String.fromCharCode(39) + t + String.fromCharCode(39) + '!1:1')).join('') }}"),
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'googleSheetsOAuth2Api',
       options: { timeout: 30000 }
@@ -89,10 +89,11 @@ const rangeVals = (i) => ((ranges[i] || {}).values || []);
 const settingsKeys = rangeVals(0).map((r) => clean(r[0]));
 const ledgerHeader = (rangeVals(1)[0] || []).map(clean);
 const leadsHeader = (rangeVals(2)[0] || []).map(clean);
-// Header rows of the Phase C tabs that already exist are read after the first 3 ranges, in this fixed order.
+const repliesHeader = (rangeVals(3)[0] || []).map(clean);
+// Header rows of the Phase C tabs that already exist are read after the first 4 ranges, in this fixed order.
 const PHASE_C_TITLES = ['Outreach Drafts', 'Draft History', 'Unsubscribe Requests'];
 const existingHead = {};
-PHASE_C_TITLES.filter((t) => byTitle[t] !== undefined).forEach((t, i) => { existingHead[t] = (rangeVals(3 + i)[0] || []).map(clean).filter(Boolean); });
+PHASE_C_TITLES.filter((t) => byTitle[t] !== undefined).forEach((t, i) => { existingHead[t] = (rangeVals(4 + i)[0] || []).map(clean).filter(Boolean); });
 const NEW_TABS = [
   { id: 1300, title: 'Outreach Drafts', headers: ['Draft ID', 'Lead ID', 'Step', 'Version', 'Created At', 'Updated At', 'Business Name', 'To Email', 'Subject', 'Body', 'Evidence Used', 'Research Sources', 'Removed Claims', 'Draft Hash', 'Review Status', 'Reviewed By', 'Reviewed At', 'Approved Hash', 'Approved At', 'Review Notes', 'Send Status', 'Ledger Row ID', 'Gmail Message ID', 'Gmail Thread ID', 'Sent At', 'Unsubscribe Token', 'Last Error'] },
   { id: 1400, title: 'Draft History', headers: ['Time', 'Draft ID', 'Version', 'Event', 'Draft Hash', 'Subject', 'Body', 'By'] },
@@ -108,9 +109,13 @@ const NEW_SETTINGS = [
   ['AGENCY_WEBSITE', '[FILL IN]', 'Shown in the email footer (optional).'],
   ['AD_DISCLOSURE_LINE', '', 'Optional line identifying the email as a business offer, if your lawyer recommends one.'],
   ['UNSUBSCRIBE_BASE_URL', '', 'Production URL of C4 Unsubscribe once it is approved and active. Empty = reply-STOP opt-out only.'],
-  ['ONE_CLICK_UNSUBSCRIBE_VERIFIED', 'NO', 'Set YES only after a real one-click unsubscribe test has passed.']
+  ['ONE_CLICK_UNSUBSCRIBE_VERIFIED', 'NO', 'Set YES only after a real one-click unsubscribe test has passed.'],
+  ['MAX_FOLLOWUPS', '2', 'Most follow-up emails per lead (0, 1 or 2). Each one still needs approval.'],
+  ['FOLLOWUP_GAP_BUSINESS_DAYS', '5', 'Business days to wait before a follow-up is drafted.'],
+  ['REPLY_CHECK_BATCH', '20', 'Most of our own Gmail threads checked for replies per run (max 50).']
 ];
 const LEDGER_EXTRA = ['Ledger Row ID', 'Draft ID', 'Run ID', 'Gmail Thread ID'];
+const REPLIES_EXTRA = ['From Email', 'Subject', 'Reply Draft', 'Rulebook Topics'];
 const requests = [];
 const data = [];
 const colLetter = (n) => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
@@ -143,6 +148,13 @@ if (missingLedger.length) {
   widen('Send Ledger', start + missingLedger.length);
   data.push({ range: q('Send Ledger') + '!' + colLetter(start) + '1:' + colLetter(start + missingLedger.length - 1) + '1', values: [missingLedger] });
   added.push('Send Ledger columns: ' + missingLedger.join(', '));
+}
+const missingReplies = repliesHeader.length ? REPLIES_EXTRA.filter((h) => repliesHeader.indexOf(h) === -1) : [];
+if (byTitle.Replies !== undefined && missingReplies.length) {
+  const start = repliesHeader.length;
+  widen('Replies', start + missingReplies.length);
+  data.push({ range: q('Replies') + '!' + colLetter(start) + '1:' + colLetter(start + missingReplies.length - 1) + '1', values: [missingReplies] });
+  added.push('Replies columns: ' + missingReplies.join(', '));
 }
 const statusCol = ledgerHeader.indexOf('Status');
 if (statusCol !== -1) requests.push(dropdown(byTitle['Send Ledger'], statusCol, ['Sending', 'Sent', 'Failed', 'Not sent - duplicate', 'Not sent - paused', 'Not sent - suppressed', 'Not sent - Gmail step off', 'Not sent - could not verify', 'Cleared for retry']));
