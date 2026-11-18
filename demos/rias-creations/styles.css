@@ -627,3 +627,4 @@ dialog.dragging::backdrop { transition: none; }
 .slide { padding-left: 24px; }
 .track { align-items: flex-start; }
 .viewport { transition: height 420ms var(--ease-in-out); }
+.score-note { margin-top: 6px; font-size: .92rem; color: var(--muted); }
