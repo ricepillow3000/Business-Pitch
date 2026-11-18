@@ -363,6 +363,7 @@ section { padding: clamp(88px, 11vw, 144px) 0; }
 .slide blockquote { font-size: clamp(1.7rem, 3.3vw, 2.6rem); line-height: 1.22; letter-spacing: -.01em; text-indent: -.36em; }
 .slide footer { margin-top: 28px; font-size: .95rem; color: var(--muted); }
 .slide footer b { font-weight: 500; color: var(--ink); }
+.slide .reply { margin-top: 14px; padding-left: 14px; border-left: 1px solid var(--line-strong); font-size: .9rem; color: var(--muted); max-width: 34em; }
 .car-ctrl { display: flex; align-items: center; gap: 6px; margin-top: 40px; }
 .car-ctrl .count { margin-left: 12px; font-size: .92rem; color: var(--muted); }
 .car-ctrl .icon-btn { box-shadow: inset 0 0 0 1px var(--line-strong); }
@@ -619,3 +620,10 @@ dialog.dragging::backdrop { transition: none; }
 
 /* the photo viewer needs a deeper scrim than menus so the caption always reads */
 .viewer::backdrop { background: rgb(14 9 7 / .9); }
+
+/* Hanging quote marks need room: the viewport reaches 24px further left and each slide
+   pads it back, so the current quote mark shows and the next slide's never peeks in. */
+.viewport { margin-left: -24px; }
+.slide { padding-left: 24px; }
+.track { align-items: flex-start; }
+.viewport { transition: height 420ms var(--ease-in-out); }

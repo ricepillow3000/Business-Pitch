@@ -600,6 +600,7 @@
     prev.disabled = idx === 0; next.disabled = idx === N - 1;
     count.textContent = `${idx + 1} / ${N}`;
     slides.forEach((s, k) => s.setAttribute("aria-hidden", k !== idx));
+    vp.style.height = slides[idx].offsetHeight + "px";       // smooth height: the box fits the review you're on
   }
   function springTo(target, v0 = 0) {
     cancelAnimationFrame(raf);
@@ -655,8 +656,9 @@
   };
   vp.addEventListener("pointerup", endDrag);
   vp.addEventListener("pointercancel", endDrag);
-  addEventListener("resize", () => { w = vp.clientWidth; cancelAnimationFrame(raf); setX(-idx * w); });
+  addEventListener("resize", () => { w = vp.clientWidth; cancelAnimationFrame(raf); setX(-idx * w); setIdx(idx); });
   setIdx(0); setX(0);
+  document.fonts?.ready.then(() => setIdx(idx));
 
   /* ── Booking ─────────────────────────────────────────────────
      Optimistic: "Request sent" shows the moment you press send.
