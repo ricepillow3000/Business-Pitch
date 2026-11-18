@@ -20,6 +20,8 @@ used only once, so until that file exists the lounge card stays hidden.
 | `app.js` | Interactions (plain JS) |
 | `vendor/anime.hero.min.js` | Anime.js v4.5.0 (MIT), a slim build used only for the hero intro. If it fails to load, a CSS version of the intro plays instead |
 | `images/` | One photo per spot |
+| `privacy.html`, `terms.html` | Plain-language drafts for Ria to review |
+| `tests/audit.cjs` | The design audit; results in `AUDIT.md` |
 
 ## Things to try
 

@@ -56,7 +56,7 @@
     const chars = split.flatMap((s) => s.chars);
     const arch = $(".hero .arch"), img = $(".hero .arch img"), glow = $(".hero .arch-glow"), lede = $(".hero .lede");
     const stem = A.createDrawable(".hero .olive .stem"), leaves = $$(".hero .olive .leaf");
-    const facts = $$(".hero-bar .fact"), stars = $$(".hero-bar .stars svg"), ctas = $$(".hero-cta .btn");
+    const facts = $$(".hero-bar .hero-note"), stars = $$(".hero-bar .stars svg"), ctas = $$(".hero-cta .btn");
     const rating = $('.hero-bar [data-swr="rating"]'), target = parseFloat(rating.textContent) || 4.5, count = { v: 0 };
 
     // starting poses, set before anything is revealed so nothing flashes
@@ -142,14 +142,14 @@
 
   /* ── Toasts, with undo ─────────────────────────────────────── */
   const toasts = $("#toasts");
-  function toast(message, { action, onAction, onExpire, duration = 5000 } = {}) {
+  function toast(message, { action, onAction, onExpire, tone, duration = 5000 } = {}) {
     const t = document.createElement("div");
-    t.className = "toast"; t.setAttribute("role", "status");
+    t.className = "toast"; t.setAttribute("role", tone === "error" ? "alert" : "status");
+    if (tone) t.dataset.tone = tone;                          // green for done, red for a problem
     const p = document.createElement("p"); p.textContent = message; t.append(p);
     if (action) { const b = document.createElement("button"); b.className = "act"; b.type = "button"; b.textContent = action; t.append(b); }
-    const bar = document.createElement("span"); bar.className = "bar"; t.append(bar);
     toasts.append(t);
-    const timer = bar.animate({ transform: ["scaleX(1)", "scaleX(0)"] }, { duration, easing: "linear", fill: "forwards" });
+    const timer = t.animate({ opacity: [1, 1] }, { duration });   // an invisible clock: no progress bar, still pausable
     let settled = false;
     const leave = (how) => {
       if (settled) return; settled = true; timer.cancel();
@@ -327,8 +327,8 @@
   addEventListener("resize", () => closePop(false));
 
   async function copy(text, label) {
-    try { await navigator.clipboard.writeText(text); toast(`${label} copied`); }
-    catch (e) { toast(`Copy didn't work. ${label}: ${text}`); }
+    try { await navigator.clipboard.writeText(text); toast(`${label} copied`, { tone: "ok" }); }
+    catch (e) { toast(`Copy didn't work. ${label}: ${text}`, { tone: "error" }); }
   }
   $("#copyBtn").addEventListener("click", () => { closePop(false); copy("(770) 557-0354", "Phone number"); });
 
@@ -350,7 +350,7 @@
      near edge, it is heading for the list, so the category does not switch. */
   const svcTrigger = $("#svcTrigger"), mega = $("#svcMenu"), megaCats = $("#megaCats"), megaItems = $("#megaItems");
   let activeCat = 0, aimTimer = 0, pts = [], hoverTimer = 0, leaveTimer = 0;
-  megaCats.innerHTML = CATS.map((c, i) => `<button type="button" role="menuitem" data-i="${i}" aria-current="${i === 0}">${c.name}<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M3.8 2l3 3-3 3"/></svg></button>`).join("");
+  megaCats.innerHTML = CATS.map((c, i) => `<button type="button" role="menuitem" data-i="${i}" aria-current="${i === 0}">${c.name}<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3.8 2l3 3-3 3"/></svg></button>`).join("");
   function showCat(i) {
     activeCat = i;
     $$("button", megaCats).forEach((b, k) => b.setAttribute("aria-current", k === i));
@@ -408,7 +408,7 @@
     { g: "Go to", label: "Services and prices", keys: "menu cost", run: () => go("#services") },
     { g: "Go to", label: "Recent work", keys: "photos gallery color hair results", run: () => go("#work") },
     { g: "Go to", label: "Reviews", keys: "rating google yelp", run: () => go("#reviews") },
-    { g: "Go to", label: "Hours and directions", keys: "open close address map visit", run: () => go("#visit") },
+    { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card", run: () => go("#visit") },
     { g: "Contact", label: "Copy phone number", keys: "call", run: () => copy("(770) 557-0354", "Phone number") },
     { g: "Contact", label: "Copy address", keys: "where location", run: () => copy("375 Rockbridge Rd NW, Suite 156, Lilburn, GA 30047", "Address") },
     { g: "Contact", label: "Get directions", keys: "map drive", run: () => open($("[data-prefetch-map]").href, "_blank", "noopener") },
@@ -539,16 +539,6 @@
     onCancel: () => viewer.style.removeProperty("--scrim-o"),
   });
 
-  /* ── Masked scroll edges ───────────────────────────────────── */
-  $$(".scroller").forEach((s) => {
-    const upd = () => {
-      s.toggleAttribute("data-more-left", s.scrollLeft > 2);
-      s.toggleAttribute("data-more-right", s.scrollLeft + s.clientWidth < s.scrollWidth - 2);
-    };
-    s.addEventListener("scroll", upd, { passive: true });
-    addEventListener("resize", upd); upd();
-  });
-
   /* ── Recent work rail: arrows move one photo at a time ── */
   const rail = $("#rail"), workPrev = $("#workPrev"), workNext = $("#workNext");
   const step = () => { const li = $("li", rail); return li.offsetWidth + parseFloat(getComputedStyle(rail).columnGap || 0); };
@@ -618,7 +608,7 @@
   function springTo(target, v0 = 0) {
     cancelAnimationFrame(raf);
     if (reduced) return setX(target);
-    const k = 230, c = 25, m = 1;     // stiffness, damping, mass: damping ratio ≈ 0.82, a whisper of overshoot
+    const k = 230, c = 31, m = 1;     // stiffness, damping, mass: critically damped, so it settles without bouncing
     let v = v0, last = performance.now();
     const step = (now) => {
       const dt = Math.min(0.032, (now - last) / 1000), sub = 4, h = dt / sub; last = now;
@@ -681,7 +671,14 @@
   const submitLabel = $("#submitLabel"), statusEl = $("#sentStatus"), otpBox = $("#otpBox"), otp = $("#otp");
   const dateIn = form.elements.date, slots = $$(".slot");
   const today = new Date(); today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-  dateIn.min = today.toISOString().slice(0, 10); dateIn.value = dateIn.min;
+  dateIn.min = today.toISOString().slice(0, 10);
+  const firstOpenDay = () => {   // today if there is still time to book, otherwise the next day the salon is open
+    const d = new Date(); if (lilburnNow().min >= 18 * 60) d.setDate(d.getDate() + 1);   // past the last slot in Lilburn
+    while (d.getDay() === 0) d.setDate(d.getDate() + 1);
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10);
+  };
+  dateIn.value = firstOpenDay();
+  const isSunday = (v) => !!v && new Date(v + "T12:00").getDay() === 0;
 
   /* The salon's booking API, simulated for the demo. In production these are real requests
      that carry the Idempotency-Key header; the server returns the first result for a repeated key. */
@@ -726,7 +723,7 @@
 
   const rules = [
     ["service", "f-service", (v) => !!v, "Choose a service."],
-    ["date", "f-date", (v) => !!v && v >= dateIn.min, "Choose today or a later day."],
+    ["date", "f-date", (v) => !!v && v >= dateIn.min && !isSunday(v), () => (isSunday(dateIn.value) ? "Closed Sundays. Pick another day." : "Choose today or a later day.")],
     ["name", "f-name", (v) => v.trim().length > 0, "Enter your first name."],
     ["phone", "f-phone", (v) => digits(v).length === 10, "Enter a 10-digit mobile number."],
   ];
@@ -735,7 +732,7 @@
     const good = ok(form.elements[n].value);
     document.getElementById(fid).toggleAttribute("data-invalid", !good);
     form.elements[n].setAttribute("aria-invalid", !good);
-    document.getElementById("e-" + n).textContent = good ? "" : msg;
+    document.getElementById("e-" + n).textContent = good ? "" : typeof msg === "function" ? msg() : msg;
     return good;
   }
   rules.forEach(([n]) => form.elements[n].addEventListener(n === "service" || n === "date" ? "change" : "input", () => {
@@ -745,25 +742,31 @@
 
   function showState(name) {
     const target = { form, sent, confirmed }[name];
-    morphHeight(box, () => { [form, sent, confirmed].forEach((el) => (el.hidden = el !== target)); });
+    morphHeight(box, () => { [form, sent, confirmed].forEach((el) => (el.hidden = el !== target)); progressEl.hidden = name === "form"; });
     enter(target);
     if (name !== "form") target.focus({ preventScroll: true });
   }
   function setStatus(state, text) { statusEl.dataset.state = state; statusEl.textContent = text; }
+  const progressEl = $("#progress"), otpSkel = $("#otpSkel");
+  function progress(stage) {                                   // 0 sending, 1 waiting for the code, 2 confirmed
+    $$("span", progressEl).forEach((s, i) => { s.classList.toggle("done", i < stage || stage === 2); s.classList.toggle("now", i === stage && stage < 2); });
+    progressEl.setAttribute("aria-valuenow", String(Math.min(3, stage + 1)));
+  }
 
   function send(key) {
     const b = booking;
     api.request(key, b.payload).then(() => {
       if (booking !== b) return;                                // canceled or replaced meanwhile
       setStatus("ok", `Delivered. We texted a 6-digit code to ${fmtPhone(b.payload.phone)}.`);
-      morphHeight(box, () => (otpBox.hidden = false));
+      progress(1);
+      morphHeight(box, () => { otpBox.hidden = false; otpSkel.hidden = true; });
       enter(otpBox);
       otp.focus({ preventScroll: true });
       listenForCode();
     }, () => {
       if (booking !== b) return;
       booking = null; showState("form");                        // roll back: the form is exactly as it was
-      toast("Couldn't send your request. Check your connection and try again.", { action: "Retry", onAction: () => form.requestSubmit() });
+      toast("Couldn't send your request. Check your connection and try again.", { tone: "error", action: "Retry", onAction: () => form.requestSubmit() });
     });
   }
   form.addEventListener("submit", (e) => {
@@ -780,6 +783,7 @@
     $("#sentText").textContent = `Thanks, ${payload.name}. Your ${payload.service.toLowerCase()} on ${dayName(payload.date, true)} at ${payload.time} is on its way to Ria.`;
     $("#sentRef").textContent = `Reference ${refFor(idemKey)}`;
     setStatus("sending", "Sending to Ria…");
+    progress(0); otpSkel.hidden = false;                        // skeleton holds the code box's place
     otpBox.hidden = true; otp.value = ""; clearOtpError();
     showState("sent");                                          // optimistic: show it now, confirm in the background
     send(idemKey);
@@ -804,9 +808,10 @@
       const p = b.payload;
       $("#confirmedText").textContent = `See you ${dayName(p.date, true)} at ${p.time}, ${p.name}. We'll text you a reminder the day before.`;
       $("#confirmedRef").textContent = `Reference ${refFor(b.key)}`;
+      progress(2);
       showState("confirmed");
     }, () => {
-      setStatus("ok", `Delivered. We texted a 6-digit code to ${fmtPhone(b.payload.phone)}.`);
+      setStatus("error", "That code didn't match. Check the text and try again.");
       $("#e-otp").textContent = "Enter the 6 digits from the text."; otp.closest(".field").setAttribute("data-invalid", "");
       shake(otp.closest(".field")); otp.select();
     }).finally(() => { verifying = false; });
@@ -833,7 +838,7 @@
   });
   $("#again").addEventListener("click", () => {
     booking = null; idemKey = newKey();
-    form.reset(); dateIn.value = dateIn.min; pick(slots[2]);
+    form.reset(); dateIn.value = firstOpenDay(); pick(slots[2]);
     rules.forEach(([n, fid]) => { document.getElementById(fid).removeAttribute("data-invalid"); document.getElementById("e-" + n).textContent = ""; });
     predict(); showState("form");
     form.elements.service.focus({ preventScroll: true });
@@ -846,10 +851,33 @@
     predict(); goBook();
   }
 
-  /* ── Stale-while-revalidate: rating, review count, closing time ──
+  /* ── Opening hours: a live "open now" line, in Lilburn's time zone ── */
+  const HOURS = [null, [630, 1170], [630, 1170], [630, 1170], [630, 1170], [630, 1170], [630, 1170]];   // Sun closed, Mon–Sat 10:30–7:30 (minutes)
+  const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  function lilburnNow() {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "numeric", minute: "numeric", hourCycle: "h23" }).formatToParts(new Date());
+    const get = (t) => parts.find((p) => p.type === t).value;
+    return { day: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(get("weekday")), min: +get("hour") * 60 + +get("minute") };
+  }
+  const clock = (m) => `${((Math.floor(m / 60) + 11) % 12) + 1}:${String(m % 60).padStart(2, "0")} ${m < 720 ? "AM" : "PM"}`;
+  function hoursStatus() {
+    const { day, min } = lilburnNow(), t = HOURS[day];
+    if (t && min >= t[0] && min < t[1]) return `Open now until ${clock(t[1])}`;
+    if (t && min < t[0]) return `Opens today at ${clock(t[0])}`;
+    let d = (day + 1) % 7, n = 1;
+    while (!HOURS[d]) { d = (d + 1) % 7; n++; }
+    return `${t ? "Closed now" : "Closed today"}. Opens ${n === 1 ? "tomorrow" : DAYS[d]} at ${clock(HOURS[d][0])}`;
+  }
+  const paintHours = () => {
+    const text = hoursStatus(), state = text.startsWith("Open now") ? "open" : text.startsWith("Opens today") ? "soon" : "closed";
+    $$("[data-hours]").forEach((el) => { el.textContent = text; el.dataset.state = state; });
+  };
+  paintHours(); setInterval(paintHours, 60e3);
+
+  /* ── Stale-while-revalidate: rating and review count ──
      Show the last known values at once, then quietly refresh them. */
   const PLACE_KEY = "ria-swr:place-v1";
-  const fetchPlace = () => wait(700).then(() => ({ rating: 4.5, reviews: 29, closes: "7:30 PM" }));   // production: Google Places, via the salon's server
+  const fetchPlace = () => wait(700).then(() => ({ rating: 4.5, reviews: 29 }));   // production: Google Places, via the salon's server
   function renderPlace(d, fresh) {
     $$("[data-swr]").forEach((el) => {
       const v = String(d[el.dataset.swr]);
@@ -883,6 +911,14 @@
   const predecode = (img) => { if (!img || img.dataset.warm) return; img.dataset.warm = "1"; const p = new Image(); p.src = img.currentSrc || img.src; p.decode?.().catch(() => {}); };
   idle(() => $$('img[loading="lazy"]').forEach(predecode));
   $$("[data-prefetch]").forEach((a) => ["pointerenter", "focus", "touchstart"].forEach((ev) => a.addEventListener(ev, () => predecode(lounge), { once: true, passive: true })));
+  const mapFrame = $("#mapFrame");
+  const mapArch = mapFrame.closest(".arch");
+  mapFrame.addEventListener("load", () => { mapArch.classList.remove("map-loading"); mapArch.classList.add("map-ready"); }, { once: true });
+  new IntersectionObserver((es, o) => {                       // skeleton pulses only once the map is in view, and gives up after 10s
+    if (!es[0].isIntersecting) return;
+    o.disconnect();
+    if (!mapArch.classList.contains("map-ready")) { mapArch.classList.add("map-loading"); setTimeout(() => mapArch.classList.remove("map-loading"), 10000); }
+  }).observe(mapArch);
   $$("[data-prefetch-map], a[href='#visit']").forEach((a) => ["pointerenter", "focus"].forEach((ev) => a.addEventListener(ev, () => ($("#mapFrame").loading = "eager"), { once: true })));
 
   /* ── Keyboard shortcuts ────────────────────────────────────── */
