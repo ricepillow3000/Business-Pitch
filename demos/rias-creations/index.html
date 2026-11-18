@@ -7,481 +7,21 @@
 <meta name="description" content="Haircuts, brows, facials, waxing and massage at Lilburn Corner in Lilburn, Georgia. Walk-ins welcome.">
 <meta name="theme-color" content="#221713">
 <script>
-  /* Set the theme before first paint so there is never a flash. */
+  /* Before first paint: mark JS as present and set the theme, so there is never a flash. */
   (function () {
-    var t = null;
+    var d = document.documentElement, t = null;
+    d.classList.add("js");
     try { t = localStorage.getItem("ria-theme"); } catch (e) {}
     if (t !== "light" && t !== "dark") t = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    document.documentElement.dataset.theme = t;
+    d.dataset.theme = t;
   })();
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..500&family=Jost:wght@400..500&display=swap" rel="stylesheet">
-<style>
-/* ════════════════════════════════════════════════════════════════════
-   RIA'S CREATIONS: design tokens
-   Direction: quiet luxury. One signature element, the lit arched mirror
-   from the salon itself (gold glow, concentric hairline). A few olive
-   branches echo the olive tree in her lounge. Everything else stays
-   flat, sharp-cornered and calm.
-
-   espresso  #221713  ceiling and wood slat wall
-   porcelain #FDFCFA  white walls and vanities
-   gold      #D6BC8A / #9C7A45  vase, sconces, mirror light, table legs
-   blush     #F7EFED  cherry blossom, used only as a whisper
-   olive     #6F7F5C / #A3B38E  the lounge's olive tree
-   ════════════════════════════════════════════════════════════════════ */
-@property --fl { syntax: "<length>"; inherits: false; initial-value: 0px; }
-@property --fr { syntax: "<length>"; inherits: false; initial-value: 0px; }
-
-:root {
-  --espresso: #221713;
-  --espresso-2: #2c1f1a;
-  --gold: #d6bc8a;
-  --gold-ink: #9c7a45;
-
-  --bg: #fdfcfa;
-  --surface: #ffffff;
-  --tint: #f7efed;
-  --ink: #241914;
-  --muted: #74645b;
-  --line: rgb(36 25 20 / .12);
-  --line-strong: rgb(36 25 20 / .24);
-  --accent: var(--gold-ink);
-  --olive: #6f7f5c;
-  --btn-bg: var(--espresso);
-  --btn-fg: #fdfcfa;
-  --btn-hi: rgb(255 255 255 / .14);
-  --shadow: 36 25 20;
-
-  --serif: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
-  --sans: "Jost", "Futura", "Century Gothic", system-ui, sans-serif;
-
-  /* strong ease-out for things entering; strong ease-in-out for things moving on screen */
-  --ease-out: cubic-bezier(.23, 1, .32, 1);
-  --ease-in-out: cubic-bezier(.77, 0, .175, 1);
-  --ease-in: cubic-bezier(.4, 0, 1, 1);
-
-  --r-sm: 2px;   /* buttons, inputs, tags */
-  --r-md: 4px;   /* tooltip, popover items */
-  --r-lg: 8px;   /* popover, inner card, photo  = items + 4px padding */
-  --r-xl: 14px;  /* layered shell               = card + 6px padding */
-
-  --wrap: min(1160px, calc(100% - 40px));
-  --nav-h: 72px;
-}
-:root[data-theme="dark"] {
-  --bg: #17100d;
-  --surface: #1f1612;
-  --tint: #2a1d1a;
-  --ink: #f2eae3;
-  --muted: #b3a39a;
-  --line: rgb(242 234 227 / .12);
-  --line-strong: rgb(242 234 227 / .26);
-  --accent: var(--gold);
-  --olive: #a3b38e;
-  --btn-bg: var(--gold);
-  --btn-fg: var(--espresso);
-  --btn-hi: rgb(255 255 255 / .35);
-  --shadow: 0 0 0;
-}
-/* Dark bands (hero, visit) stay espresso in both themes. */
-.on-dark {
-  --ink: #f4ede6;
-  --muted: rgb(244 237 230 / .66);
-  --line: rgb(244 237 230 / .14);
-  --line-strong: rgb(244 237 230 / .3);
-  --accent: var(--gold);
-  --olive: #a3b38e;
-  --btn-bg: var(--gold);
-  --btn-fg: var(--espresso);
-  --btn-hi: rgb(255 255 255 / .35);
-  --shadow: 0 0 0;
-  background: var(--espresso);
-  color: var(--ink);
-}
-/* Instant theme switch: kill every transition for the frame of the swap. */
-.theme-switching *, .theme-switching *::before, .theme-switching *::after { transition: none !important; }
-
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top: var(--nav-h); -webkit-text-size-adjust: 100%; }
-body {
-  font: 400 1.0625rem/1.65 var(--sans);
-  color: var(--ink); background: var(--bg);
-  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
-  overflow-x: clip;
-}
-::selection { background: #f1dcd8; color: #241914; }
-[hidden] { display: none !important; }
-img { display: block; max-width: 100%; }
-a { color: inherit; text-decoration: none; }
-button, input, select, textarea { font: inherit; color: inherit; }
-button { background: none; border: 0; cursor: pointer; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-h1, h2, h3, blockquote { font-family: var(--serif); font-weight: 400; text-wrap: balance; }
-h2 { font-size: clamp(2.25rem, 4.2vw, 3.5rem); line-height: 1.04; letter-spacing: -.015em; }
-p { text-wrap: pretty; }
-.num { font-variant-numeric: tabular-nums lining-nums; }
-.wrap { width: var(--wrap); margin-inline: auto; }
-.lede { color: var(--muted); max-width: 34em; }
-section { padding: clamp(88px, 11vw, 144px) 0; }
-
-/* ── Olive branches: line drawings, used three times only ─────── */
-.olive { position: absolute; pointer-events: none; color: var(--olive); }
-.olive svg { width: 100%; height: 100%; overflow: visible; display: block; }
-.olive .stem { fill: none; stroke: currentColor; stroke-width: 1.1; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.olive .leaf { fill: color-mix(in srgb, currentColor 14%, transparent); stroke: currentColor; stroke-width: 1; vector-effect: non-scaling-stroke; }
-
-/* ── Buttons: sharp, layered, tactile ───────────────────────────── */
-.btn {
-  --bs: 0 0 0 1px rgb(0 0 0 / .14), 0 1px 2px rgb(var(--shadow) / .18), 0 6px 16px -8px rgb(var(--shadow) / .35);
-  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  height: 50px; padding: 0 24px; border-radius: var(--r-sm);
-  font: 500 .95rem/1 var(--sans); letter-spacing: .01em; white-space: nowrap;
-  background: var(--btn-bg); color: var(--btn-fg);
-  box-shadow: inset 0 1px 0 var(--btn-hi), var(--bs);
-  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out), filter 160ms var(--ease-out);
-  -webkit-tap-highlight-color: transparent; user-select: none;
-}
-.btn:active { transform: scale(.97); transition-duration: 90ms; }          /* press feedback */
-.btn-quiet { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-strong); }
-@media (hover: hover) {
-  .btn:hover { filter: brightness(1.07); }
-  .btn-quiet:hover { filter: none; background: rgb(127 127 127 / .08); }
-}
-/* Optical centering: trim the label box to cap height so text sits truly centred. */
-@supports (text-box: trim-both cap alphabetic) { .btn > span { text-box: trim-both cap alphabetic; } }
-.icon-btn {
-  width: 44px; height: 44px; display: grid; place-items: center; border-radius: var(--r-sm); color: inherit;
-  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out);
-  -webkit-tap-highlight-color: transparent;
-}
-.icon-btn:active { transform: scale(.97); }
-@media (hover: hover) { .icon-btn:hover { background: rgb(127 127 127 / .12); } }
-.icon-btn svg { width: 20px; height: 20px; }
-
-/* ── Nav ───────────────────────────────────────────────────────── */
-.nav {
-  position: fixed; inset: 0 0 auto; z-index: 40; height: var(--nav-h);
-  color: #f4ede6; border-bottom: 1px solid transparent;
-  transition: background-color 240ms var(--ease-out), color 240ms var(--ease-out), border-color 240ms var(--ease-out);
-}
-.nav.solid { background: var(--bg); color: var(--ink); border-color: var(--line); }
-.nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-.logo { font-family: var(--serif); font-size: 1.45rem; letter-spacing: -.01em; line-height: 1; }
-.logo small { display: block; font: 500 .66rem/1 var(--sans); letter-spacing: .32em; margin-top: 6px; opacity: .7; text-transform: uppercase; }
-.nav-right { display: flex; align-items: center; gap: 28px; }
-.nav-links { display: flex; gap: 28px; font-size: .95rem; }
-.nav-links a { position: relative; padding: 6px 0; }
-.nav-links a::after {
-  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px; background: currentColor;
-  transform: scaleX(0); transform-origin: right; transition: transform 300ms var(--ease-out);
-}
-@media (hover: hover) { .nav-links a:hover::after { transform: scaleX(1); transform-origin: left; } }
-.nav-tools { display: flex; gap: 4px; margin-right: -10px; }
-#menuBtn { display: none; }
-@media (max-width: 820px) { .nav-links { display: none; } #menuBtn { display: grid; } }
-
-/* ── Hero ──────────────────────────────────────────────────────── */
-.hero { min-height: 100svh; display: flex; flex-direction: column; padding: 0; position: relative; overflow-x: clip; }
-.hero-main {
-  flex: 1; display: grid; grid-template-columns: 1fr minmax(300px, 430px); gap: clamp(40px, 7vw, 110px);
-  align-items: center; padding: calc(var(--nav-h) + 48px) 0 56px;
-}
-.hero h1 { font-size: clamp(3rem, 6.1vw, 6rem); line-height: .98; letter-spacing: -.025em; }
-.hero h1 .ln { display: block; overflow: clip; padding-bottom: .08em; margin-bottom: -.08em; }
-.hero h1 .ln > span { display: block; }
-.hero .lede { margin-top: 28px; font-size: 1.125rem; max-width: 27em; }
-
-/* The signature: Ria's lit arched mirror. Inner hairline inset 12px; with both radii
-   at "half the width", the inner arch radius is exactly outer minus 12px (concentric). */
-.arch {
-  position: relative; aspect-ratio: 3 / 4; border-radius: 999px 999px var(--r-sm) var(--r-sm);
-  overflow: hidden; background: var(--espresso-2); isolation: isolate;
-}
-.arch img { width: 100%; height: 100%; object-fit: cover; }
-.arch::after {
-  content: ""; position: absolute; inset: 12px; border-radius: 999px 999px 0 0; pointer-events: none;
-  box-shadow: inset 0 0 0 1px rgb(214 188 138 / .55);
-}
-.arch-glow { position: relative; }
-.arch-glow::before { /* the LED halo around her mirrors, kept faint */
-  content: ""; position: absolute; inset: -1px; border-radius: 999px 999px var(--r-sm) var(--r-sm);
-  box-shadow: 0 0 0 1px rgb(214 188 138 / .35), 0 0 48px 2px rgb(214 188 138 / .16), 0 30px 80px -30px rgb(0 0 0 / .6);
-}
-.hero .olive { width: 190px; height: 190px; left: -128px; bottom: -22px; transform: scaleX(-1); opacity: .9; }
-
-/* CTAs live at the bottom of the hero, in a quiet information bar. */
-.hero-bar { border-top: 1px solid var(--line); }
-.hero-bar .wrap {
-  display: grid; grid-template-columns: repeat(3, auto) 1fr; align-items: center;
-  padding: 22px 0 calc(22px + env(safe-area-inset-bottom));
-}
-.fact { padding-right: clamp(20px, 3.4vw, 48px); margin-right: clamp(20px, 3.4vw, 48px); border-right: 1px solid var(--line); }
-.fact:nth-child(3) { border-right: 0; }
-.fact dt { font-size: .8rem; color: var(--muted); }
-.fact dd { font-size: .98rem; }
-.fact dd.rating { display: flex; align-items: center; gap: 8px; }
-.stars { display: inline-flex; gap: 2px; color: var(--accent); }
-.stars svg { width: 13px; height: 13px; }
-.hero-cta { display: flex; gap: 10px; justify-content: flex-end; }
-
-@media (max-width: 960px) {
-  .hero-bar .wrap { grid-template-columns: auto auto 1fr; row-gap: 20px; }
-  .hero-cta { grid-column: 1 / -1; }
-  .hero-cta .btn { flex: 1; }
-}
-@media (max-width: 820px) {
-  .hero-main { grid-template-columns: 1fr; padding-top: calc(var(--nav-h) + 28px); gap: 36px; }
-  .hero-main .arch-glow { width: min(82%, 360px); }
-  .hero .olive { width: 130px; height: 130px; left: auto; right: -34px; bottom: -14px; transform: none; }
-}
-@media (max-width: 560px) {
-  .hero-bar .wrap { grid-template-columns: auto 1fr; }
-  .fact { padding-right: 16px; margin-right: 16px; }
-  .fact:nth-child(2) { border-right: 0; }
-  .fact:nth-child(3) { grid-column: 1 / -1; }
-}
-
-/* One orchestrated page-load moment; nothing else animates on its own. */
-@media (prefers-reduced-motion: no-preference) {
-  .hero h1 .ln > span { animation: rise 1100ms var(--ease-out) both; }
-  .hero h1 .ln:nth-child(2) > span { animation-delay: 90ms; }
-  .hero .lede { animation: fade 900ms var(--ease-out) 380ms both; }
-  .hero .arch { animation: unveil 1500ms var(--ease-out) 120ms both; }
-  .hero .arch img { animation: settle 2200ms var(--ease-out) 120ms both; }
-  .hero .arch-glow::before { animation: fade 1200ms var(--ease-out) 700ms both; }
-  .hero .olive .stem { stroke-dasharray: 1; animation: draw 1600ms var(--ease-out) 700ms both; }
-  .hero .olive .leaf { animation: leaf 700ms var(--ease-out) both; animation-delay: calc(900ms + var(--i) * 55ms); }
-  .hero-bar { animation: fade 900ms var(--ease-out) 650ms both; }
-}
-@keyframes rise   { from { transform: translateY(104%); } }
-@keyframes fade   { from { opacity: 0; transform: translateY(8px); } }
-@keyframes unveil { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
-@keyframes settle { from { transform: scale(1.08); } }
-@keyframes draw   { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
-@keyframes leaf   { from { opacity: 0; } }
-
-/* ── About ─────────────────────────────────────────────────────── */
-.about .wrap { display: grid; grid-template-columns: 1.05fr .95fr; gap: clamp(40px, 8vw, 120px); align-items: center; }
-.about figure img {
-  width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: 60% 22%; border-radius: var(--r-sm);
-  outline: 1px solid rgb(0 0 0 / .08); outline-offset: -1px; /* alpha edge so the photo never bleeds into the page */
-}
-.about figcaption { margin-top: 12px; font-size: .85rem; color: var(--muted); }
-.about h2 { max-width: 12em; }
-.about .lede { margin-top: 24px; }
-.about .lede + .lede { margin-top: 14px; }
-@media (max-width: 820px) { .about .wrap { grid-template-columns: 1fr; } }
-
-/* ── Services ──────────────────────────────────────────────────── */
-.services { border-top: 1px solid var(--line); }
-.svc-head { display: flex; justify-content: space-between; align-items: end; gap: 24px 60px; flex-wrap: wrap; }
-.svc-head .lede { max-width: 26em; }
-
-/* Masked scroll edges: the fade only appears on a side that has more to scroll. */
-.scroller {
-  overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain;
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
-          mask-image: linear-gradient(to right, transparent, #000 var(--fl), #000 calc(100% - var(--fr)), transparent);
-  transition: --fl 200ms var(--ease-out), --fr 200ms var(--ease-out);
-}
-.scroller::-webkit-scrollbar { display: none; }
-.scroller[data-more-left] { --fl: 32px; }
-.scroller[data-more-right] { --fr: 32px; }
-
-.tabs { position: relative; display: flex; gap: 36px; margin: 52px 0 8px; border-bottom: 1px solid var(--line); }
-.tab { position: relative; flex: none; padding: 14px 0; font-size: 1rem; color: var(--muted); transition: color 200ms var(--ease-out); }
-.tab[aria-selected="true"] { color: var(--ink); }
-@media (hover: hover) { .tab:hover { color: var(--ink); } }
-.tab-ink { /* moves with transform only, never left/width */
-  position: absolute; left: 0; top: 0; width: 1px; height: 1px; background: var(--ink);
-  transform-origin: 0 0; transition: transform 420ms var(--ease-in-out);
-}
-.panels { position: relative; overflow: clip; }
-.menu { list-style: none; display: grid; grid-template-columns: 1fr 1fr; column-gap: 72px; }
-.menu li { display: grid; grid-template-columns: 1fr auto; gap: 2px 24px; align-items: baseline; padding: 22px 0; border-bottom: 1px solid var(--line); }
-.menu h3 { font-size: 1.35rem; line-height: 1.25; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.menu p { grid-column: 1; color: var(--muted); font-size: .95rem; }
-.price { font-size: 1.05rem; font-variant-numeric: tabular-nums lining-nums; min-width: 3.2ch; text-align: right; }
-.tag {
-  font: 500 .72rem/1 var(--sans); letter-spacing: .02em; color: var(--accent);
-  padding: 5px 7px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px currentColor; cursor: help;
-}
-.fineprint { margin-top: 26px; font-size: .82rem; color: var(--muted); }
-@media (max-width: 760px) {
-  .menu { grid-template-columns: 1fr; }
-  .tabs { gap: 28px; margin-inline: -20px; padding-inline: 20px; }
-}
-
-/* ── Reviews ───────────────────────────────────────────────────── */
-.reviews { background: var(--tint); position: relative; overflow: clip; }
-.reviews .wrap { display: grid; grid-template-columns: 300px 1fr; gap: clamp(40px, 8vw, 120px); }
-.score-col { position: relative; }
-.score { font-family: var(--serif); font-size: 5.5rem; line-height: 1; margin-top: 28px; font-variant-numeric: tabular-nums lining-nums; }
-.score-meta { margin-top: 10px; display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: .92rem; }
-.reviews .olive { width: 170px; height: 170px; right: max(16px, calc((100% - 1160px) / 2 - 60px)); bottom: -40px; transform: rotate(-8deg); opacity: .6; }
-.carousel { min-width: 0; }
-.viewport { overflow: clip; touch-action: pan-y; cursor: grab; border-radius: var(--r-sm); }
-.viewport.dragging { cursor: grabbing; user-select: none; }
-.track { display: flex; will-change: transform; }
-.slide { flex: 0 0 100%; padding-right: 8%; }
-.slide blockquote { font-size: clamp(1.7rem, 3.3vw, 2.6rem); line-height: 1.22; letter-spacing: -.01em; text-indent: -.36em; }
-.slide footer { margin-top: 28px; font-size: .95rem; color: var(--muted); }
-.slide footer b { font-weight: 500; color: var(--ink); }
-.car-ctrl { display: flex; align-items: center; gap: 6px; margin-top: 40px; }
-.car-ctrl .count { margin-left: 12px; font-size: .92rem; color: var(--muted); }
-.car-ctrl .icon-btn { box-shadow: inset 0 0 0 1px var(--line-strong); }
-.car-ctrl .icon-btn:disabled { opacity: .35; cursor: default; transform: none; }
-/* optical centering: a chevron's mass sits on its open side, so nudge it toward the point */
-.chev-l svg { transform: translateX(-1px); }
-.chev-r svg { transform: translateX(1px); }
-@media (max-width: 820px) {
-  .reviews .wrap { grid-template-columns: 1fr; } .score { font-size: 4.5rem; } .slide { padding-right: 0; }
-  .reviews .olive { width: 120px; height: 120px; right: -20px; bottom: -30px; }
-}
-
-/* ── Booking ───────────────────────────────────────────────────── */
-.book .wrap { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(40px, 7vw, 100px); align-items: start; }
-.book .lede { margin-top: 22px; }
-/* Layered structure: tinted shell (14px) → 6px gap → card or photo (8px). Concentric. */
-.shell { padding: 6px; border-radius: var(--r-xl); background: var(--tint); box-shadow: inset 0 0 0 1px var(--line); }
-.card {
-  border-radius: var(--r-lg); background: var(--surface); padding: clamp(24px, 4vw, 40px);
-  box-shadow: 0 0 0 1px var(--line), 0 1px 2px rgb(var(--shadow) / .06), 0 24px 48px -28px rgb(var(--shadow) / .28);
-}
-.photo-card { margin-top: 40px; }
-.photo-card img {
-  width: 100%; aspect-ratio: 4 / 5; object-fit: cover; object-position: 50% 60%; border-radius: var(--r-lg);
-  outline: 1px solid rgb(0 0 0 / .08); outline-offset: -1px;
-}
-.photo-card figcaption { display: flex; justify-content: space-between; gap: 12px; padding: 12px 10px 6px; font-size: .88rem; color: var(--muted); }
-.photo-card figcaption b { font-weight: 500; color: var(--ink); }
-.form-box { overflow: clip; }
-form { display: grid; grid-template-columns: 1fr 1fr; gap: 22px 18px; }
-.field { display: grid; gap: 8px; align-content: start; min-width: 0; }
-.field.full { grid-column: 1 / -1; }
-.field > span:first-child, .field legend { font-size: .85rem; color: var(--muted); }
-.field legend { margin-bottom: 8px; }
-fieldset { border: 0; min-width: 0; }
-input, select, textarea {
-  width: 100%; height: 50px; padding: 0 14px; border-radius: var(--r-sm);
-  border: 0; background: var(--bg); color: var(--ink); box-shadow: inset 0 0 0 1px var(--line-strong);
-  font-size: 1rem; font-variant-numeric: tabular-nums lining-nums; outline: none;
-  transition: box-shadow 160ms var(--ease-out);
-}
-select {
-  appearance: none; padding-right: 40px;
-  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
-  background-position: calc(100% - 20px) 50%, calc(100% - 15px) 50%; background-size: 5px 5px; background-repeat: no-repeat;
-}
-textarea { height: auto; min-height: 96px; padding: 13px 14px; resize: vertical; line-height: 1.5; }
-:is(input, select, textarea):focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px rgb(214 188 138 / .35); }
-input::placeholder, textarea::placeholder { color: var(--muted); opacity: .7; }
-:root[data-theme="dark"] :is(input, select, textarea) { color-scheme: dark; }
-.field[data-invalid] :is(input, select) { box-shadow: inset 0 0 0 1px #b4524a; }
-.field[data-invalid] :is(input, select):focus-visible { box-shadow: inset 0 0 0 1px #b4524a, 0 0 0 3px rgb(180 82 74 / .18); }
-.err { font-size: .82rem; color: #b4524a; }
-:root[data-theme="dark"] .err { color: #e59a92; }
-.err:empty { display: none; }
-
-.slots { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 2px; }
-.slot {
-  height: 46px; border-radius: var(--r-sm); font-size: .95rem; font-variant-numeric: tabular-nums lining-nums; white-space: nowrap;
-  box-shadow: inset 0 0 0 1px var(--line-strong); -webkit-tap-highlight-color: transparent;
-  transition: transform 160ms var(--ease-out), background-color 160ms var(--ease-out), color 160ms var(--ease-out);
-}
-.slot:active { transform: scale(.97); }
-.slot[aria-checked="true"] { background: var(--btn-bg); color: var(--btn-fg); box-shadow: inset 0 1px 0 var(--btn-hi); }
-@media (hover: hover) { .slot:not([aria-checked="true"]):hover { background: rgb(127 127 127 / .08); } }
-form .btn { width: 100%; }
-.done h3 { font-size: 2rem; line-height: 1.1; }
-.done p { color: var(--muted); margin-top: 12px; }
-.done .btn { margin-top: 28px; }
-.done:focus { outline: none; }
-.done-mark { width: 44px; height: 44px; border-radius: var(--r-sm); display: grid; place-items: center; background: var(--tint); color: var(--accent); margin-bottom: 22px; }
-.done-mark svg { width: 20px; height: 20px; transform: translate(.5px, .5px); } /* optical: a check's mass sits low-left */
-@media (max-width: 900px) {
-  .book .wrap { grid-template-columns: 1fr; }
-  .photo-card { max-width: 520px; }
-  .photo-card img { aspect-ratio: 4 / 3; }
-}
-@media (max-width: 640px) {
-  form { grid-template-columns: 1fr; }
-  .slots { display: flex; margin-inline: -2px; }
-  .slot { flex: 0 0 96px; }
-}
-
-/* ── Visit ─────────────────────────────────────────────────────── */
-.visit { overflow-x: clip; }
-.visit .wrap { display: grid; grid-template-columns: 1fr minmax(280px, 430px); gap: clamp(40px, 8vw, 120px); align-items: center; }
-.info { margin-top: 36px; border-top: 1px solid var(--line); }
-.info div { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 18px 0; border-bottom: 1px solid var(--line); }
-.info dt { color: var(--muted); font-size: .9rem; padding-top: 2px; }
-.info dd { font-size: 1.05rem; }
-.visit .cta { display: flex; gap: 10px; margin-top: 36px; flex-wrap: wrap; }
-.map-fallback { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; font-family: var(--serif); font-size: 1.3rem; color: var(--gold); z-index: -1; }
-.map-fallback small { display: block; font: .85rem var(--sans); color: rgb(244 237 230 / .6); margin-top: 6px; }
-.arch iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; filter: grayscale(.25) sepia(.15); }
-.visit .olive { width: 150px; height: 150px; right: -96px; bottom: -18px; opacity: .85; }
-@media (max-width: 820px) {
-  .visit .wrap { grid-template-columns: 1fr; } .visit .arch-glow { width: min(100%, 400px); }
-  .visit .olive { width: 120px; height: 120px; right: -40px; }
-}
-
-footer.site { padding: 28px 0 32px; font-size: .85rem; }
-footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32px; flex-wrap: wrap; border-top: 1px solid var(--line); padding-top: 28px; color: var(--muted); }
-
-/* ── Popovers: origin-aware, scale from .97 ─────────────────────── */
-.pop {
-  position: fixed; z-index: 60; min-width: 220px; padding: 4px; border-radius: var(--r-lg);
-  background: var(--surface); color: var(--ink);
-  box-shadow: 0 0 0 1px var(--line), 0 2px 4px rgb(var(--shadow) / .08), 0 16px 40px -12px rgb(var(--shadow) / .35);
-  opacity: 0; transform: scale(.97); visibility: hidden;
-  transition: opacity 140ms var(--ease-in), transform 140ms var(--ease-in), visibility 0s linear 140ms;
-}
-.pop.open { opacity: 1; transform: none; visibility: visible; transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out), visibility 0s; }
-.pop a, .pop button { display: flex; align-items: center; width: 100%; height: 44px; padding: 0 12px; border-radius: var(--r-md); font-size: 1rem; text-align: left; }
-@media (hover: hover) { .pop a:hover, .pop button:hover { background: rgb(127 127 127 / .1); } }
-.pop a:active, .pop button:active { background: rgb(127 127 127 / .16); }
-.pop-head { padding: 12px 12px 8px; }
-.pop-head small { display: block; font-size: .8rem; color: var(--muted); }
-.pop-head strong { font-family: var(--serif); font-weight: 400; font-size: 1.6rem; font-variant-numeric: tabular-nums lining-nums; }
-.pop hr { border: 0; border-top: 1px solid var(--line); margin: 4px 8px; }
-
-/* ── Tooltip: the first one waits, its neighbours appear instantly ─ */
-#tip {
-  position: fixed; z-index: 70; top: 0; left: 0; pointer-events: none; max-width: 240px;
-  padding: 7px 10px; border-radius: var(--r-md); font-size: .82rem; line-height: 1.35;
-  background: #241914; color: #f4ede6; box-shadow: 0 0 0 1px rgb(255 255 255 / .06), 0 8px 20px -8px rgb(0 0 0 / .45);
-  opacity: 0; transform: scale(.97);
-  transition: opacity 140ms var(--ease-out), transform 140ms var(--ease-out);
-}
-:root[data-theme="dark"] #tip { background: #f4ede6; color: #241914; }
-#tip.show { opacity: 1; transform: none; }
-#tip.instant { transition: none; }
-
-/* ── Mobile action bar ─────────────────────────────────────────── */
-.mbar { display: none; }
-@media (max-width: 820px) {
-  .mbar {
-    display: grid; grid-template-columns: 1fr 1.4fr; gap: 8px; position: fixed; z-index: 30; inset: auto 0 0;
-    padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
-    border-top: 1px solid rgb(244 237 230 / .12);
-    transform: translateY(105%); transition: transform 320ms var(--ease-in);
-  }
-  .mbar.show { transform: none; transition: transform 420ms var(--ease-out); }
-  .mbar .btn { height: 48px; }
-  footer.site { padding-bottom: 100px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { animation: none !important; transition-duration: 1ms !important; }
-}
-</style>
+<link rel="preload" as="image" href="images/studio.webp" fetchpriority="high">
+<link rel="stylesheet" href="styles.css">
+<script src="app.js" defer></script>
 </head>
 <body>
 
@@ -490,16 +30,21 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
     <a href="#top" class="logo" aria-label="Ria's Creations Salon, back to top">Ria's Creations<small>Salon</small></a>
     <div class="nav-right">
       <nav class="nav-links" aria-label="Main">
-        <a href="#services">Services</a>
-        <a href="#reviews">Reviews</a>
-        <a href="#book">Book</a>
-        <a href="#visit">Visit</a>
+        <a href="#services" class="slop" id="svcTrigger" data-pop="svcMenu" aria-haspopup="menu" aria-expanded="false" aria-controls="svcMenu">Services
+          <svg class="caret" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><path d="M2 3.8l3 3 3-3"/></svg></a>
+        <a href="#reviews" class="slop">Reviews</a>
+        <a href="#book" class="slop">Book</a>
+        <a href="#visit" class="slop">Visit</a>
       </nav>
+      <button class="search-btn" type="button" id="searchBtn" aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K /">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <span>Search</span><kbd id="modKey">Ctrl K</kbd>
+      </button>
       <div class="nav-tools">
-        <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch theme" data-tip="Switch to evening">
+        <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch theme" data-tip="Switch to evening" data-kbd="T" aria-keyshortcuts="T">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg>
         </button>
-        <button class="icon-btn" id="menuBtn" type="button" aria-label="Open menu" aria-haspopup="true" aria-expanded="false" aria-controls="menuPop" data-pop="menuPop">
+        <button class="icon-btn" id="menuBtn" type="button" aria-label="Open menu and search" aria-haspopup="dialog">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 8.5h16M4 15.5h16"/></svg>
         </button>
       </div>
@@ -518,7 +63,11 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
       </div>
       <div class="arch-glow">
         <div class="arch">
-          <img src="images/studio.webp" alt="Inside the salon: lit arched mirrors, black styling chairs and a marble relaxation suite" fetchpriority="high" decoding="async">
+          <button class="photo-btn" type="button" data-view aria-label="View larger photo of the salon floor">
+            <span class="ph" data-blurhash="dDF5~so}%MaL4TM{?b%MXU%2My-;IUxuIUWB%ga#%Maz">
+              <img src="images/studio.webp" alt="The salon floor: lit arched mirrors, black styling chairs and a marble relaxation suite" fetchpriority="high" decoding="async">
+            </span>
+          </button>
         </div>
         <div class="olive" data-olive></div>
       </div>
@@ -528,7 +77,7 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
       <dl class="wrap">
         <div class="fact">
           <dt>Google rating</dt>
-          <dd class="rating"><a href="#reviews" class="num" data-tip="Average of 29 Google reviews">4.5</a><span class="stars" data-stars="4.5" role="img" aria-label="4.5 out of 5 stars"></span></dd>
+          <dd class="rating"><a href="#reviews" class="num slop" data-swr="rating" data-tip="Average of 29 Google reviews">4.5</a><span class="stars" data-stars="4.5" role="img" aria-label="4.5 out of 5 stars"></span></dd>
         </div>
         <div class="fact">
           <dt>Find us</dt>
@@ -536,11 +85,11 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
         </div>
         <div class="fact">
           <dt>Today</dt>
-          <dd>Open until <span class="num">7:30 PM</span></dd>
+          <dd>Open until <span class="num" data-swr="closes">7:30 PM</span></dd>
         </div>
         <div class="hero-cta">
           <button class="btn btn-quiet" type="button" data-pop="callPop" aria-haspopup="dialog" aria-expanded="false" aria-controls="callPop"><span>Call the salon</span></button>
-          <a class="btn" href="#book"><span>Book a visit</span></a>
+          <a class="btn" href="#book" data-prefetch><span>Book a visit</span></a>
         </div>
       </dl>
     </div>
@@ -555,7 +104,11 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
         <p class="lede">Kids are welcome, and so is walking in without an appointment.</p>
       </div>
       <figure>
-        <img src="images/stations.webp" alt="Styling stations with arched mirrors and red poppy artwork" loading="lazy" decoding="async">
+        <button class="photo-btn" type="button" data-view aria-label="View larger photo of the styling stations">
+          <span class="ph" data-blurhash="dFJRs%u6IraKIw?bWqRQ$eaIM{WB9Eoes,Io02?bozIU">
+            <img src="images/stations.webp" alt="The styling stations: arched mirrors, black vanities and red poppy artwork" loading="lazy" decoding="async">
+          </span>
+        </button>
         <figcaption>The styling stations</figcaption>
       </figure>
     </div>
@@ -577,6 +130,7 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
         <span class="tab-ink" aria-hidden="true"></span>
       </div>
 
+      <!-- Pre-rendered: this list is the single source for the nav menu, search and booking form. -->
       <div class="panels" id="panels">
         <ul class="menu" id="p0" role="tabpanel" aria-labelledby="t0">
           <li><h3>Women's haircut</h3><span class="price">$35</span><p>Consultation, wash, cut and style.</p></li>
@@ -599,8 +153,8 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
           <li><h3>Facial and brows</h3><span class="price">$60</span><p>Fresh skin and clean brows in one visit.</p></li>
         </ul>
         <ul class="menu" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
-          <li><h3>Brazilian wax <button class="tag" type="button" data-tip="Current in-salon special">Special</button></h3><span class="price">$35</span><p>The salon's most requested wax.</p></li>
-          <li><h3>Full-body wax <button class="tag" type="button" data-tip="Holiday price, for a limited time">Holiday</button></h3><span class="price">$65</span><p>Smooth from head to toe.</p></li>
+          <li><h3>Brazilian wax <button class="tag slop" type="button" data-tip="Current in-salon special">Special</button></h3><span class="price">$35</span><p>The salon's most requested wax.</p></li>
+          <li><h3>Full-body wax <button class="tag slop" type="button" data-tip="Holiday price, for a limited time">Holiday</button></h3><span class="price">$65</span><p>Smooth from head to toe.</p></li>
           <li><h3>Underarm wax</h3><span class="price">$12</span><p>Fast and long-lasting.</p></li>
           <li><h3>Relaxing massage</h3><span class="price">$40</span><p>Eases the neck, shoulders and back.</p></li>
         </ul>
@@ -613,10 +167,10 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
   <section class="reviews" id="reviews">
     <div class="olive" data-olive></div>
     <div class="wrap">
-      <div class="score-col">
+      <div>
         <h2>What clients say</h2>
-        <div class="score">4.5</div>
-        <div class="score-meta"><span class="stars" data-stars="4.5" role="img" aria-label="4.5 out of 5 stars"></span><span><span class="num">29</span> Google reviews</span></div>
+        <div class="score" data-swr="rating">4.5</div>
+        <div class="score-meta"><span class="stars" data-stars="4.5" role="img" aria-label="4.5 out of 5 stars"></span><span><span class="num" data-swr="reviews">29</span> Google reviews</span></div>
       </div>
       <div class="carousel" aria-roledescription="carousel" aria-label="Client reviews">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Reviews. Drag, swipe or use the arrow keys.">
@@ -636,10 +190,10 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
           </div>
         </div>
         <div class="car-ctrl">
-          <button class="icon-btn chev-l" id="prev" type="button" aria-label="Previous review" data-tip="Previous review">
+          <button class="icon-btn chev-l" id="prev" type="button" aria-label="Previous review" data-tip="Previous review" data-kbd="←">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>
           </button>
-          <button class="icon-btn chev-r" id="next" type="button" aria-label="Next review" data-tip="Next review">
+          <button class="icon-btn chev-r" id="next" type="button" aria-label="Next review" data-tip="Next review" data-kbd="→">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>
           </button>
           <span class="count num" id="count" aria-live="polite">1 / 3</span>
@@ -653,10 +207,18 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
     <div class="wrap">
       <div>
         <h2>Book a visit</h2>
-        <p class="lede">Choose a service and a time. Ria texts you back to confirm, and again the day before. Walk-ins are welcome too.</p>
-        <figure class="shell photo-card">
-          <!-- lounge.webp is the waiting-lounge photo; until it is added, the studio photo stands in -->
-          <img src="images/lounge.webp" onerror="this.onerror=null;this.src='images/studio.webp'" alt="The waiting lounge: brown leather seating, a gold side table, an olive tree and a lit oval mirror" loading="lazy" decoding="async">
+        <p class="lede">Choose a service and a time. Ria texts you back to confirm, and again the day before.</p>
+        <ul class="book-notes">
+          <li>Reschedule by replying to the text</li>
+          <li>Walk-ins are welcome any time we are open</li>
+        </ul>
+        <!-- The lounge photo. Each photo on the page is used once; if this file is missing, the card hides. -->
+        <figure class="shell photo-card" id="loungeCard">
+          <button class="photo-btn" type="button" data-view aria-label="View larger photo of the lounge">
+            <span class="ph">
+              <img src="images/lounge.webp" onerror="this.closest('figure').hidden = true" alt="The waiting lounge: brown leather seating, a gold side table, an olive tree and a lit oval mirror" loading="lazy" decoding="async">
+            </span>
+          </button>
           <figcaption><b>The lounge</b><span>Sit back while you wait</span></figcaption>
         </figure>
       </div>
@@ -669,9 +231,9 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
                 <select name="service" aria-describedby="e-service">
                   <option value="">Choose a service</option>
                   <optgroup label="Hair"><option>Women's haircut</option><option>Long layers and face framing</option><option>Men's haircut</option><option>Kids' haircut</option><option>Blowout and style</option><option>Trim</option></optgroup>
-                  <optgroup label="Brows and face"><option>Eyebrow threading</option><option>Brow tint</option><option>Full face threading</option></optgroup>
-                  <optgroup label="Facials"><option>Signature facial</option><option>Express facial</option><option>Deep-cleansing facial</option></optgroup>
-                  <optgroup label="Wax and massage"><option>Brazilian wax</option><option>Full-body wax</option><option>Relaxing massage</option></optgroup>
+                  <optgroup label="Brows and face"><option>Eyebrow threading</option><option>Brow tint</option><option>Upper lip</option><option>Full face threading</option></optgroup>
+                  <optgroup label="Facials"><option>Signature facial</option><option>Express facial</option><option>Deep-cleansing facial</option><option>Facial and brows</option></optgroup>
+                  <optgroup label="Wax and massage"><option>Brazilian wax</option><option>Full-body wax</option><option>Underarm wax</option><option>Relaxing massage</option></optgroup>
                 </select>
                 <span class="err" id="e-service"></span>
               </label>
@@ -693,6 +255,7 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
                   <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">4:00 PM</button>
                   <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">5:30 PM</button>
                 </div>
+                <span class="err"></span>
               </fieldset>
               <label class="field full" id="f-phone"><span>Mobile number</span>
                 <input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="(770) 555-0123" aria-describedby="e-phone">
@@ -701,14 +264,31 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
               <label class="field full"><span>Notes for Ria (optional)</span>
                 <textarea name="notes" placeholder="For example: long layers with face-framing pieces"></textarea>
               </label>
-              <div class="field full"><button class="btn" type="submit"><span>Send request</span></button></div>
+              <div class="field full"><button class="btn" type="submit" id="submitBtn"><span id="submitLabel">Send request</span></button></div>
             </form>
 
-            <div class="done" id="done" hidden tabindex="-1">
-              <div class="done-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+            <!-- Shown the instant you press send (optimistic), before the salon has answered. -->
+            <div class="state" id="sent" hidden tabindex="-1">
+              <div class="state-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
               <h3>Request sent</h3>
-              <p id="doneText"></p>
-              <button class="btn btn-quiet" type="button" id="again"><span>Book another visit</span></button>
+              <p id="sentText"></p>
+              <p class="status" id="sentStatus" data-state="sending" role="status">Sending to Ria…</p>
+              <p class="ref num" id="sentRef"></p>
+              <div class="otp field" id="otpBox" hidden>
+                <label for="otp" class="hint" style="font-size:.85rem">Enter the 6-digit code we texted you</label>
+                <input id="otp" name="otp" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" maxlength="6" aria-describedby="e-otp otpHint">
+                <span class="err" id="e-otp"></span>
+                <span class="hint" id="otpHint">Demo: any 6 digits work.</span>
+              </div>
+              <div class="state-actions"><button class="link-btn slop" type="button" id="cancelReq">Cancel request</button></div>
+            </div>
+
+            <div class="state" id="confirmed" hidden tabindex="-1">
+              <div class="state-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+              <h3>Visit confirmed</h3>
+              <p id="confirmedText"></p>
+              <p class="ref num" id="confirmedRef"></p>
+              <div class="state-actions"><button class="btn btn-quiet" type="button" id="again"><span>Book another visit</span></button></div>
             </div>
           </div>
         </div>
@@ -723,18 +303,18 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
         <h2>Visit the salon</h2>
         <dl class="info">
           <div><dt>Address</dt><dd class="num">375 Rockbridge Rd NW, Suite 156<br>Lilburn, GA 30047</dd></div>
-          <div><dt>Phone</dt><dd><a class="num" href="tel:+17705570354">(770) 557-0354</a></dd></div>
-          <div><dt>Today</dt><dd>Open until <span class="num">7:30 PM</span>. Walk-ins welcome.</dd></div>
+          <div><dt>Phone</dt><dd><a class="num slop" href="tel:+17705570354">(770) 557-0354</a></dd></div>
+          <div><dt>Today</dt><dd>Open until <span class="num" data-swr="closes">7:30 PM</span>. Walk-ins welcome.</dd></div>
         </dl>
         <div class="cta">
-          <a class="btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=375+Rockbridge+Rd+NW+Ste+156%2C+Lilburn%2C+GA+30047" target="_blank" rel="noopener"><span>Get directions</span></a>
+          <a class="btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=375+Rockbridge+Rd+NW+Ste+156%2C+Lilburn%2C+GA+30047" target="_blank" rel="noopener" data-prefetch-map><span>Get directions</span></a>
           <button class="btn btn-quiet" type="button" data-pop="callPop" aria-haspopup="dialog" aria-expanded="false" aria-controls="callPop"><span>Call the salon</span></button>
         </div>
       </div>
       <div class="arch-glow">
         <div class="arch">
           <div class="map-fallback" aria-hidden="true">Lilburn Corner<small>375 Rockbridge Rd NW</small></div>
-          <iframe title="Map showing Ria's Creations Salon at Lilburn Corner" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+          <iframe id="mapFrame" title="Map showing Ria's Creations Salon at Lilburn Corner" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
             src="https://maps.google.com/maps?q=375%20Rockbridge%20Rd%20NW%20Ste%20156%2C%20Lilburn%2C%20GA%2030047&amp;z=15&amp;output=embed"></iframe>
         </div>
         <div class="olive" data-olive></div>
@@ -751,8 +331,9 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
 
 <div class="mbar on-dark" id="mbar">
   <button class="btn btn-quiet" type="button" data-pop="callPop" aria-haspopup="dialog" aria-expanded="false" aria-controls="callPop"><span>Call</span></button>
-  <a class="btn" href="#book"><span>Book a visit</span></a>
+  <a class="btn" href="#book" data-prefetch><span>Book a visit</span></a>
 </div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
 
 <!-- Popovers -->
 <div class="pop" id="callPop" role="dialog" aria-label="Call the salon">
@@ -761,341 +342,36 @@ footer.site .wrap { display: flex; justify-content: space-between; gap: 12px 32p
   <a href="tel:+17705570354">Call now</a>
   <button type="button" id="copyBtn">Copy number</button>
 </div>
-<nav class="pop" id="menuPop" aria-label="Menu">
-  <a href="#services">Services</a>
-  <a href="#reviews">Reviews</a>
-  <a href="#book">Book a visit</a>
-  <a href="#visit">Visit</a>
-</nav>
+<div class="pop mega" id="svcMenu" role="menu" aria-label="Services">
+  <div class="mega-cats" id="megaCats" role="group" aria-label="Categories"></div>
+  <div class="mega-items" id="megaItems" role="group" aria-label="Services"></div>
+  <div class="mega-foot"><span>Choose a service to book it</span><span><kbd>↑</kbd> <kbd>↓</kbd> <kbd>→</kbd></span></div>
+</div>
 <div id="tip" role="tooltip"></div>
 
+<!-- Command menu: a centred dialog on desktop, a swipe-to-dismiss sheet on phones -->
+<dialog class="cmd" id="cmd" aria-label="Search">
+  <div class="cmd-handle" aria-hidden="true"></div>
+  <div class="cmd-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    <input id="cmdInput" type="text" role="combobox" aria-expanded="true" aria-controls="cmdList" aria-autocomplete="list" placeholder="Search services, hours or actions" autocomplete="off" spellcheck="false">
+    <kbd>esc</kbd>
+  </div>
+  <div class="cmd-list" id="cmdList" role="listbox" aria-label="Results"></div>
+  <div class="cmd-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> choose</span><span><kbd>esc</kbd> close</span></div>
+</dialog>
+
+<!-- Photo viewer: the photo morphs in with a view transition; swipe it away to close -->
+<dialog class="viewer" id="viewer" aria-label="Photo">
+  <div class="viewer-inner" id="viewerInner">
+    <img class="viewer-img" id="viewerImg" alt="" draggable="false">
+    <p class="viewer-cap" id="viewerCap"></p>
+  </div>
+  <button class="icon-btn viewer-close" id="viewerClose" type="button" aria-label="Close photo" data-tip="Close" data-kbd="esc">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+</dialog>
+
 <template id="oliveTpl"><svg viewBox="0 0 250 250" aria-hidden="true" focusable="false"><path class="stem" pathLength="1" d="M10 230 C60 170 120 90 230 20"/><path class="leaf" style="--i:0" transform="translate(28.5 207.6) rotate(-95.6) scale(0.95)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:1" transform="translate(28.5 207.6) rotate(-5.5) scale(0.95)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:2" transform="translate(45.7 186.8) rotate(-94.2) scale(0.90)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:3" transform="translate(45.7 186.8) rotate(-5.8) scale(0.90)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:4" transform="translate(64.2 165.1) rotate(-92.3) scale(0.85)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:5" transform="translate(64.2 165.1) rotate(-5.6) scale(0.85)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:6" transform="translate(84.2 142.8) rotate(-89.8) scale(0.80)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:7" transform="translate(84.2 142.8) rotate(-4.7) scale(0.80)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:8" transform="translate(106.0 120.0) rotate(-86.8) scale(0.76)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:9" transform="translate(106.0 120.0) rotate(-3.5) scale(0.76)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:10" transform="translate(130.0 97.0) rotate(-83.5) scale(0.71)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:11" transform="translate(130.0 97.0) rotate(-1.8) scale(0.71)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:12" transform="translate(156.2 73.9) rotate(-79.9) scale(0.66)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:13" transform="translate(156.2 73.9) rotate(0.1) scale(0.66)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:14" transform="translate(185.2 51.0) rotate(-76.0) scale(0.62)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:15" transform="translate(185.2 51.0) rotate(2.3) scale(0.62)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:16" transform="translate(217.0 28.4) rotate(-72.0) scale(0.57)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/><path class="leaf" style="--i:17" transform="translate(230 20) rotate(-32.5) scale(.55)" d="M0 0C7-5.5 22-6 34 0C22 6 7 5.5 0 0Z"/></svg></template>
-
-<script>
-(() => {
-  const $ = (s, r = document) => r.querySelector(s);
-  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const OUT = "cubic-bezier(.23, 1, .32, 1)", INOUT = "cubic-bezier(.77, 0, .175, 1)", IN = "cubic-bezier(.4, 0, 1, 1)";
-  const root = document.documentElement;
-
-  /* Olive branches: one drawing, cloned where it is used */
-  const olive = $("#oliveTpl").content;
-  $$("[data-olive]").forEach((el) => el.appendChild(olive.cloneNode(true)));
-
-  /* Smooth height: animate a box from its old height to its new auto height. */
-  function morphHeight(box, change) {
-    box.getAnimations().forEach((a) => a.cancel());
-    const from = box.offsetHeight;
-    change();
-    const to = box.offsetHeight;
-    if (reduced || from === to) return;
-    box.animate({ height: [from + "px", to + "px"] }, { duration: 380, easing: INOUT });
-  }
-
-  /* Stars: crisp SVG, supports halves */
-  let sid = 0;
-  const STAR = "M12 2.6l2.85 5.9 6.45.78-4.76 4.45 1.22 6.42L12 17l-5.76 3.15 1.22-6.42L2.7 9.28l6.45-.78z";
-  $$("[data-stars]").forEach((el) => {
-    const n = parseFloat(el.dataset.stars);
-    el.innerHTML = Array.from({ length: 5 }, (_, i) => {
-      const f = Math.max(0, Math.min(1, n - i)), id = "star" + sid++;
-      return `<svg viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="${id}"><rect width="${24 * f}" height="24"/></clipPath></defs><path d="${STAR}" fill="currentColor" opacity=".28"/><path d="${STAR}" fill="currentColor" clip-path="url(#${id})"/></svg>`;
-    }).join("");
-  });
-
-  /* Tooltips with skip-delay */
-  const tipEl = $("#tip");
-  let tipTimer = 0, tipOn = false, lastHide = -1e9, tipFor = null;
-  function placeTip(el) {
-    tipEl.textContent = el.dataset.tip;
-    const r = el.getBoundingClientRect(), tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
-    let top = r.top - th - 8, below = false;
-    if (top < 8) { top = r.bottom + 8; below = true; }
-    const left = Math.max(8, Math.min(innerWidth - tw - 8, r.left + r.width / 2 - tw / 2));
-    tipEl.style.top = top + "px"; tipEl.style.left = left + "px";
-    tipEl.style.transformOrigin = `${r.left + r.width / 2 - left}px ${below ? 0 : th}px`;
-  }
-  function showTip(el, instant) {
-    tipFor = el; placeTip(el);
-    tipEl.classList.toggle("instant", instant);
-    tipEl.classList.add("show"); tipOn = true;
-    el.setAttribute("aria-describedby", "tip");
-  }
-  function hideTip() {
-    clearTimeout(tipTimer);
-    if (tipOn) lastHide = performance.now();
-    tipOn = false; tipEl.classList.add("instant"); tipEl.classList.remove("show");
-    if (tipFor) tipFor.removeAttribute("aria-describedby");
-    tipFor = null;
-  }
-  function wantTip(el) {
-    clearTimeout(tipTimer);
-    if (tipOn || performance.now() - lastHide < 450) showTip(el, true);   // skip the delay between neighbours
-    else tipTimer = setTimeout(() => showTip(el, false), 520);
-  }
-  $$("[data-tip]").forEach((el) => {
-    el.addEventListener("pointerenter", (e) => { if (e.pointerType !== "touch") wantTip(el); });
-    el.addEventListener("pointerleave", hideTip);
-    el.addEventListener("focus", () => { if (el.matches(":focus-visible")) wantTip(el); });
-    el.addEventListener("blur", hideTip);
-    el.addEventListener("pointerdown", hideTip);
-  });
-
-  /* Theme: instant switch */
-  const themeBtn = $("#themeBtn");
-  const syncThemeTip = () => (themeBtn.dataset.tip = root.dataset.theme === "dark" ? "Switch to day" : "Switch to evening");
-  syncThemeTip();
-  themeBtn.addEventListener("click", () => {
-    const next = root.dataset.theme === "dark" ? "light" : "dark";
-    root.classList.add("theme-switching");
-    root.dataset.theme = next;
-    void root.offsetWidth;                                   // flush styles while transitions are off
-    requestAnimationFrame(() => root.classList.remove("theme-switching"));
-    try { localStorage.setItem("ria-theme", next); } catch (e) {}
-    syncThemeTip();
-    if (tipFor === themeBtn) placeTip(themeBtn);
-  });
-
-  /* Nav turns solid once past the hero; mobile bar shows between the hero and the booking form */
-  const nav = $("#nav"), mbar = $("#mbar");
-  const hero = $(".hero"), book = $("#book"), visit = $("#visit");
-  const seen = new Map();
-  const io = new IntersectionObserver((es) => {
-    es.forEach((e) => seen.set(e.target, e.isIntersecting));
-    mbar.classList.toggle("show", seen.size === 3 && !seen.get(hero) && !seen.get(book) && !seen.get(visit));
-  });
-  [hero, book, visit].forEach((el) => io.observe(el));
-  const onScroll = () => {
-    const h = nav.offsetHeight;
-    const overDark = hero.getBoundingClientRect().bottom > h || visit.getBoundingClientRect().top < h;
-    nav.classList.toggle("solid", !overDark);
-  };
-  addEventListener("scroll", onScroll, { passive: true }); onScroll();
-
-  /* Popovers: origin-aware, scale from .97 */
-  let openPop = null, openTrigger = null;
-  function closePop(focusBack) {
-    if (!openPop) return;
-    openPop.classList.remove("open");
-    openTrigger.setAttribute("aria-expanded", "false");
-    if (focusBack) openTrigger.focus();
-    openPop = openTrigger = null;
-  }
-  function openPopFor(trigger) {
-    const pop = document.getElementById(trigger.dataset.pop);
-    if (openPop === pop && openTrigger === trigger) return closePop(false);
-    closePop(false); hideTip();
-    const r = trigger.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 8;
-    const below = innerHeight - r.bottom >= ph + gap + 8 || r.top < ph + gap + 8;
-    const top = below ? r.bottom + gap : r.top - gap - ph;
-    let left = r.left + r.width / 2 > innerWidth / 2 ? r.right - pw : r.left;
-    left = Math.max(12, Math.min(innerWidth - pw - 12, left));
-    const ox = Math.max(0, Math.min(pw, r.left + r.width / 2 - left));
-    pop.style.left = left + "px"; pop.style.top = top + "px";
-    pop.style.transformOrigin = `${ox}px ${below ? 0 : ph}px`;   // grow out of the button that opened it
-    pop.classList.add("open");
-    trigger.setAttribute("aria-expanded", "true");
-    openPop = pop; openTrigger = trigger;
-    pop.querySelector("a, button")?.focus({ preventScroll: true });
-  }
-  $$("[data-pop]").forEach((t) => t.addEventListener("click", (e) => { e.stopPropagation(); openPopFor(t); }));
-  document.addEventListener("click", (e) => {
-    if (!openPop) return;
-    if (!openPop.contains(e.target) || e.target.closest("a")) closePop(false);
-  });
-  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { closePop(true); hideTip(); } });
-  addEventListener("scroll", () => closePop(false), { passive: true });
-  addEventListener("resize", () => closePop(false));
-  const copyBtn = $("#copyBtn");
-  copyBtn.addEventListener("click", async () => {
-    try { await navigator.clipboard.writeText("(770) 557-0354"); copyBtn.textContent = "Copied"; }
-    catch (err) { copyBtn.textContent = "(770) 557-0354"; }
-    setTimeout(() => (copyBtn.textContent = "Copy number"), 1600);
-  });
-
-  /* Masked scroll edges */
-  $$(".scroller").forEach((s) => {
-    const upd = () => {
-      s.toggleAttribute("data-more-left", s.scrollLeft > 2);
-      s.toggleAttribute("data-more-right", s.scrollLeft + s.clientWidth < s.scrollWidth - 2);
-    };
-    s.addEventListener("scroll", upd, { passive: true });
-    addEventListener("resize", upd); upd();
-  });
-
-  /* Service tabs: directional slides, smooth height, transform-only indicator */
-  const tabs = $$(".tab"), panels = $$(".menu"), ink = $(".tab-ink"), wrapP = $("#panels");
-  let cur = 0;
-  function moveInk(animate) {
-    const t = tabs[cur];
-    if (!animate) ink.style.transition = "none";
-    ink.style.transform = `translate(${t.offsetLeft}px, ${t.offsetTop + t.offsetHeight - 1}px) scaleX(${t.offsetWidth})`;
-    if (!animate) { void ink.offsetWidth; ink.style.transition = ""; }
-  }
-  function select(i, focus) {
-    if (i === cur) return;
-    const dir = i > cur ? 1 : -1, oldP = panels[cur], newP = panels[i];
-    wrapP.getAnimations({ subtree: true }).forEach((a) => a.cancel());
-    panels.forEach((p, k) => { p.style.cssText = ""; p.hidden = k !== cur; });
-    tabs.forEach((t, k) => { t.setAttribute("aria-selected", k === i); t.tabIndex = k === i ? 0 : -1; });
-    if (focus) tabs[i].focus();
-    morphHeight(wrapP, () => {
-      oldP.style.cssText = "position:absolute;inset:0 0 auto 0;pointer-events:none";
-      newP.hidden = false;
-    });
-    cur = i; moveInk(true);
-    const tl = tabs[i].parentElement;   // keep the chosen tab in view on narrow screens
-    tl.scrollTo({ left: Math.max(0, tabs[i].offsetLeft - tl.clientWidth / 2 + tabs[i].offsetWidth / 2), behavior: reduced ? "auto" : "smooth" });
-    if (reduced) { oldP.hidden = true; oldP.style.cssText = ""; return; }
-    newP.animate({ opacity: [0, 1], transform: [`translateX(${dir * 32}px)`, "none"] }, { duration: 460, easing: OUT });
-    const ex = oldP.animate({ opacity: [1, 0], transform: ["none", `translateX(${-dir * 32}px)`] }, { duration: 200, easing: IN, fill: "forwards" });
-    ex.onfinish = () => { ex.cancel(); oldP.hidden = true; oldP.style.cssText = ""; };
-  }
-  tabs.forEach((t, i) => {
-    t.addEventListener("click", () => select(i));
-    t.addEventListener("keydown", (e) => {
-      const k = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
-      if (k) { e.preventDefault(); select((cur + k + tabs.length) % tabs.length, true); }
-    });
-  });
-  moveInk(false);
-  if (document.fonts) document.fonts.ready.then(() => moveInk(false));
-  addEventListener("resize", () => moveInk(false));
-
-  /* Reviews: drag with velocity springs and rubber-banding */
-  const vp = $("#viewport"), track = $("#track"), slides = $$(".slide", track);
-  const prev = $("#prev"), next = $("#next"), count = $("#count");
-  const N = slides.length;
-  let x = 0, idx = 0, w = vp.clientWidth, raf = 0;
-  const setX = (v) => { x = v; track.style.transform = `translate3d(${v}px,0,0)`; };
-  const rubber = (over, dim) => (1 - 1 / ((over * 0.55) / dim + 1)) * dim;   // resistance grows the further you pull
-  function setIdx(i) {
-    idx = Math.max(0, Math.min(N - 1, i));
-    prev.disabled = idx === 0; next.disabled = idx === N - 1;
-    count.textContent = `${idx + 1} / ${N}`;
-    slides.forEach((s, k) => s.setAttribute("aria-hidden", k !== idx));
-  }
-  function springTo(target, v0 = 0) {
-    cancelAnimationFrame(raf);
-    if (reduced) return setX(target);
-    const k = 230, c = 25, m = 1;   // stiffness, damping, mass: damping ratio ≈ 0.82, a whisper of overshoot
-    let v = v0, last = performance.now();
-    const step = (now) => {
-      const dt = Math.min(0.032, (now - last) / 1000), sub = 4, h = dt / sub; last = now;
-      for (let s = 0; s < sub; s++) { const a = (-k * (x - target) - c * v) / m; v += a * h; x += v * h; }
-      setX(x);
-      if (Math.abs(v) < 4 && Math.abs(x - target) < 0.4) return setX(target);
-      raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-  }
-  const go = (i, v0 = 0) => { setIdx(i); springTo(-idx * w, v0); };
-  prev.addEventListener("click", () => go(idx - 1));
-  next.addEventListener("click", () => go(idx + 1));
-  vp.addEventListener("keydown", (e) => {
-    if (e.key === "ArrowRight") { e.preventDefault(); go(idx + 1); }
-    if (e.key === "ArrowLeft") { e.preventDefault(); go(idx - 1); }
-  });
-  let drag = null;
-  vp.addEventListener("pointerdown", (e) => {
-    if (e.button !== 0) return;
-    cancelAnimationFrame(raf);
-    drag = { x0: e.clientX, y0: e.clientY, base: x, axis: null, id: e.pointerId, samples: [{ t: e.timeStamp, x: e.clientX }] };
-  });
-  vp.addEventListener("pointermove", (e) => {
-    if (!drag || e.pointerId !== drag.id) return;
-    const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
-    if (!drag.axis) {
-      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-      drag.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
-      if (drag.axis === "y") { drag = null; return go(idx); }
-      vp.setPointerCapture(e.pointerId); vp.classList.add("dragging"); hideTip();
-    }
-    let p = drag.base + dx;
-    const min = -(N - 1) * w;
-    if (p > 0) p = rubber(p, w);
-    else if (p < min) p = min - rubber(min - p, w);
-    setX(p);
-    drag.samples.push({ t: e.timeStamp, x: e.clientX });
-    while (drag.samples.length > 2 && e.timeStamp - drag.samples[0].t > 100) drag.samples.shift();
-  });
-  const endDrag = (e) => {
-    if (!drag || e.pointerId !== drag.id) return;
-    const d = drag; drag = null; vp.classList.remove("dragging");
-    if (d.axis !== "x") return go(idx);
-    const a = d.samples[0], b = d.samples[d.samples.length - 1];
-    const v = b.t > a.t ? ((b.x - a.x) / (b.t - a.t)) * 1000 : 0;   // release velocity, px per second
-    let target = Math.round(-(x + v * 0.18) / w);                    // where the flick would come to rest
-    target = Math.max(idx - 1, Math.min(idx + 1, target));           // one review per flick
-    go(target, v);
-  };
-  vp.addEventListener("pointerup", endDrag);
-  vp.addEventListener("pointercancel", endDrag);
-  addEventListener("resize", () => { w = vp.clientWidth; cancelAnimationFrame(raf); setX(-idx * w); });
-  setIdx(0);
-
-  /* Booking form: shake on error, smooth height into the confirmation */
-  const form = $("#bookForm"), box = $("#formBox"), done = $("#done");
-  const dateIn = form.elements.date;
-  const today = new Date(); today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-  dateIn.min = today.toISOString().slice(0, 10); dateIn.value = dateIn.min;
-
-  const slots = $$(".slot");
-  const pick = (s) => slots.forEach((el) => { const on = el === s; el.setAttribute("aria-checked", on); el.tabIndex = on ? 0 : -1; });
-  slots.forEach((s, i) => {
-    s.addEventListener("click", () => pick(s));
-    s.addEventListener("keydown", (e) => {
-      const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-      if (k) { e.preventDefault(); const n = slots[(i + k + slots.length) % slots.length]; pick(n); n.focus(); }
-    });
-  });
-
-  const shake = (el) => !reduced && el.animate(
-    { transform: ["translateX(0)", "translateX(-7px)", "translateX(6px)", "translateX(-4px)", "translateX(3px)", "translateX(-1px)", "translateX(0)"] },
-    { duration: 420, easing: "ease-out" });
-  const digits = (s) => s.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
-  const rules = [
-    ["service", "f-service", (v) => !!v, "Choose a service."],
-    ["date", "f-date", (v) => !!v && v >= dateIn.min, "Choose today or a later day."],
-    ["name", "f-name", (v) => v.trim().length > 0, "Enter your first name."],
-    ["phone", "f-phone", (v) => digits(v).length === 10, "Enter a 10-digit mobile number."],
-  ];
-  function check(name) {
-    const [n, fid, ok, msg] = rules.find((r) => r[0] === name);
-    const good = ok(form.elements[n].value);
-    document.getElementById(fid).toggleAttribute("data-invalid", !good);
-    form.elements[n].setAttribute("aria-invalid", !good);
-    document.getElementById("e-" + n).textContent = good ? "" : msg;
-    return good;
-  }
-  rules.forEach(([n]) => form.elements[n].addEventListener(n === "service" ? "change" : "input", () => {
-    if (document.getElementById("e-" + n).textContent) morphHeight(box, () => check(n));
-  }));
-  form.addEventListener("submit", (e) => {
-    e.preventDefault();
-    let bad = [];
-    morphHeight(box, () => { bad = rules.filter(([n]) => !check(n)); });
-    if (bad.length) {
-      bad.forEach(([, fid]) => shake(document.getElementById(fid)));
-      form.elements[bad[0][0]].focus();
-      return;
-    }
-    const f = form.elements, d = new Date(f.date.value + "T12:00"), p = digits(f.phone.value);
-    const time = $('.slot[aria-checked="true"]').textContent;
-    $("#doneText").textContent = `Thanks, ${f.name.value.trim()}. Ria will text you at (${p.slice(0, 3)}) ${p.slice(3, 6)}-${p.slice(6)} to confirm your ${f.service.value.toLowerCase()} on ${d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })} at ${time}.`;
-    morphHeight(box, () => { form.hidden = true; done.hidden = false; });
-    if (!reduced) done.animate({ opacity: [0, 1], transform: ["scale(.97)", "none"] }, { duration: 420, easing: OUT });
-    done.focus({ preventScroll: true });
-  });
-  $("#again").addEventListener("click", () => {
-    form.reset(); dateIn.value = dateIn.min; pick(slots[2]);
-    rules.forEach(([n, fid]) => { document.getElementById(fid).removeAttribute("data-invalid"); document.getElementById("e-" + n).textContent = ""; });
-    morphHeight(box, () => { done.hidden = true; form.hidden = false; });
-    if (!reduced) form.animate({ opacity: [0, 1], transform: ["scale(.97)", "none"] }, { duration: 420, easing: OUT });
-    form.elements.service.focus({ preventScroll: true });
-  });
-})();
-</script>
 </body>
 </html>
