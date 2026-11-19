@@ -415,6 +415,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 }
 .slot:active { transform: scale(.97); }
 .slot[aria-checked="true"] { background: var(--btn-bg); color: var(--btn-fg); box-shadow: inset 0 1px 0 var(--btn-hi); }
+.slot:disabled { opacity: .35; text-decoration: line-through; cursor: default; }   /* already passed today */
 @media (hover: hover) { .slot:not([aria-checked="true"]):hover { background: rgb(127 127 127 / .08); } }
 form .btn { width: 100%; margin-top: 8px; }
 
@@ -687,7 +688,7 @@ dialog.dragging::backdrop { transition: none; }
 @keyframes pop { from { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { #confirmed .state-mark { animation: none; } }
 /* keyboard hints mean nothing on a touch screen */
-@media (hover: none) { .cmd kbd { display: none; } }
+@media (hover: none), (pointer: coarse) { .cmd kbd { display: none; } }
 
 /* ── Skeletons: a calm pulse where something is on its way (no shimmer gradient) ── */
 .skeleton { background: var(--line); animation: skeleton 1.1s var(--ease-in-out) infinite alternate; }

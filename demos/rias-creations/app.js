@@ -663,7 +663,7 @@
     img.style.viewTransitionName = "photo";
     withVT(() => {
       img.style.viewTransitionName = "";
-      vImg.src = img.currentSrc || img.src; vImg.alt = img.alt; vCap.textContent = img.alt;
+      vImg.src = img.currentSrc || img.src; vImg.alt = img.alt; vCap.textContent = img.closest("li")?.querySelector("figcaption b")?.textContent || img.alt;
       // the page may show a small copy; the viewer swaps to the full-size photo once it is ready
       const full = img.getAttribute("src");
       if (full && vImg.src !== new URL(full, location.href).href) {
@@ -843,7 +843,7 @@
   const today = new Date(); today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
   dateIn.min = today.toISOString().slice(0, 10);
   const firstOpenDay = () => {   // today if there is still time to book, otherwise the next day the salon is open
-    const d = new Date(); if (lilburnNow().min >= 18 * 60) d.setDate(d.getDate() + 1);   // past the last slot in Lilburn
+    const d = new Date(); if (lilburnNow().min > 18 * 60 - 30) d.setDate(d.getDate() + 1);   // too late for the last slot in Lilburn
     while (d.getDay() === 0) d.setDate(d.getDate() + 1);
     d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10);
   };
@@ -873,6 +873,14 @@
   let idemKey = newKey(), booking = null, otpAbort = null;
 
   const pick = (s) => slots.forEach((el) => { const on = el === s; el.setAttribute("aria-checked", on); el.tabIndex = on ? 0 : -1; });
+  const slotMin = (el) => { const [, h, m, ap] = el.textContent.match(/(\d+):(\d+)\s*(AM|PM)/); return (+h % 12 + (ap === "PM" ? 12 : 0)) * 60 + +m; };
+  function refreshSlots() {   // on today, times that have passed (or start within 30 minutes) are greyed out
+    const now = dateIn.value === dateIn.min ? lilburnNow().min + 30 : -1;
+    slots.forEach((el) => (el.disabled = slotMin(el) <= now));
+    const chosen = $('.slot[aria-checked="true"]');
+    if (!chosen || chosen.disabled) pick(slots.find((el) => !el.disabled) || slots[slots.length - 1]);
+  }
+  refreshSlots();
   const slotTime = () => $('.slot[aria-checked="true"]').textContent;
   const dayName = (v, long) => new Date(v + "T12:00").toLocaleDateString(undefined, long ? { weekday: "long", month: "long", day: "numeric" } : { weekday: "short" });
   const digits = (s) => s.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
@@ -881,20 +889,25 @@
   /* Predictive feedback: the button says exactly what will be requested. */
   function predict() {
     const s = form.elements.service.value;
-    const dayOk = dateIn.value && dateIn.value >= dateIn.min && !isSunday(dateIn.value);
+    const dayOk = dateIn.value && dateIn.value >= dateIn.min && !isSunday(dateIn.value) && slots.some((el) => !el.disabled);
     submitLabel.textContent = s && dayOk ? `Request ${s.toLowerCase()}, ${`${dayName(dateIn.value)} at ${slotTime()}`.replace(/ /g, "\u00a0")}` : "Send request";   // day and time stay together
   }
   slots.forEach((s, i) => {
     s.addEventListener("click", () => { pick(s); predict(); });
     s.addEventListener("keydown", (e) => {
       const k = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
-      if (k) { e.preventDefault(); const n = slots[(i + k + slots.length) % slots.length]; pick(n); n.focus(); predict(); }
+      if (k) {
+        e.preventDefault();
+        let j = i; do { j = (j + k + slots.length) % slots.length; } while (slots[j].disabled && j !== i);
+        const n = slots[j]; pick(n); n.focus(); predict();
+      }
     });
   });
 
   const rules = [
     ["service", "f-service", (v) => !!v, "Choose a service."],
-    ["date", "f-date", (v) => !!v && v >= dateIn.min && !isSunday(v), () => (isSunday(dateIn.value) ? "Closed Sundays. Pick another day." : "Choose today or a later day.")],
+    ["date", "f-date", (v) => !!v && v >= dateIn.min && !isSunday(v) && slots.some((el) => !el.disabled),
+      () => (isSunday(dateIn.value) ? "Closed Sundays. Pick another day." : dateIn.value === dateIn.min ? "No times left today. Pick another day." : "Choose today or a later day.")],
     ["name", "f-name", (v) => v.trim().length > 0, "Enter your first name."],
     ["phone", "f-phone", (v) => digits(v).length === 10, "Enter a 10-digit mobile number."],
   ];
@@ -907,6 +920,7 @@
     return good;
   }
   rules.forEach(([n]) => form.elements[n].addEventListener(n === "service" || n === "date" ? "change" : "input", () => {
+    if (n === "date") refreshSlots();
     if (n === "date" || document.getElementById("e-" + n).textContent) check(n);   // a closed day says so at once
     predict();
   }));
@@ -1017,7 +1031,7 @@
   $("#again").addEventListener("click", () => {
     booking = null; idemKey = newKey();
     const keep = { name: form.elements.name.value, phone: form.elements.phone.value };   // same person: no typing twice
-    form.reset(); dateIn.value = firstOpenDay(); pick(slots[2]);
+    form.reset(); dateIn.value = firstOpenDay(); pick(slots[2]); refreshSlots();
     form.elements.name.value = keep.name; form.elements.phone.value = keep.phone;
     rules.forEach(([n, fid]) => { document.getElementById(fid).removeAttribute("data-invalid"); document.getElementById("e-" + n).textContent = ""; });
     predict(); showState("form");

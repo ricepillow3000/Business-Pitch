@@ -118,6 +118,7 @@ good and what was boring, wordy, confusing or broken, and the fixes went in befo
 | 5 | The review arrows moved as quotes changed length; at 320 px the booking card briefly ran past the screen | The reviews box is as tall as the longest review; the booking column never grows past the screen |
 | 6 | "Book another visit" emptied name and phone; on a laptop both Book buttons showed just below the hero; gallery titles showed faintly behind the photo viewer | Name and phone are kept; the header's Book now waits until the hero's button is gone; the viewer's backdrop is solid |
 | 7 | On a laptop the gallery arrows only cut the first photo in half; at 320 px the tabs took a screen; the booking button split the time over two lines | Laptops show all five photos in one row, no arrows; compact tab rows on the smallest phones; day and time stay together |
+| 8 | Late in the day, times that had already passed could still be booked; keyboard hints showed in the phone menu; the photo viewer's caption was a long description | Passed times (and any within 30 minutes) are struck through and the next open one is picked; a day with none left says so; no keyboard hints on touch screens; the viewer shows the photo's short title |
 
 ## Not applicable to a website
 

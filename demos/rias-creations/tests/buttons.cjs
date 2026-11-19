@@ -61,7 +61,9 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
       }
       const before = await snap(p);
       let effect = note, ok = true;
-      if (info.href && /^tel:/.test(info.href)) { effect = `calls ${info.href.slice(4)}`; }
+      const passed = await p.$eval(sel, (e) => e.disabled && e.classList.contains('slot'));
+      if (passed) { effect = 'greyed out: this time has already passed today'; }
+      else if (info.href && /^tel:/.test(info.href)) { effect = `calls ${info.href.slice(4)}`; }
       else if (info.target === '_blank') {
         const [pop] = await Promise.all([ctx.waitForEvent('page', { timeout: 4000 }).catch(() => null), p.click(sel, { timeout: 5000 }).catch(() => null)]);
         effect = pop ? `opens new tab ${pop.url().replace(/^https?:\/\//, '').slice(0, 50)}` : 'NO NEW TAB'; ok = !!pop; if (pop) await pop.close();
