@@ -771,7 +771,7 @@
     count.textContent = `${idx + 1} / ${N}`;
     // reviews you are not on are out of reach: no Tab stop or click lands in a hidden card
     slides.forEach((s, k) => { s.setAttribute("aria-hidden", k !== idx); s.inert = k !== idx; });
-    vp.style.height = slides[idx].offsetHeight + "px";       // smooth height: the box fits the review you're on
+    vp.style.height = Math.max(...slides.map((s) => s.offsetHeight)) + "px";   // as tall as the longest review: the arrows never move under your thumb
   }
   function springTo(target, v0 = 0) {
     cancelAnimationFrame(raf);

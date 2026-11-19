@@ -115,6 +115,7 @@ good and what was boring, wordy, confusing or broken, and the fixes went in befo
 | 2 | Two service tabs hidden off-screen on phones; "Request sent" looked finished before the code; calling took two taps; the card tucked under the header; the menu icon showed through the photo viewer | Tabs wrap on phones; "Check your texts"; one-tap call on phones; the card scrolls clear of the header; the viewer hides the header |
 | 3 | A Sunday could be picked and the button agreed; the confirmation dropped the service | "Closed Sundays" shows at once; "Balayage on Monday ... See you then, Maria!" |
 | 4 | At 320 px the menu button was cut off; the Notes hint was cut off; the phone number split over two lines | Everything fits at 320 px; "Example: long layers"; the number stays on one line |
+| 5 | The review arrows moved as quotes changed length; at 320 px the booking card briefly ran past the screen | The reviews box is as tall as the longest review; the booking column never grows past the screen |
 
 ## Not applicable to a website
 
