@@ -414,6 +414,7 @@
       name: [...$("h3", li).childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim(),
       price: $(".price", li).textContent.trim(),
       desc: $("p", li).textContent.trim(),
+      dur: $(".dur", li)?.textContent.trim() || "",
     })),
   }));
   const SERVICES = CATS.flatMap((c) => c.items.map((s) => ({ ...s, cat: c.name })));
@@ -428,7 +429,7 @@
   function showCat(i) {
     activeCat = i;
     $$("button", megaCats).forEach((b, k) => b.setAttribute("aria-current", k === i));
-    megaItems.innerHTML = CATS[i].items.map((s) => `<button type="button" role="menuitem" data-name="${s.name.replace(/"/g, "&quot;")}"><span>${s.name}</span><span class="price">${s.price}</span></button>`).join("");
+    megaItems.innerHTML = CATS[i].items.map((s) => `<button type="button" role="menuitem" data-name="${s.name.replace(/"/g, "&quot;")}"><span class="mi-name">${s.name}</span><span class="mi-meta"><span class="price">${s.price}</span><small>${s.dur}</small></span></button>`).join("");
   }
   showCat(0);
   const inTriangle = (p, a, b, c) => {

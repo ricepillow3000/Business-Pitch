@@ -24,3 +24,10 @@ Not used: "Creations Salon Studio" (a different Lilburn salon) and a Booksy list
 
 Other ratings seen: Birdeye 4.6 from 26, Chamber of Commerce 4.8 from 17. The site quotes
 Google and Yelp only, and links to both so visitors can read every review.
+
+## Photos
+
+- Hero and entry: her salon floor, enlarged 4x with EDSR super-resolution (a neural upscaler
+  that sharpens existing detail without inventing objects). A higher-resolution original from
+  Ria would still be better.
+- Meet Ria: her own photo, supplied for the pitch.

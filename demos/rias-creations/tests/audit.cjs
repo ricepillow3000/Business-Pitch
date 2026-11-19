@@ -76,7 +76,8 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
       concentric: [['.book .shell', '.book .card'], ['.mega', '.mega button']].map(([o, i]) => {
         const O = document.querySelector(o), I = document.querySelector(i); if (!O || !I) return true;
         const co = getComputedStyle(O), pad = parseFloat(co.paddingTop);
-        return Math.abs(parseFloat(co.borderTopLeftRadius) - (parseFloat(getComputedStyle(I).borderTopLeftRadius) + pad)) < 0.5;
+        const ro = parseFloat(co.borderTopLeftRadius), ri = parseFloat(getComputedStyle(I).borderTopLeftRadius);
+        return (ro === 0 && ri === 0) || Math.abs(ro - (ri + pad)) < 0.5;   // both square, or concentric
       }),
       sections: [...document.querySelectorAll('main > section')].map((s) => getComputedStyle(s).backgroundColor) };
   });
@@ -84,8 +85,8 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
   ok('No gradient backgrounds (computed)', m.grad.length === 0);
   ok('No glass (computed)', m.glass.length === 0);
   ok('No italic text (computed)', m.italic.length === 0);
-  ok('Subtle corners only (4 to 16px; arches and dots aside)', m.radii.every((r) => /999px|50%/.test(r) || parseFloat(r.split(':').pop()) <= 16), [...new Set(m.radii.map((r) => r.split(':').pop()))].join(', '));
-  ok('Outer radius = inner radius + padding (concentric)', m.concentric.every(Boolean), m.concentric.join(', '));
+  ok('Sharp rectangles only (just the arched mirrors and dots are round)', m.radii.every((r) => /999px|50%/.test(r)), [...new Set(m.radii.map((r) => r.split(':').pop()))].join(', '));
+  ok('Outer and inner corners match', m.concentric.every(Boolean), m.concentric.join(', '));
   ok('Readable labels (smallest text ≥ 12px)', m.minFont >= 12, m.minFont + 'px');
   ok('One highlighted word', m.h1em === 1);
   ok('Single-button hero', m.heroButtons === 1, m.heroButtons + ' button(s)');

@@ -45,11 +45,13 @@
   --ease-in-out: cubic-bezier(.77, 0, .175, 1);
   --ease-in: cubic-bezier(.4, 0, 1, 1);
 
-  /* Subtle rounded corners, concentric: each outer radius = the inner radius + the padding between them. */
-  --r-sm: 4px;    /* buttons, inputs, tags, photos */
-  --r-md: 6px;    /* list items, tooltip */
-  --r-lg: 10px;   /* popover, card       = r-md + 4px padding */
-  --r-xl: 16px;   /* shell, sheet        = r-lg + 6px padding */
+  /* Sharp rectangles everywhere: buttons, search, menus, cards, inputs, photos.
+     Outer and inner corners match because they are all square. Only the arched
+     mirror shape and the small status dots are round, on purpose. */
+  --r-sm: 0;
+  --r-md: 0;
+  --r-lg: 0;
+  --r-xl: 0;
   --shadow-soft: 0 1px 2px rgb(var(--shadow) / .05), 0 16px 36px -22px rgb(var(--shadow) / .28);
   --field-line: rgb(36 25 20 / .5);   /* input borders: 3:1 or better, as WCAG asks for controls */
 
@@ -487,12 +489,33 @@ footer.site { padding: 28px 0 32px; font-size: .85rem; }
 .pop hr { border: 0; border-top: 1px solid var(--line); margin: 4px 8px; }
 
 /* Services mega menu (with a safe triangle between the two columns) */
-.mega { display: grid; grid-template-columns: 200px 300px; padding: 4px; gap: 4px; }
-.mega-cats { display: grid; align-content: start; gap: 2px; padding-right: 4px; border-right: 1px solid var(--line); }
-.mega-cats button[aria-current="true"] { background: rgb(127 127 127 / .1); }
-.mega-items { display: grid; align-content: start; gap: 2px; }
-.mega-items .price { color: var(--muted); font-size: .95rem; }
-.mega-foot { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 10px 12px 8px; border-top: 1px solid var(--line); font-size: .8rem; color: var(--muted); }
+/* Services menu: an editorial panel. Categories sit on a blush rail in the serif;
+   the open one joins the white list beside it, marked by a thin ink line. */
+.mega { display: grid; grid-template-columns: 240px 360px; padding: 0; gap: 0; overflow: hidden; }
+.mega-cats { display: grid; align-content: start; padding: 12px 0; background: var(--tint); border-right: 1px solid var(--line); }
+.mega .mega-cats button {
+  position: relative; min-height: 50px; padding: 0 22px; font: 400 1.12rem/1.2 var(--serif); color: var(--muted);
+  transition: color 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+.mega .mega-cats button::before {
+  content: ""; position: absolute; left: 0; top: 12px; bottom: 12px; width: 2px; background: var(--ink);
+  transform: scaleY(0); transition: transform 220ms var(--ease-out);
+}
+.mega .mega-cats button[aria-current="true"] { color: var(--ink); background: var(--surface); margin-right: -1px; }
+.mega .mega-cats button[aria-current="true"]::before { transform: none; }
+.mega .mega-cats button svg { opacity: 0; transition: opacity 160ms; }
+.mega .mega-cats button[aria-current="true"] svg { opacity: .6; }
+@media (hover: hover) { .mega .mega-cats button:hover { color: var(--ink); background: transparent; } .mega .mega-cats button[aria-current="true"]:hover { background: var(--surface); } }
+.mega-items { display: grid; align-content: start; padding: 12px 0; }
+.mega .mega-items button { min-height: 52px; padding: 0 22px; border-bottom: 1px solid var(--line); gap: 18px; }
+.mega .mega-items button:last-child { border-bottom: 0; }
+.mi-name { font-size: 1rem; }
+.mi-meta { display: grid; justify-items: end; line-height: 1.2; font-variant-numeric: tabular-nums lining-nums; }
+.mi-meta .price { font-size: .98rem; color: var(--ink); min-width: 0; }
+.mi-meta small { font-size: .78rem; color: var(--muted); }
+@media (hover: hover) { .mega .mega-items button:hover { background: var(--tint); } }
+.mega-foot { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 14px 22px; border-top: 1px solid var(--line); font-size: .85rem; color: var(--muted); background: var(--surface); }
+.mega-foot a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line-strong); }
 
 /* ── Tooltip: the first one waits, its neighbours appear instantly ─ */
 #tip {
@@ -782,3 +805,8 @@ footer.site .wrap.foot { align-items: start; }
   .logo-salon { font-size: 1.62rem; }
   .nav .logo { gap: 7px; }
 }
+
+/* Ria's portrait sits in the arch, framed on her */
+.about-arch img { object-position: 100% 40%; }
+.mega .mega-foot a { display: inline; width: auto; min-height: 0; padding: 0; font-size: .85rem; border-radius: 0; }   /* a link, not a menu row */
+.mega .mega-foot a:hover { background: none; color: var(--ink); text-decoration-color: currentColor; }

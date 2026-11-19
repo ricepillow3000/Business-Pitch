@@ -19,12 +19,12 @@ PASS  Consistent icon stroke  (stroke-width="1.5")
 PASS  Favicon + social meta tags
 PASS  Entry walk-in plays, then hands over to the hero
 PASS  Entry plays once per visit (not again on reload)
-PASS  Every text passes WCAG AA contrast  (188 text elements checked)
+PASS  Every text passes WCAG AA contrast  (195 text elements checked)
 PASS  No gradient backgrounds (computed)
 PASS  No glass (computed)
 PASS  No italic text (computed)
-PASS  Subtle corners only (4 to 16px; arches and dots aside)  (4px, 999px, 16px, 10px)
-PASS  Outer radius = inner radius + padding (concentric)  (true, true)
+PASS  Sharp rectangles only (just the arched mirrors and dots are round)  (999px)
+PASS  Outer and inner corners match  (true, true)
 PASS  Readable labels (smallest text ≥ 12px)  (12.48px)
 PASS  One highlighted word
 PASS  Single-button hero  (1 button(s))
@@ -48,7 +48,7 @@ PASS  No sideways scroll on phone
 | Real logo | Her storefront sign rebuilt in type: "Ria's Creations" stacked beside a big SALON |
 | Her own colors | Espresso, white, gold and a hint of blush, taken from the salon |
 | One highlighted word | "beautifully" in gold, upright (not italic) |
-| Subtle corners, matched radii | 4px buttons and photos, 10px cards, 16px shells; each outer radius = inner + padding |
+| Sharp rectangles, matched corners | Every button, input, search bar, menu, card and photo is square; only the arched mirror frames and status dots are round |
 | Solid cards, soft shadows, hairlines | White cards with a thin neutral edge and a soft, uncolored shadow; 1px hairlines between sections |
 | No gradients, glows, glass or orbs | None in the code or on screen |
 | Readable labels, less all caps | Smallest text 12px; caps only in the logo |
