@@ -120,6 +120,7 @@ good and what was boring, wordy, confusing or broken, and the fixes went in befo
 | 7 | On a laptop the gallery arrows only cut the first photo in half; at 320 px the tabs took a screen; the booking button split the time over two lines | Laptops show all five photos in one row, no arrows; compact tab rows on the smallest phones; day and time stay together |
 | 8 | Late in the day, times that had already passed could still be booked; keyboard hints showed in the phone menu; the photo viewer's caption was a long description | Passed times (and any within 30 minutes) are struck through and the next open one is picked; a day with none left says so; no keyboard hints on touch screens; the viewer shows the photo's short title |
 | 9 | At 1024 px one gallery caption wrapped and knocked its photo out of line | Captions stay on one line, so the row of photos is even from 1024 px up |
+| 10 | At 320 px the time buttons were squeezed edge to edge | Under 360 px the times sit two to a row, each with room around it |
 
 ## Not applicable to a website
 

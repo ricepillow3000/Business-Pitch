@@ -442,6 +442,7 @@ form .btn { width: 100%; margin-top: 8px; }
   form { grid-template-columns: 1fr; }
   .slots { grid-template-columns: repeat(3, 1fr); }
 }
+@media (max-width: 359px) { .slots { grid-template-columns: repeat(2, 1fr); } }   /* the smallest phones: two times to a row, each with room around it */
 
 /* ── Visit ─────────────────────────────────────────────────────── */
 .visit { overflow-x: clip; }
