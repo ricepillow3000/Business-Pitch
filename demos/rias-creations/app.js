@@ -74,8 +74,12 @@
     ];
     let ready = 0; tasks.forEach((p) => p.then(() => ready++, () => ready++));
     const t0 = performance.now(), MIN = 2200, MAX = 6000;
+    let finished = false, walking = false;
+    // never stuck: if frames stop (the phone pauses the page, a slow device), the walk-in still ends
+    const giveUp = setTimeout(() => finish(), MAX + 5000);
     let shown = 0;
     const tick = (now) => {
+      if (finished) return;
       const el = now - t0;
       const target = el > MAX ? 100 : Math.min((ready / tasks.length) * 100, (el / MIN) * 100);
       shown += (target - shown) * 0.14;
@@ -89,6 +93,9 @@
     requestAnimationFrame(tick);
 
     function walk() {
+      if (finished || walking) return;
+      walking = true;
+      setTimeout(() => finish(), 1600 + 1400);                 // the walk lasts 1.6 s; if frames stall, land anyway
       const vw = innerWidth, vh = innerHeight, r = door.getBoundingClientRect();
       Object.assign(door.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", transform: "none" });
       const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -102,6 +109,7 @@
       const dur = 1600, start = performance.now();
       const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);   // step in, glide through, settle
       const step = (now) => {
+        if (finished) return;
         const p = Math.min(1, (now - start) / dur), e = ease(p);
         // equal steps in scale feel like walking at a steady pace; the door outruns the room (depth),
         // but the room always fills the opening until it is big enough to fill the screen
@@ -115,6 +123,8 @@
       requestAnimationFrame(step);
     }
     function finish() {
+      if (finished) return;
+      finished = true; clearTimeout(giveUp);
       try { sessionStorage.setItem("ria-entered", "1"); } catch (e) {}
       entry.remove();
       root.classList.add("no-entry"); root.classList.remove("entry-playing");
@@ -130,8 +140,9 @@
     const clean = () => [heroImg, scrim].forEach((el) => { el.style.removeProperty("transform"); el.style.removeProperty("opacity"); });
     if (reduced) { clean(); root.classList.add("intro-run"); return; }
     if (!A) { clean(); root.classList.add("intro-css"); return; }        // library missing: CSS fallback
-    const split = $$(".hero h1 .ln > span").map((el) => A.splitText(el, { chars: true }));
-    const chars = split.flatMap((s) => s.chars);
+    let chars = [];
+    try { chars = $$(".hero h1 .ln > span").flatMap((el) => A.splitText(el, { chars: true }).chars); }
+    catch (e) { clean(); root.classList.add("intro-css"); return; }
     const lede = $(".hero .lede"), nav = $("#nav");
     const brand = $("#nav .logo");
     const navItems = $$("#nav .nav-links > a, #nav .search-btn, #nav .nav-book, #nav .nav-tools > button").filter((el) => el.offsetParent);
@@ -152,7 +163,26 @@
     rating.dataset.counting = "1";                            // the rating refresh waits for the count-up
     root.classList.add("intro-run");
 
-    const tl = A.createTimeline({ defaults: { ease: "out(4)" } });
+    // the intro lasts about 2.6 s; whatever happens (frames stop, the phone pauses the page), it lands by 4.5 s
+    let landed = false;
+    const land = () => {
+      if (landed) return;
+      landed = true; clearTimeout(guard);
+      try { tl.pause(); } catch (e) {}
+      delete rating.dataset.counting;
+      let shown = target;
+      try { shown = store.get(PLACE_KEY)?.data?.rating ?? target; } catch (e) {}   // may run before the rating cache is set up
+      rating.textContent = String(shown);
+      // hand the elements back to CSS so hover, press and theme styles work normally
+      [lede, heroImg, scrim, nav, brand, ...navItems, ...facts, ...stars, ...ctas, ...chars].forEach((el) => {
+        ["transform", "opacity", "translate", "scale"].forEach((p) => el.style.removeProperty(p));
+      });
+      root.classList.add("intro-done");
+    };
+    const guard = setTimeout(land, 4500);
+    let tl;
+    try {
+    tl = A.createTimeline({ defaults: { ease: "out(4)" } });
     tl.add(heroImg, { scale: 1, duration: 2600, ease: "out(3)" }, 0)
       .add(scrim, { opacity: 1, duration: 1000, ease: "out(2)" }, 0)
       .add(chars, { y: "0%", duration: 1100, delay: A.stagger(16) }, 180)
@@ -163,15 +193,8 @@
       .add(stars, { opacity: 1, scale: 1, duration: 600, delay: A.stagger(60), ease: "out(3)" }, 980)
       .add(count, { v: target, duration: 1000, ease: "out(3)", onUpdate: () => (rating.textContent = count.v.toFixed(1)) }, 920)
       .add(ctas, { opacity: 1, x: 0, duration: 1100, delay: A.stagger(80) }, 1150)
-      .then(() => {
-        delete rating.dataset.counting;
-        rating.textContent = String(store.get(PLACE_KEY)?.data?.rating ?? target);
-        // hand the elements back to CSS so hover, press and theme styles work normally
-        [lede, heroImg, scrim, nav, brand, ...navItems, ...facts, ...stars, ...ctas].forEach((el) => {
-          ["transform", "opacity", "translate", "scale"].forEach((p) => el.style.removeProperty(p));
-        });
-        root.classList.add("intro-done");
-      });
+      .then(land);
+    } catch (e) { land(); }
   }
   runEntry(heroIntro);
 
@@ -229,6 +252,9 @@
     }, true);
     addEventListener("hashchange", () => arrive(location.hash.slice(1)));
     if (location.hash) arrive(location.hash.slice(1));
+    const settle = () => $$("[data-r].in").forEach(land);
+    addEventListener("pageshow", (e) => { if (e.persisted) settle(); });
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") settle(); });
     window.__story = { revealAll: () => blocks.forEach((el) => { io.unobserve(el); show(el, 0, true); }) };
     root.classList.add("reveal-ready");
   })();

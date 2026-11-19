@@ -24,6 +24,7 @@ used only once, so until that file exists the lounge card stays hidden.
 | `_headers` | Cache rules for Cloudflare Pages or Netlify |
 | `tests/audit.cjs` | The design audit; results in `AUDIT.md` |
 | `tests/buttons.cjs` | Presses every button, link, tab and menu item on a laptop and a phone |
+| `tests/motion.cjs` | Tries to freeze the animations (slow CPU, paused page, rotation, scroll storm) and checks everything still lands |
 
 ## Things to try
 

@@ -839,6 +839,9 @@ footer.site .wrap.foot { align-items: start; }
   transition-delay: var(--d, 0ms);
 }
 .reveal-on [data-r].in { opacity: 1; transform: none; }
+/* Apple's engine: the same hinges, folding open flat (no depth), so nothing can freeze mid-turn */
+.reveal-on.story-flat [data-r="lift"]:not(.in) { transform: scaleY(.02); }
+.reveal-on.story-flat [data-r="flip"]:not(.in) { transform: scaleX(.02); backface-visibility: visible; }
 .reveal-on [data-r].now { transition: none; }      /* a destination you jumped to is simply there */
 @media (max-width: 760px) {     /* phones: blocks rise, so nothing can open a sideways scroll */
   .reveal-on [data-r="left"], .reveal-on [data-r="right"] { transform: translateY(var(--reveal-rise)); }

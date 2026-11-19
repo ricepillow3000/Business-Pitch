@@ -31,6 +31,11 @@
     if (seen || location.hash || still) d.classList.add("no-entry");
     /* blocks arrive as you scroll; never without the script, never under reduced motion */
     if (!still && "IntersectionObserver" in window) d.classList.add("reveal-on");
+    /* Safari (every iPhone browser) draws 3D turns poorly and can leave them frozen half way,
+       so on Apple's engine the card moves fold open flat instead (styles.css, "story-flat") */
+    var ua = navigator.userAgent;
+    if (/iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ||
+        (/Safari\//.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS/.test(ua))) d.classList.add("story-flat");
     /* failsafe: if the scripts never run, drop the entry and show the hero with the CSS intro */
     setTimeout(function () {
       if (!/intro-(run|css)|entry-playing/.test(d.className)) { d.classList.add("intro-css"); d.classList.add("no-entry"); }

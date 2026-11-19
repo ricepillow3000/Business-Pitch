@@ -87,6 +87,23 @@ Fixed on the way: links inside hidden review cards could be reached with Tab (hi
 inert), and letting go of the phone's menu sheet after pulling it upward closed it (a drag is no
 longer read as a tap outside).
 
+## Nothing freezes mid-move
+
+`tests/motion.cjs` tries hard to stop an animation half way, on a laptop and an iPhone:
+a 6x slower CPU, animation frames switched off mid walk-in, a scroll storm on a slow CPU,
+the page frozen and resumed, the page hidden and shown, the screen rotated, and tabs and
+reviews pressed rapidly. After each one, every block must sit at full opacity with no
+leftover tilt or offset. 14 of 14 pass.
+
+How: every move has a deadline (walk-in 3 s, hero intro 4.5 s, each scroll block its own
+length plus a little), finishing twice is harmless, and coming back to the page lands anything
+that was moving. On iPhones (Safari's engine) the card turns fold open flat, which can't stall
+half-turned.
+
+```bash
+node demos/rias-creations/tests/motion.cjs "$PWD/demos/rias-creations"
+```
+
 ## Not applicable to a website
 
 Video and thumbnail tips: "big text behind your head", "nothing over your face",
