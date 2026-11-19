@@ -945,6 +945,10 @@
       toast("Couldn't send your request. Check your connection and try again.", { tone: "error", action: "Retry", onAction: () => form.requestSubmit() });
     });
   }
+  // the phone keyboard says "Next" on these two: it moves on instead of sending early
+  [["name", "phone"], ["phone", "notes"]].forEach(([from, to]) => form.elements[from].addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); form.elements[to].focus(); }
+  }));
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const bad = rules.filter(([n]) => !check(n));

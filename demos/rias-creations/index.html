@@ -374,15 +374,15 @@
                 <span class="err"></span>
               </fieldset>
               <label class="field" id="f-name"><span>First name</span>
-                <input type="text" name="name" autocomplete="given-name" aria-describedby="e-name">
+                <input type="text" name="name" autocomplete="given-name" autocapitalize="words" enterkeyhint="next" aria-describedby="e-name">
                 <span class="err" id="e-name"></span>
               </label>
               <label class="field" id="f-phone"><span>Mobile, for your text</span>
-                <input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="(770) 555-0123" aria-describedby="e-phone">
+                <input type="tel" name="phone" autocomplete="tel" inputmode="tel" enterkeyhint="next" placeholder="(770) 555-0123" aria-describedby="e-phone">
                 <span class="err" id="e-phone"></span>
               </label>
               <label class="field full"><span>Notes for Ria (optional)</span>
-                <input type="text" name="notes" placeholder="For example: long layers with face-framing pieces">
+                <input type="text" name="notes" enterkeyhint="send" placeholder="For example: long layers with face-framing pieces">
               </label>
               <div class="field full"><button class="btn" type="submit" id="submitBtn"><span id="submitLabel">Send request</span></button>
                 <p class="consent">We only use your number to text about this visit. Reply STOP to opt out. <a href="privacy.html">Privacy</a></p></div>
@@ -398,7 +398,7 @@
               <div class="skeleton otp-skel" id="otpSkel" aria-hidden="true"></div>
               <div class="otp field" id="otpBox" hidden>
                 <label for="otp" class="hint" style="font-size:.85rem">Enter the 6-digit code we texted you</label>
-                <input id="otp" name="otp" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" maxlength="6" aria-describedby="e-otp otpHint">
+                <input id="otp" name="otp" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" maxlength="6" enterkeyhint="done" aria-describedby="e-otp otpHint">
                 <span class="err" id="e-otp"></span>
                 <span class="hint" id="otpHint">Demo: any 6 digits work.</span>
               </div>
@@ -475,7 +475,7 @@
   <div class="cmd-handle" aria-hidden="true"></div>
   <div class="cmd-search">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
-    <input id="cmdInput" type="text" role="combobox" aria-expanded="true" aria-controls="cmdList" aria-autocomplete="list" placeholder="Search services, hours or actions" autocomplete="off" spellcheck="false">
+    <input id="cmdInput" type="text" role="combobox" aria-expanded="true" aria-controls="cmdList" aria-autocomplete="list" enterkeyhint="go" placeholder="Search services, hours or actions" autocomplete="off" spellcheck="false">
     <kbd>esc</kbd>
   </div>
   <div class="cmd-list" id="cmdList" role="listbox" aria-label="Results"></div>

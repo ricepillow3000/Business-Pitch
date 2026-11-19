@@ -104,7 +104,12 @@ body {
 img { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
 button, input, select, textarea { font: inherit; color: inherit; }
-button { background: none; border: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button { background: none; border: 0; cursor: pointer; }
+/* feels like an app: no grey flash on tap, no double-tap zoom on controls */
+a, button, label, select, summary, [role="tab"], [role="radio"] { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+/* while a popup is open, the page behind it stays still */
+:root:has(dialog[open]) { overflow: hidden; }
+dialog, .pop, .mega { overscroll-behavior: contain; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 kbd {
   font: 500 .78rem/1 var(--sans); letter-spacing: .02em; font-variant-numeric: tabular-nums;
@@ -690,7 +695,7 @@ dialog.dragging::backdrop { transition: none; }
 .consent { margin-top: 12px; font-size: .82rem; color: var(--muted); }
 .consent a { text-decoration: underline; text-underline-offset: 3px; }
 .legal { display: flex; gap: 20px; }
-.legal a:hover { color: var(--ink); }
+@media (hover: hover) { .legal a:hover { color: var(--ink); } }
 
 /* ── Privacy and terms pages ── */
 .doc-nav { border-bottom: 1px solid var(--line); }
@@ -779,7 +784,7 @@ footer.site .wrap.foot { display: flex; align-items: center; justify-content: sp
 footer.site .legal { gap: 8px 22px; flex-wrap: wrap; font-size: .85rem; align-items: baseline; }
 .foot h3 { font: 500 .9rem/1.3 var(--sans); color: var(--ink); margin-bottom: 8px; }
 .foot p { font-size: .95rem; line-height: 1.7; }
-.foot a:hover { color: var(--ink); }
+@media (hover: hover) { .foot a:hover { color: var(--ink); } }
 .foot-brand .logo { color: var(--ink); margin-bottom: 14px; }
 footer.site .wrap.foot-legal { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
 @media (max-width: 560px) { footer.site .wrap.foot { flex-direction: column; align-items: start; } }
@@ -801,7 +806,7 @@ footer.site .wrap.foot { align-items: start; }
 /* Ria's portrait sits in the arch, framed on her */
 .about-arch img { object-position: 100% 40%; }
 .mega .mega-foot a { display: inline; width: auto; min-height: 0; padding: 0; font-size: .85rem; border-radius: 0; }   /* a link, not a menu row */
-.mega .mega-foot a:hover { background: none; color: var(--ink); text-decoration-color: currentColor; }
+@media (hover: hover) { .mega .mega-foot a:hover { background: none; color: var(--ink); text-decoration-color: currentColor; } }
 
 /* ── The scroll story ─────────────────────────────────────────
    After Arcas (rulebook M13 to M15) and Meliona ("Motion and scrolling"):
