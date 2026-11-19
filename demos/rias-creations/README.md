@@ -29,8 +29,9 @@ used only once, so until that file exists the lounge card stays hidden.
 
 - Open the page fresh: it counts to 100% with her salon in the arched doorway, then walks you inside.
   It plays once per visit (close the tab to see it again); links like `index.html#book` skip it.
-- Scroll down slowly. Each section tells its part once: the heading turns face up like a card
-  lifted off the table, the text slides in from its side, the photos rise one after another.
+- Scroll down slowly. Each section tells its part once, and no two arrive the same way: cards lift
+  face up off the table, flip over in the hand (the gallery photos are dealt like a deck), drop in
+  from above, rise from below or slide in from a side.
   Jump with a link or the search menu and the section is simply there, already in place.
 - Hover **Services** in the top bar. Move diagonally into the list; the category won't flip on the way (safe triangle).
 - Press **Ctrl K** (or **⌘K**, or **/**) for the search menu. **T** switches day/evening. **B** jumps to booking.

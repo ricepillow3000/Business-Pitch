@@ -68,7 +68,7 @@ PASS  No sideways scroll on phone
 | Feels like a salon | Full-bleed photo of her salon floor, headline names hair, brows and lashes |
 | Entry walk-in | Loads on a blush screen with her salon in the arched doorway, then walks you in; plays once per visit |
 | Hero text over the photo | Worst-case contrast measured on the brightest 5% of pixels behind each line: 5.1 to 6.1 |
-| Scroll story | Headings turn face up like a lifted card, text slides in from its side, photos rise in turn; once each, at 15% in view; all 32 blocks land; none hidden without the script or under reduced motion; a jumped-to section is already in place |
+| Scroll story | Six moves mixed so no two sections arrive alike: a card lifted face up, a card flipped over (gallery photos dealt like a deck), drop from above, rise from below, slide from either side; once each, at 15% in view; all 32 blocks land; none hidden without the script or under reduced motion; a jumped-to section is already in place |
 | Short page | 4,797 px at 1280×800 (6.0 screens, was 7.9); 7,004 px on an iPhone 13 (8.3 screens, was 9.5) |
 | Page weight | 1,443 KB before; now 681 KB (laptop), 964 KB (retina laptop), 1,266 KB (iPhone); the background downloads once |
 

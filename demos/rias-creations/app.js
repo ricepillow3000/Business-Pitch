@@ -195,7 +195,7 @@
       const d = Math.min(i, CAP - 1) * STEP;
       el.style.setProperty("--d", d + "ms");
       el.classList.add("in");
-      const dur = el.dataset.r === "lift" ? 1200 : 1000;
+      const dur = el.dataset.r === "lift" || el.dataset.r === "flip" ? 1200 : 1000;
       el._landT = setTimeout(() => land(el), d + dur + 250);   // lands even if no transition event comes
       const done = (e) => { if (e.target === el && e.propertyName === "transform") { el.removeEventListener("transitionend", done); land(el); } };
       el.addEventListener("transitionend", done);

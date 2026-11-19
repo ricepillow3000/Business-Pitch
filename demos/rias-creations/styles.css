@@ -805,9 +805,11 @@ footer.site .wrap.foot { align-items: start; }
 
 /* ── The scroll story ─────────────────────────────────────────
    After Arcas (rulebook M13 to M15) and Meliona ("Motion and scrolling"):
-   each block arrives once, when 15% of it is on screen. Headings turn face up
-   like a card lifted off the table, hinged on their bottom edge; text and buttons
-   slide in from their own side of the page; photos rise one after another.
+   each block arrives once, when 15% of it is on screen. Six moves, mixed so no two
+   sections arrive alike (John, 2026-11-19: "try not to make it too repetitive"):
+   lift (a card lifted face up off the table, hinged on its bottom edge), flip (a card
+   turned over in the hand, hinged on its left edge; the gallery photos are dealt this
+   way), down (drops in from above), up (rises from below), left and right (slide in).
    Only opacity and transform move. Hidden states exist only under .reveal-on,
    which the head sets before first paint, never without the script and never
    under reduced motion; app.js hands each block back to its own styles once landed. */
@@ -825,6 +827,14 @@ footer.site .wrap.foot { align-items: start; }
 .reveal-on [data-r="right"] { transform: translateX(var(--reveal-slide)); }
 .reveal-on [data-r="lift"] {
   transform: perspective(900px) rotateX(-95deg); transform-origin: 50% 100%;
+  transition: opacity calc(var(--lift-dur) * .5) var(--ease-out), transform var(--lift-dur) var(--ease-lift);
+  transition-delay: var(--d, 0ms);
+}
+/* drops in from above and eases into place */
+.reveal-on [data-r="down"] { transform: translateY(calc(var(--reveal-rise) * -1.5)); }
+/* turned over like a card in your hand: hinged on its left edge, it swings face up */
+.reveal-on [data-r="flip"] {
+  transform: perspective(1100px) rotateY(-100deg); transform-origin: 0% 50%; backface-visibility: hidden;
   transition: opacity calc(var(--lift-dur) * .5) var(--ease-out), transform var(--lift-dur) var(--ease-lift);
   transition-delay: var(--d, 0ms);
 }
