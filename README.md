@@ -1,5 +1,8 @@
 # JIDO: intelligent workflows for local businesses
 
+> **New session?** Start with [`docs/HANDOFF.md`](docs/HANDOFF.md): current state, owner rules, how to test, open items.
+
+
 One-page agency site. Marathon-style HUD art direction, Lusion-style motion.
 Next.js 16 (static export) · GSAP 3 (ScrollTrigger, SplitText, CustomEase, ScrambleText) · Lenis · Tailwind v4.
 
