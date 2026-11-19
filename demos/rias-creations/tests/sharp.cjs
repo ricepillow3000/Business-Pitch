@@ -16,13 +16,12 @@ const site = process.argv[2], out = process.argv[3] || '/tmp';
   const p = await c.newPage();
   await p.goto('file://' + site + '/index.html');
   await p.waitForFunction(() => {
-    const door = document.getElementById('entryDoor'), hero = document.getElementById('heroImg');
-    if (!door) return false;
-    if (!window.__w0) window.__w0 = door.offsetWidth;                          // the doorway's size before the walk
-    if (!document.querySelector('#entry.walking')) return false;
-    const w0 = window.__w0, h0 = w0 * 4 / 3, grow = door.getBoundingClientRect().width / w0;   // on-screen size: a zoom or a real resize
-    const end = 4 * Math.max(innerWidth / w0, innerHeight / h0, hero.getBoundingClientRect().width * 1.04 / w0);
-    if (Math.log(grow) / Math.log(end) > 0.97) { window.__rafOff = true; return true; }   // the last few frames (the photo has landed)
+    // the moment the photo has landed: its on-screen size equals the hero's (object-fit cover) size
+    const img = document.getElementById('entryImg'), hero = document.getElementById('heroImg');
+    if (!img || !document.querySelector('#entry.walking')) return false;
+    const r = hero.getBoundingClientRect(), nw = hero.naturalWidth || 1530, nh = hero.naturalHeight || 2040;
+    const cw = Math.max(r.width / nw, r.height / nh) * nw;
+    if (Math.abs(img.getBoundingClientRect().width - cw) < 0.5) { window.__rafOff = true; return true; }
     return false;
   }, null, { polling: 5, timeout: 20000 });
   await p.waitForTimeout(150);

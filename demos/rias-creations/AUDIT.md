@@ -171,6 +171,15 @@ A second fresh judge scored the final version: color match 8/10, glamour 7/10, e
 Both judges found the two-line "Ria's Creations" next to a big "SALON" the weakest part of the look:
 her real logo file (still to get from Ria) should replace it.
 
+## Buttons: flat, with a gold hairline (2026-11-19)
+
+John: "not really liking the gradient buttons ... professional, glamorous, simple, clean and an accent mark".
+The shine along the top edge, the stacked drop shadows and the brighten-on-hover (which together read as a
+gradient) are gone. Every button is one flat color, square, with a 1 px hairline set 4 px inside its edge:
+gold inside a dark button, espresso inside a gold one, half strength at rest and full on hover. It is the
+same concentric line as her arched mirrors and the map frame. The chosen time carries it too.
+Text contrast is unchanged (audit 28/28).
+
 ## The council: cut until nothing is left
 
 A fresh critic used the whole site each round (laptop, iPhone 13, dark mode, 320 px), wrote what was
