@@ -73,7 +73,7 @@
       new Promise((r) => (document.readyState === "complete" ? r() : addEventListener("load", r, { once: true }))),
     ];
     let ready = 0; tasks.forEach((p) => p.then(() => ready++, () => ready++));
-    const t0 = performance.now(), MIN = 2200, MAX = 6000;
+    const t0 = performance.now(), MIN = 1300, MAX = 6000;
     let finished = false, walking = false;
     // never stuck: if frames stop (the phone pauses the page, a slow device), the walk-in still ends
     const giveUp = setTimeout(() => finish(), MAX + 5000);
@@ -87,7 +87,7 @@
       count.textContent = String(Math.floor(shown));
       ring.style.strokeDashoffset = String(100 - shown);       // the mirror light comes on as the page loads
       setLine(shown);
-      if (shown >= 100) { count.textContent = "100"; ring.style.strokeDashoffset = "0"; setTimeout(walk, 520); return; }
+      if (shown >= 100) { count.textContent = "100"; ring.style.strokeDashoffset = "0"; setTimeout(walk, 180); return; }
       requestAnimationFrame(tick);
     };
     requestAnimationFrame(tick);
@@ -95,7 +95,7 @@
     function walk() {
       if (finished || walking) return;
       walking = true;
-      setTimeout(() => finish(), 1600 + 1400);                 // the walk lasts 1.6 s; if frames stall, land anyway
+      setTimeout(() => finish(), 1300 + 1400);                 // the walk lasts 1.3 s; if frames stall, land anyway
       const vw = innerWidth, vh = innerHeight, r = door.getBoundingClientRect();
       Object.assign(door.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", transform: "none" });
       const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
@@ -106,7 +106,7 @@
       const I0 = 1.15, I1 = cw / r.width;                        // photo: a slight crop through the door → hero size
       const D1 = 4 * Math.max(vw / r.width, vh / r.height, I1);   // doorway: grows well past the screen edges
       entry.classList.add("walking");
-      const dur = 1600, start = performance.now();
+      const dur = 1300, start = performance.now();
       const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);   // step in, glide through, settle
       const step = (now) => {
         if (finished) return;
@@ -147,7 +147,7 @@
     const brand = $("#nav .logo");
     const navItems = $$("#nav .nav-links > a, #nav .search-btn, #nav .nav-book, #nav .nav-tools > button").filter((el) => el.offsetParent);
     const facts = $$(".hero-bar .hero-note"), stars = $$(".hero-bar .stars svg"), ctas = $$(".hero-cta .btn");
-    const rating = $('.hero-bar [data-swr="rating"]'), target = parseFloat(rating.textContent) || 4.5, count = { v: 0 };
+    const rating = $('.hero-bar [data-swr="rating"]'), target = parseFloat(rating.textContent) || 4.5;
 
     // starting poses, set before anything is revealed so nothing flashes
     A.set(chars, { y: "108%" });
@@ -159,8 +159,6 @@
     A.set(facts, { opacity: 0, x: -40 });
     A.set(ctas, { opacity: 0, x: 40 });
     A.set(stars, { opacity: 0, scale: 0.6 });
-    rating.textContent = "0.0";
-    rating.dataset.counting = "1";                            // the rating refresh waits for the count-up
     root.classList.add("intro-run");
 
     // the intro lasts about 2.6 s; whatever happens (frames stop, the phone pauses the page), it lands by 4.5 s
@@ -169,7 +167,6 @@
       if (landed) return;
       landed = true; clearTimeout(guard);
       try { tl.pause(); } catch (e) {}
-      delete rating.dataset.counting;
       let shown = target;
       try { shown = store.get(PLACE_KEY)?.data?.rating ?? target; } catch (e) {}   // may run before the rating cache is set up
       rating.textContent = String(shown);
@@ -191,7 +188,6 @@
       .add(lede, { opacity: 1, x: 0, duration: 1200 }, 560)
       .add(facts, { opacity: 1, x: 0, duration: 1100, delay: A.stagger(90) }, 820)
       .add(stars, { opacity: 1, scale: 1, duration: 600, delay: A.stagger(60), ease: "out(3)" }, 980)
-      .add(count, { v: target, duration: 1000, ease: "out(3)", onUpdate: () => (rating.textContent = count.v.toFixed(1)) }, 920)
       .add(ctas, { opacity: 1, x: 0, duration: 1100, delay: A.stagger(80) }, 1150)
       .then(land);
     } catch (e) { land(); }
@@ -298,8 +294,6 @@
     if (img.complete && img.naturalWidth) img.classList.add("loaded");          // already here: no fade needed
     else img.addEventListener("load", () => img.classList.add("loaded"), { once: true });
   });
-  const lounge = $("#loungeCard img");
-  if (lounge.complete && !lounge.naturalWidth) $("#loungeCard").hidden = true;    // missing file: hide, never reuse a photo
 
   /* ── Toasts, with undo ─────────────────────────────────────── */
   const toasts = $("#toasts");
@@ -420,9 +414,7 @@
   bindTips();
 
   /* ── Theme: instant switch ─────────────────────────────────── */
-  const themeBtn = $("#themeBtn");
   const themeLabel = () => (root.dataset.theme === "dark" ? "Switch to day" : "Switch to evening");
-  themeBtn.dataset.tip = themeLabel();
   function toggleTheme() {
     const next = root.dataset.theme === "dark" ? "light" : "dark";
     root.classList.add("theme-switching");
@@ -430,10 +422,7 @@
     void root.offsetWidth;                                     // flush styles while transitions are off
     requestAnimationFrame(() => root.classList.remove("theme-switching"));
     try { localStorage.setItem("ria-theme", next); } catch (e) {}
-    themeBtn.dataset.tip = themeLabel();
-    if (tipFor === themeBtn) placeTip(themeBtn);
   }
-  themeBtn.addEventListener("click", toggleTheme);
 
   /* ── Nav turns solid past the hero; mobile bar shows between hero and booking ── */
   const nav = $("#nav"), mbar = $("#mbar"), hero = $(".hero"), book = $("#book"), visit = $("#visit");   // mbar: optional mobile bar
@@ -449,9 +438,9 @@
   io2.observe(book); io2.observe(visit);
   const onScroll = () => {
     const h = nav.offsetHeight, vr = visit.getBoundingClientRect();
-    const overHero = hero.getBoundingClientRect().bottom > h;            // see-through only over the hero photo
-    nav.classList.toggle("solid", !overHero);
-    nav.classList.toggle("over-dark", !overHero && vr.top < h && vr.bottom > 0);   // a dark bar over the dark Location band
+    const overHero = hero.getBoundingClientRect().bottom > h, moved = scrollY > 4;   // see-through only at the very top
+    nav.classList.toggle("solid", !overHero || moved);
+    nav.classList.toggle("over-dark", moved && (overHero || (vr.top < h && vr.bottom > 0)));   // a dark bar over the photo and the dark Location band
   };
   addEventListener("scroll", onScroll, { passive: true }); onScroll();
 
@@ -566,25 +555,26 @@
   /* ── Command menu (⌘K / Ctrl K / "/") ───────────────────────── */
   const cmd = $("#cmd"), cmdInput = $("#cmdInput"), cmdList = $("#cmdList");
   const MOD = isMac ? "⌘K" : "Ctrl K";
-  $("#modKey").textContent = MOD;
   let results = [], active = 0, cmdReturn = null, closing = null;
   const commands = () => [
     { g: "Suggested", label: "Book a visit", kbd: "B", run: goBook },
     { g: "Suggested", label: "Call the salon", hint: "(770) 557-0354", run: () => (location.href = "tel:+17705570354") },
-    { g: "Suggested", label: themeLabel(), kbd: "T", keys: "theme dark light evening day mode", run: toggleTheme },
     ...SERVICES.map((s) => ({ g: "Book a service", label: s.name, hint: s.price, keys: `${s.cat} ${s.desc}`, run: () => bookService(s.name) })),
     { g: "Go to", label: "Services and prices", keys: "menu cost", run: () => go("#services") },
     { g: "Go to", label: "Gallery", keys: "photos recent work color hair results", run: () => go("#work") },
     { g: "Go to", label: "Meet Ria", keys: "stylist owner about team", run: () => go("#stylist") },
     { g: "Go to", label: "Reviews", keys: "rating google yelp", run: () => go("#reviews") },
     { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card", run: () => go("#visit") },
-    { g: "Contact", label: "Copy phone number", keys: "call", run: () => copy("(770) 557-0354", "Phone number") },
     { g: "Contact", label: "Copy address", keys: "where location", run: () => copy("375 Rockbridge Rd NW, Suite 156, Lilburn, GA 30047", "Address") },
     { g: "Contact", label: "Get directions", keys: "map drive", run: () => open($("[data-prefetch-map]").href, "_blank", "noopener") },
+    { g: "Contact", label: themeLabel(), keys: "theme dark light evening day mode", run: toggleTheme },
   ];
   function renderCmd() {
     const words = cmdInput.value.toLowerCase().split(/\s+/).filter(Boolean);
-    results = commands().filter((c) => words.every((w) => `${c.label} ${c.keys || ""} ${c.g}`.toLowerCase().includes(w)));
+    results = commands().filter((c) => (words.length ? words.every((w) => `${c.label} ${c.keys || ""} ${c.g}`.toLowerCase().includes(w)) : c.g !== "Book a service"));
+    // a name that starts with what you typed comes first, then a name that contains it
+    const rank = (c) => { const l = c.label.toLowerCase(); return words.every((w) => l.startsWith(w) || l.includes(" " + w)) ? 0 : words.every((w) => l.includes(w)) ? 1 : 2; };
+    if (words.length) results = results.map((c, i) => [rank(c), i, c]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((x) => x[2]);
     active = Math.min(active, Math.max(0, results.length - 1));
     if (!results.length) {
       cmdList.innerHTML = `<div class="cmd-empty">No matches for “${cmdInput.value.replace(/[<&]/g, "")}”. Try “haircut”, “hours” or “call”.</div>`;
@@ -920,7 +910,11 @@
     const target = { form, sent, confirmed }[name];
     morphHeight(box, () => { [form, sent, confirmed].forEach((el) => (el.hidden = el !== target)); progressEl.hidden = name === "form"; });
     enter(target);
-    if (name !== "form") target.focus({ preventScroll: true });
+    if (name !== "form") {
+      target.focus({ preventScroll: true });
+      const top = box.getBoundingClientRect().top;
+      if (top < nav.offsetHeight || top > innerHeight * 0.5) box.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" });
+    }
   }
   function setStatus(state, text) { statusEl.dataset.state = state; statusEl.textContent = text; }
   const progressEl = $("#progress"), otpSkel = $("#otpSkel");
@@ -1061,7 +1055,7 @@
   function renderPlace(d, fresh) {
     $$("[data-swr]").forEach((el) => {
       const v = String(d[el.dataset.swr]);
-      if (el.textContent === v || el.dataset.counting) return;
+      if (el.textContent === v) return;
       el.textContent = v;
       if (fresh && !reduced) { el.classList.remove("swr-fresh"); void el.offsetWidth; el.classList.add("swr-fresh"); }
     });
@@ -1090,7 +1084,6 @@
   /* ── Pre-rendering: decode images and warm the map before they are needed ── */
   const predecode = (img) => { if (!img || img.dataset.warm) return; img.dataset.warm = "1"; const p = new Image(); p.src = img.currentSrc || img.src; p.decode?.().catch(() => {}); };
   idle(() => $$('img[loading="lazy"]').forEach(predecode));
-  $$("[data-prefetch]").forEach((a) => ["pointerenter", "focus", "touchstart"].forEach((ev) => a.addEventListener(ev, () => predecode(lounge), { once: true, passive: true })));
   const mapFrame = $("#mapFrame");
   const mapArch = mapFrame.closest(".map-box");
   mapFrame.addEventListener("load", () => { mapArch.classList.remove("map-loading"); mapArch.classList.add("map-ready"); }, { once: true });

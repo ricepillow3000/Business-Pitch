@@ -207,7 +207,10 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .nav-tools { display: flex; gap: 4px; margin-right: -10px; }
 #menuBtn { display: none; }
 @media (max-width: 900px) { .nav-links, .search-btn { display: none; } #menuBtn { display: grid; } }
-@media (max-width: 520px) { #themeBtn { display: none; } .nav-right { gap: 8px; } .nav-book { padding: 0 14px; } }   /* theme switch lives in the search menu on phones */
+@media (max-width: 520px) { .nav-right { gap: 8px; } .nav-book { padding: 0 14px; } }
+/* one gold button at a time: the header's appears once the hero's own button is behind you */
+.nav-book { transition: opacity 240ms var(--ease-out), visibility 240ms; }
+.nav:not(.solid) .nav-book { opacity: 0; visibility: hidden; }
 
 /* ── Hero ──────────────────────────────────────────────────────── */
 .hero { min-height: 100svh; display: flex; flex-direction: column; padding: 0; position: relative; overflow-x: clip; }
@@ -329,7 +332,6 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
   font: 500 .8rem/1 var(--sans); letter-spacing: .01em; color: var(--ink);
   padding: 5px 8px; border-radius: var(--r-sm); box-shadow: inset 0 0 0 1px var(--line-strong); cursor: help;
 }
-.fineprint { margin-top: 26px; font-size: .82rem; color: var(--muted); }
 @media (max-width: 760px) {
   .menu { grid-template-columns: 1fr; }
   .tabs { gap: 28px; margin-inline: -20px; padding-inline: 20px; }
@@ -348,7 +350,7 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .slide blockquote { font-size: clamp(1.6rem, 2.9vw, 2.35rem); line-height: 1.22; letter-spacing: -.01em; text-indent: -.36em; }
 .slide footer { margin-top: 28px; font-size: .95rem; color: var(--muted); }
 .slide footer b { font-weight: 500; color: var(--ink); }
-.slide .reply { margin-top: 14px; padding-left: 14px; border-left: 1px solid var(--line-strong); font-size: .9rem; color: var(--muted); max-width: 34em; }
+@media (max-width: 760px) { .slide blockquote { font-size: 1.35rem; line-height: 1.3; } }
 .car-ctrl { display: flex; align-items: center; gap: 6px; margin-top: 40px; }
 .car-ctrl .count { margin-left: 12px; font-size: .92rem; color: var(--muted); }
 .car-ctrl .icon-btn { box-shadow: inset 0 0 0 1px var(--line-strong); }
@@ -364,22 +366,13 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .book .wrap { display: grid; grid-template-columns: .9fr 1.1fr; gap: clamp(40px, 7vw, 100px); align-items: start; }
 .book .lede { margin-top: 22px; }
 @media (min-width: 901px) { .book .wrap > div:first-child { position: sticky; top: calc(var(--nav-h) + 40px); } }
-.book-notes { list-style: none; margin-top: 32px; border-top: 1px solid var(--line); }
-.book-notes li { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: .98rem; }
+
 /* Layered structure: tinted shell → 6px gap → card or photo. Concentric. */
 .shell { padding: 6px; border-radius: var(--r-xl); background: var(--tint); box-shadow: inset 0 0 0 1px var(--line), var(--shadow-soft); }
 .card {
   border-radius: var(--r-lg); background: var(--surface); padding: clamp(22px, 3vw, 34px);
   box-shadow: 0 0 0 1px var(--line);
 }
-.photo-card { margin-top: 40px; }
-.photo-card .ph { border-radius: var(--r-lg); aspect-ratio: 4 / 5; }
-.photo-card img {
-  width: 100%; height: 100%; object-fit: cover; object-position: 50% 60%; border-radius: var(--r-lg);
-  outline: 1px solid rgb(0 0 0 / .08); outline-offset: -1px;
-}
-.photo-card figcaption { display: flex; justify-content: space-between; gap: 12px; padding: 12px 10px 6px; font-size: .88rem; color: var(--muted); }
-.photo-card figcaption b { font-weight: 500; color: var(--ink); }
 .form-box { overflow: clip; }
 form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; }
 .field { display: grid; gap: 8px; align-content: start; min-width: 0; }
@@ -436,8 +429,6 @@ form .btn { width: 100%; margin-top: 8px; }
 .state-actions { display: flex; align-items: center; gap: 20px; margin-top: 28px; flex-wrap: wrap; }
 @media (max-width: 900px) {
   .book .wrap { grid-template-columns: 1fr; }
-  .photo-card { max-width: 520px; }
-  .photo-card .ph { aspect-ratio: 4 / 3; }
 }
 @media (max-width: 640px) {
   form { grid-template-columns: 1fr; }
@@ -674,11 +665,16 @@ dialog.dragging::backdrop { transition: none; }
 .progress { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-bottom: 28px; }
 .progress span { position: relative; height: 3px; background: var(--line); overflow: hidden; }
 .progress span::after {
-  content: ""; position: absolute; inset: 0; background: var(--ok);
+  content: ""; position: absolute; inset: 0; background: var(--gold);
   transform: scaleX(0); transform-origin: left; transition: transform 520ms var(--ease-in-out), background-color 200ms;
 }
 .progress span.done::after { transform: none; }
-.progress span.now::after { transform: none; background: var(--warn); }
+.progress span.now::after { transform: none; background: #e8c4c0; }   /* blush: this step */
+#confirmed .state-mark { background: var(--gold); color: var(--espresso); animation: pop 520ms var(--ease-out) both; }
+@keyframes pop { from { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { #confirmed .state-mark { animation: none; } }
+/* keyboard hints mean nothing on a touch screen */
+@media (hover: none) { .cmd kbd { display: none; } }
 
 /* ── Skeletons: a calm pulse where something is on its way (no shimmer gradient) ── */
 .skeleton { background: var(--line); animation: skeleton 1.1s var(--ease-in-out) infinite alternate; }
@@ -768,10 +764,9 @@ dialog.dragging::backdrop { transition: none; }
 main > section:not(.on-dark):not(.reviews) + section:not(.on-dark) { border-top: 1px solid var(--line); }
 
 /* ── Meet Ria: what she is known for ── */
-.skills { list-style: none; display: grid; grid-template-columns: 1fr 1fr; margin-top: 28px; border-top: 1px solid var(--line); }
-.skills li { padding: 14px 0; border-bottom: 1px solid var(--line); font-size: 1rem; }
-.skills li:nth-child(odd) { padding-right: 16px; }
-.about .lede + .skills + .lede { margin-top: 24px; }
+.book-call { margin-top: 22px; color: var(--muted); }
+.book-call a { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; text-decoration-color: var(--gold); }
+.motto { margin-top: 26px; font: 400 clamp(1.5rem, 2.4vw, 1.9rem)/1.2 var(--serif); color: var(--accent); }
 
 /* ── Soft lift on photos ── */
 .rail .ph, .about-arch { box-shadow: var(--shadow-soft); }
