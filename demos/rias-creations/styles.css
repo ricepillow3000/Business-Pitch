@@ -653,6 +653,7 @@ dialog.dragging::backdrop { transition: none; }
 @media (min-width: 1024px) {
   .rail { grid-auto-flow: row; grid-template-columns: 1.25fr repeat(4, 1fr); overflow: visible; }
   .rail li, .rail li:not(:first-child), .rail li:first-child { width: auto; }
+  .rail li:not(:first-child) figcaption b { font-size: clamp(1.05rem, 1.25vw, 1.25rem); white-space: nowrap; }   /* one line each: the row stays even */
   .rail-ctrl { display: none; }
 }
 @media (max-width: 640px) {
