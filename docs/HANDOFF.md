@@ -109,6 +109,8 @@ Each suite takes the base URL, and all of them passed at build 1.7.2:
 - **Network:**
   - The Default cloud environment blocks `calendar.google.com`. A personal environment **"Business-Pitch"** was created that allows `calendar.google.com`, `www.gstatic.com`, `ssl.gstatic.com`, `fonts.gstatic.com` and `fonts.googleapis.com`.
   - Start new sessions on it to load and screenshot the real booking calendar. The real calendar has **not** yet been viewed by Claude; it was only tested with a stand-in.
+  - **Update (2026-11-19):** `calendar-pa.clients6.google.com` was added to "Business-Pitch" (the calendar fetches its free times from there). Even so, the real calendar **cannot load in a cloud session**: Google's booking page sends those requests with a `$httpHeaders` query parameter, and the cloud network proxy refuses any Google request that carries it (`403`, header `X-Proxy-Error: ... $httpHeaders ...`). The browser reports it as a CORS error and Google shows "There was an error loading this appointment page". This is a proxy safety rule, not a site bug and not an allowlist gap; no environment setting changes it. (`play.google.com` is also blocked; it is only Google's usage logging and not needed.)
+  - To see or test the real calendar, use the owner's own computer (the zip + `start-windows.bat`, then open `/book`), or the live Google link directly.
 
 ## 6. Open items (waiting on the owner)
 
