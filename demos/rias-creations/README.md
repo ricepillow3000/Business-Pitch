@@ -43,8 +43,9 @@ used only once, so until that file exists the lounge card stays hidden.
 
 - Plain files: nothing is built or fetched from a database on a visit, and the script makes no data requests.
 - Each photo comes in a small and a full size, and the browser picks the one the screen needs
-  (`srcset`). A phone loads the salon photo at 100 to 211 KB instead of 338 KB; the gallery photos at
-  21 to 64 KB each on a laptop. The photo viewer swaps to the full size only when you open a photo.
+  (`srcset`), downloading it once (the entry doorway reuses the hero's file). Whole page, measured:
+  1,443 KB before, now 681 KB on a laptop, 964 KB on a retina laptop, 1,266 KB on an iPhone (its sharper
+  screen needs the bigger photos). The photo viewer swaps to the full size only when you open a photo.
 - Photos below the first screen load only when you scroll near them; the map loads only near the
   Location section.
 - Reviews show one at a time, services one category at a time, the gallery five photos: nothing long

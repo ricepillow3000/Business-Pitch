@@ -51,8 +51,12 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
       const sel = `[data-tid="${i}"]`;
       const info = await p.$eval(sel, (e) => ({ tag: e.tagName, href: e.getAttribute('href'), target: e.target, type: e.type }));
       await p.$eval(sel, (e) => e.scrollIntoView({ block: 'center' })); await p.waitForTimeout(250);
+      // a "previous" arrow is greyed out on the first item, as it should be: step forward first
+      let note = '';
+      const partner = { workPrev: '#workNext', prev: '#next' }[await p.$eval(sel, (e) => (e.disabled ? e.id : ''))];
+      if (partner) { await p.click(partner); await p.waitForTimeout(900); note = '(off on the first item; after Next) '; }
       const before = await snap(p);
-      let effect = '', ok = true;
+      let effect = note, ok = true;
       if (info.href && /^tel:/.test(info.href)) { effect = `calls ${info.href.slice(4)}`; }
       else if (info.target === '_blank') {
         const [pop] = await Promise.all([ctx.waitForEvent('page', { timeout: 4000 }).catch(() => null), p.click(sel, { timeout: 5000 }).catch(() => null)]);
@@ -63,7 +67,7 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
         if (ok) {
           const after = await snap(p);
           if (/privacy|terms/.test(info.href || '')) { effect = 'opens ' + p.url().split('/').pop(); ok = /privacy|terms/.test(p.url()); }
-          else { effect = diff(before, after) || (['INPUT', 'SELECT'].includes(info.tag) ? 'focused for typing' : 'NO VISIBLE EFFECT'); ok = effect !== 'NO VISIBLE EFFECT'; }
+          else { const d = diff(before, after) || (['INPUT', 'SELECT'].includes(info.tag) ? 'focused for typing' : 'NO VISIBLE EFFECT'); effect = note + d; ok = d !== 'NO VISIBLE EFFECT'; }
         }
       }
       if (p._errs.length) { ok = false; effect += ' | ERROR ' + p._errs.join(' / '); }
@@ -126,6 +130,22 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
     rec(vp, 'Photo viewer: full-size photo', vsrc, /work-burgundy\.webp$/.test(vsrc));
     await p.click('#viewer button[aria-label]'); await p.waitForTimeout(800);
     rec(vp, 'Photo viewer: close button', (await p.$eval('#viewer', (e) => e.open)) ? 'STILL OPEN' : 'closes', !(await p.$eval('#viewer', (e) => e.open)));
+    if (vp === 'phone') {
+      // the menu sheet: a drag is not a tap, a tap outside still closes it
+      await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(300);
+      await p.click('#menuBtn'); await p.waitForTimeout(600);
+      const hb = await (await p.$('.cmd-handle')).boundingBox(), x = hb.x + hb.width / 2;
+      await p.mouse.move(x, hb.y + 10); await p.mouse.down();
+      for (let i = 1; i <= 8; i++) { await p.mouse.move(x, hb.y + 10 - i * 20); await p.waitForTimeout(40); }
+      await p.waitForTimeout(150); await p.mouse.up(); await p.waitForTimeout(800);
+      rec(vp, 'Menu sheet: pull up and let go', (await p.$eval('#cmd', (e) => e.open)) ? 'springs back, stays open' : 'CLOSED', await p.$eval('#cmd', (e) => e.open));
+      await p.mouse.move(x, hb.y + 10); await p.mouse.down();
+      for (let i = 1; i <= 10; i++) { await p.mouse.move(x, hb.y + 10 + i * 6); await p.waitForTimeout(50); }
+      await p.waitForTimeout(120); await p.mouse.up(); await p.waitForTimeout(800);
+      rec(vp, 'Menu sheet: short slow drag down', (await p.$eval('#cmd', (e) => e.open)) ? 'springs back, stays open' : 'CLOSED', await p.$eval('#cmd', (e) => e.open));
+      await p.mouse.click(x, 20); await p.waitForTimeout(800);
+      rec(vp, 'Menu sheet: tap outside', (await p.$eval('#cmd', (e) => e.open)) ? 'STILL OPEN' : 'closes', !(await p.$eval('#cmd', (e) => e.open)));
+    }
     rec(vp, 'No script errors in menu tests', p._errs.join(' / ') || 'none', !p._errs.length);
     await p.close();
     await ctx.close();

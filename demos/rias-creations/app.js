@@ -52,6 +52,10 @@
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     scrollTo(0, 0);
     const door = $("#entryDoor"), dimg = $("#entryImg"), count = $("#entryCount"), ring = $("#entryRing"), line = $("#entryLine");
+    // the doorway shows the very file the hero picked for this screen: one download, never two
+    const syncDoor = () => { if (heroImg.currentSrc) dimg.src = heroImg.currentSrc; };
+    syncDoor();
+    if (!dimg.getAttribute("src")) heroImg.addEventListener("load", syncDoor, { once: true });
     // a little story while the page loads, then the door opens
     const LINES = [[0, "Warming up the dryers"], [25, "Laying out fresh towels"], [50, "Polishing the mirrors"], [75, "Saving you the best chair"], [100, "Come on in"]];
     let lineIdx = 0;
@@ -330,6 +334,10 @@
       if (!d || e.pointerId !== d.id) return;
       const g = d; d = null;
       if (!g.active) return;
+      // a drag is not a tap: letting go over the dimmed backdrop must not count as "tap outside to close"
+      const swallow = (ev) => { ev.stopPropagation(); ev.preventDefault(); };
+      addEventListener("click", swallow, { capture: true, once: true });
+      setTimeout(() => removeEventListener("click", swallow, { capture: true }), 0);
       const a = g.s[0], b = g.s[g.s.length - 1];
       const vel = b.t > a.t ? ((b.p - a.p) / (b.t - a.t)) * 1000 : 0;                    // px per second
       const far = sign === 0 ? Math.abs(g.v) > g.size * threshold : g.v * sign > g.size * threshold;

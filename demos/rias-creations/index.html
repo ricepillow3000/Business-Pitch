@@ -41,7 +41,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..600&family=Fraunces:opsz,wght,SOFT@72,700,100&family=Jost:wght@400..600&display=swap" rel="stylesheet">
-<link rel="preload" as="image" href="images/salon-floor.webp" imagesrcset="images/salon-floor-1200.webp 1200w, images/salon-floor-1800.webp 1800w, images/salon-floor-2400.webp 2400w, images/salon-floor.webp 3060w" imagesizes="max(100vw, 75vh)" fetchpriority="high">
 <link rel="stylesheet" href="styles.css">
 <script src="vendor/anime.hero.min.js" defer></script>
 <script src="app.js" defer></script>
@@ -53,7 +52,7 @@
   <div class="entry-portal" id="entryDoor">
     <!-- the gold mirror light draws around the doorway as the page loads -->
     <svg class="entry-ring" viewBox="0 0 328 428" aria-hidden="true"><path class="ring-track" d="M1 427V164A163 163 0 0 1 327 164V427"/><path class="ring-line" id="entryRing" pathLength="100" d="M1 427V164A163 163 0 0 1 327 164V427"/></svg>
-    <div class="entry-door"><img id="entryImg" src="images/salon-floor.webp" srcset="images/salon-floor-1200.webp 1200w, images/salon-floor-1800.webp 1800w, images/salon-floor-2400.webp 2400w, images/salon-floor.webp 3060w" sizes="max(100vw, 75vh)" alt="" decoding="async"></div>
+    <div class="entry-door"><img id="entryImg" alt="" decoding="async"></div>
   </div>
   <!-- her services, very large and very faint, drifting behind the doorway -->
   <div class="entry-words" aria-hidden="true"><div class="entry-words-track"><span>Cuts</span><span>Color</span><span>Balayage</span><span>Keratin</span><span>Brows</span><span>Lashes</span><span>Facials</span><span>Cuts</span><span>Color</span><span>Balayage</span><span>Keratin</span><span>Brows</span><span>Lashes</span><span>Facials</span></div></div>
@@ -98,7 +97,7 @@
   <!-- ═══ HERO ═══ -->
   <!-- The photo you walk into from the entry screen; it lands here pixel for pixel. -->
   <section class="hero on-dark" aria-label="Welcome">
-    <div class="hero-bg"><img id="heroImg" src="images/salon-floor.webp" srcset="images/salon-floor-1200.webp 1200w, images/salon-floor-1800.webp 1800w, images/salon-floor-2400.webp 2400w, images/salon-floor.webp 3060w" sizes="max(100vw, 75vh)" alt="Inside Ria's Creations Salon: lit arched mirrors, black styling chairs and a marble relaxation suite" fetchpriority="high" decoding="async"></div>
+    <div class="hero-bg"><img id="heroImg" src="images/salon-floor.webp" srcset="images/salon-floor-1200.webp 1200w, images/salon-floor-1800.webp 1800w, images/salon-floor-2400.webp 2400w, images/salon-floor.webp 3060w" sizes="(orientation: portrait) and (max-width: 600px) 150vw, 100vw" alt="Inside Ria's Creations Salon: lit arched mirrors, black styling chairs and a marble relaxation suite" fetchpriority="high" decoding="async"></div>
     <div class="hero-scrim" aria-hidden="true"></div>
     <div class="wrap hero-main">
       <div>
@@ -233,7 +232,7 @@
         <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Long layers">
-              <span class="ph" data-blurhash="dTHU,,i]-:_2~WM{Rls:S4V@t6RQIVWBn%V[RPS4oKW;"><img src="images/work-layers.webp" srcset="images/work-layers-480.webp 480w, images/work-layers.webp 765w" sizes="(max-width: 760px) 72vw, 300px" alt="Side profile: long dark layers with face-framing pieces and soft highlights" loading="lazy" decoding="async"></span>
+              <span class="ph" data-blurhash="dTHU,,i]-:_2~WM{Rls:S4V@t6RQIVWBn%V[RPS4oKW;"><img src="images/work-layers.webp" srcset="images/work-layers-480.webp 480w, images/work-layers.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Side profile: long dark layers with face-framing pieces and soft highlights" loading="lazy" decoding="async"></span>
             </button>
             <figcaption><b>Long layers</b><span>Cut, face framing</span></figcaption>
           </figure>
@@ -241,7 +240,7 @@
         <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Soft bob">
-              <span class="ph" data-blurhash="dJGk?_?b9]9u%yNG$*oI0OIV%0adRgngI;IU9bbdsAVs"><img src="images/work-bob.webp" srcset="images/work-bob-480.webp 480w, images/work-bob.webp 765w" sizes="(max-width: 760px) 72vw, 300px" alt="A smiling client with a soft blonde bob and bangs" loading="lazy" decoding="async"></span>
+              <span class="ph" data-blurhash="dJGk?_?b9]9u%yNG$*oI0OIV%0adRgngI;IU9bbdsAVs"><img src="images/work-bob.webp" srcset="images/work-bob-480.webp 480w, images/work-bob.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="A smiling client with a soft blonde bob and bangs" loading="lazy" decoding="async"></span>
             </button>
             <figcaption><b>Soft bob</b><span>Cut with bangs</span></figcaption>
           </figure>
@@ -249,7 +248,7 @@
         <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Caramel highlights">
-              <span class="ph" data-blurhash="dJIOOgr_?vtSxpt6WYRj_N%MIBV@xt%MxExaadxtIoRP"><img src="images/work-caramel.webp" srcset="images/work-caramel-480.webp 480w, images/work-caramel.webp 765w" sizes="(max-width: 760px) 72vw, 300px" alt="Caramel highlights and long face-framing layers, styled in loose waves" loading="lazy" decoding="async"></span>
+              <span class="ph" data-blurhash="dJIOOgr_?vtSxpt6WYRj_N%MIBV@xt%MxExaadxtIoRP"><img src="images/work-caramel.webp" srcset="images/work-caramel-480.webp 480w, images/work-caramel.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Caramel highlights and long face-framing layers, styled in loose waves" loading="lazy" decoding="async"></span>
             </button>
             <figcaption><b>Caramel highlights</b><span>Color and layers</span></figcaption>
           </figure>
@@ -257,7 +256,7 @@
         <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Honey balayage">
-              <span class="ph" data-blurhash="dKGbYTa$%gbH~q%MIpWA?wRknhIo_NoexZRkt8t7R*Rk"><img src="images/work-balayage.webp" srcset="images/work-balayage-480.webp 480w, images/work-balayage.webp 765w" sizes="(max-width: 760px) 72vw, 300px" alt="Long hair from behind: honey balayage styled in full curls" loading="lazy" decoding="async"></span>
+              <span class="ph" data-blurhash="dKGbYTa$%gbH~q%MIpWA?wRknhIo_NoexZRkt8t7R*Rk"><img src="images/work-balayage.webp" srcset="images/work-balayage-480.webp 480w, images/work-balayage.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Long hair from behind: honey balayage styled in full curls" loading="lazy" decoding="async"></span>
             </button>
             <figcaption><b>Honey balayage</b><span>Color and curls</span></figcaption>
           </figure>

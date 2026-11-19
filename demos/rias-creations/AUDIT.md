@@ -68,6 +68,24 @@ PASS  No sideways scroll on phone
 | Feels like a salon | Full-bleed photo of her salon floor, headline names hair, brows and lashes |
 | Entry walk-in | Loads on a blush screen with her salon in the arched doorway, then walks you in; plays once per visit |
 | Hero text over the photo | Worst-case contrast measured on the brightest 5% of pixels behind each line: 5.1 to 6.1 |
+| Scroll story | Headings turn face up like a lifted card, text slides in from its side, photos rise in turn; once each, at 15% in view; all 32 blocks land; none hidden without the script or under reduced motion; a jumped-to section is already in place |
+| Short page | 4,797 px at 1280×800 (6.0 screens, was 7.9); 7,004 px on an iPhone 13 (8.3 screens, was 9.5) |
+| Page weight | 1,443 KB before; now 681 KB (laptop), 964 KB (retina laptop), 1,266 KB (iPhone); the background downloads once |
+
+## Every button
+
+`tests/buttons.cjs` presses every link, button, tab, time slot and field on a laptop and an
+iPhone, one at a time on a fresh page, then everything inside the services menu, the call
+popover, the search menu (each of its items), the photo viewer and the phone's menu sheet.
+A control passes when something visible happens and no script error appears.
+
+```bash
+node demos/rias-creations/tests/buttons.cjs "$PWD/demos/rias-creations"
+```
+
+Fixed on the way: links inside hidden review cards could be reached with Tab (hidden cards are now
+inert), and letting go of the phone's menu sheet after pulling it upward closed it (a drag is no
+longer read as a tap outside).
 
 ## Not applicable to a website
 
