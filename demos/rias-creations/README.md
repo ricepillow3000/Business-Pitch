@@ -27,14 +27,15 @@ used only once, so until that file exists the lounge card stays hidden.
 | `tests/motion.cjs` | Tries to freeze the animations (slow CPU, paused page, rotation, scroll storm) and checks everything still lands |
 | `tests/sharp.cjs` | Holds the walk-in at its last frame and checks the photo is as sharp as the finished hero |
 | `tests/handoff.cjs` | Records the walk-in frame by frame: one shot, no jump, no slide, no readjust after it lands |
+| `tests/reveal.cjs` | Every scroll animation is a flat slide from the left, right or bottom: no turning, folding or book-opening |
+| `tests/booking.cjs` | A first-time client books from the first screen: taps counted, every route in, thumb-sized buttons, clear mistakes |
 
 ## Things to try
 
 - Open the page fresh: it counts to 100% with her salon in the arched doorway, then walks you inside.
   It plays once per visit (close the tab to see it again); links like `index.html#book` skip it.
-- Scroll down slowly. Each section tells its part once, and no two arrive the same way: cards lift
-  face up off the table, flip over in the hand (the gallery photos are dealt like a deck), drop in
-  from above, rise from below or slide in from a side.
+- Scroll down slowly. Each block arrives once, flying in flat and easing into place: text from the
+  left, pictures and cards from the right, rows and photos from below. Nothing turns or opens like a book.
   Jump with a link or the search menu and the section is simply there, already in place.
 - Hover **Services** in the top bar. Move diagonally into the list; the category won't flip on the way (safe triangle).
 - Press **Ctrl K** (or **⌘K**, or **/**) for the search menu. **T** switches day/evening. **B** jumps to booking.

@@ -22,7 +22,7 @@ const site = process.argv[2], out = process.argv[3] || '/tmp';
     if (!document.querySelector('#entry.walking')) return false;
     const w0 = window.__w0, h0 = w0 * 4 / 3, grow = door.getBoundingClientRect().width / w0;   // on-screen size: a zoom or a real resize
     const end = 4 * Math.max(innerWidth / w0, innerHeight / h0, hero.getBoundingClientRect().width * 1.04 / w0);
-    if (Math.log(grow) / Math.log(end) > 0.993) { window.__rafOff = true; return true; }   // the last frame
+    if (Math.log(grow) / Math.log(end) > 0.97) { window.__rafOff = true; return true; }   // the last few frames (the photo has landed)
     return false;
   }, null, { polling: 5, timeout: 20000 });
   await p.waitForTimeout(150);

@@ -68,7 +68,7 @@ PASS  No sideways scroll on phone
 | Feels like a salon | Full-bleed photo of her salon floor, headline names hair, brows and lashes |
 | Entry walk-in | Loads on a blush screen with her salon in the arched doorway, then walks you in; plays once per visit |
 | Hero text over the photo | Worst-case contrast measured on the brightest 5% of pixels behind each line: 5.1 to 6.1 |
-| Scroll story | Six moves mixed so no two sections arrive alike: a card lifted face up, a card flipped over (gallery photos dealt like a deck), drop from above, rise from below, slide from either side; once each, at 15% in view; all 32 blocks land; none hidden without the script or under reduced motion; a jumped-to section is already in place |
+| Scroll story | Every block flies in flat once, at 15% in view: text from the left, pictures and cards from the right, rows from below; no turning or book-opening (`tests/reveal.cjs`); all blocks land; none hidden without the script or under reduced motion; a jumped-to section is already in place |
 | Short page | 4,711 px at 1280×800 (5.9 screens, was 7.9); 6,510 px on an iPhone 13 (was 7,004); about 600 words on the whole page |
 | Page weight | 1,443 KB before; now 681 KB (laptop), 964 KB (retina laptop), 1,266 KB (iPhone); the background downloads once |
 
@@ -137,6 +137,34 @@ the zoom, no readjust after the hand-off. Before: FAIL on all three; now PASS.
 ```bash
 node demos/rias-creations/tests/handoff.cjs "$PWD/demos/rias-creations"
 ```
+
+## Flat slides, the store's colors, easy booking (2026-11-19)
+
+John: "I don't like it when it opens up like a book ... flying in from the left side, the right side,
+or from the bottom". The card lift and the card flip are gone. `tests/reveal.cjs` checks every animated
+block's waiting pose and about 100 mid-flight samples per screen: only flat slides (old version: FAIL,
+headings folded flat and photos squeezed to slivers; now PASS on a laptop and an iPhone, no sideways scroll).
+A blind judge, shown slow-motion filmstrips of the old and new versions in shuffled order, picked the
+new one in all three sections: "the fold/squeeze versions read as a gimmick for a salon".
+
+Colors, measured from her salon photo (the listings online could not be opened from here; web search
+found no other photos). Difference from the store, CIEDE2000, under 2 is hard to see:
+
+| | Store | Old site | New site |
+|---|---|---|---|
+| Gold: her mirror brass | #DFB677 | #D6BC8A, 4.7 | #DFB677, 0.0 |
+| Dark brown: ceiling, chairs | #1D1A1A | #221713, 5.3 | #201917, 2.8 |
+| White: her walls | #F9F8FA | #FDFCFA, 2.3 | #FAFAFB, 0.9 |
+| Pink: her roses #B24A63, as a whisper | | #F7EFED, peach | #F8EFF1, rose |
+
+Contrast stays well above the minimum: dark text on the gold 9.1:1, the gold on brown 9.1:1, body text 5.75:1.
+
+Booking, proven by `tests/booking.cjs` on an iPhone and a laptop: "Book a visit" on the first screen;
+5 taps and 3 boxes (name, mobile, code) to "Visit confirmed"; every route in works (hero, header,
+Services menu, search, each filling in the service); every control on the phone at least 44 x 44 px
+(the header's Book now was 40 px tall, fixed); mistakes explained where they happen; a call is one tap.
+From the judge's walk-through: no time is chosen for the client any more ("Choose a time." if she skips
+it), the Book buttons land on the form itself on a phone, and the mobile number formats as it is typed.
 
 ## The council: cut until nothing is left
 

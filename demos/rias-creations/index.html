@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Ria's Creations Salon, Lilburn GA</title>
 <meta name="description" content="Enhancing beauty in Lilburn, Georgia: haircuts, color, balayage, keratin, bridal hair, threading, lashes, waxing, facials and massage. Walk-ins welcome, free parking.">
-<meta name="theme-color" content="#221713">
+<meta name="theme-color" content="#201917">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta property="og:type" content="website">
@@ -31,11 +31,6 @@
     if (seen || location.hash || still) d.classList.add("no-entry");
     /* blocks arrive as you scroll; never without the script, never under reduced motion */
     if (!still && "IntersectionObserver" in window) d.classList.add("reveal-on");
-    /* Safari (every iPhone browser) draws 3D turns poorly and can leave them frozen half way,
-       so on Apple's engine the card moves fold open flat instead (styles.css, "story-flat") */
-    var ua = navigator.userAgent;
-    if (/iP(hone|ad|od)/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1) ||
-        (/Safari\//.test(ua) && !/Chrome|Chromium|CriOS|Edg|OPR|Firefox|FxiOS/.test(ua))) d.classList.add("story-flat");
     /* failsafe: if the scripts never run, drop the entry and show the hero with the CSS intro */
     setTimeout(function () {
       if (!/intro-(run|css)|entry-playing/.test(d.className)) { d.classList.add("intro-css"); d.classList.add("no-entry"); }
@@ -123,11 +118,11 @@
   <section class="about" id="stylist">
     <div class="wrap">
       <div>
-        <h2 data-r="lift">Meet Ria</h2>
+        <h2 data-r="left">Meet Ria</h2>
         <p class="lede" data-r="left">The stylist and owner behind Ria's Creations. Clients come back for even cuts, rich color and clean brows, and for how welcome she makes them feel.</p>
         <p class="motto" data-r="up">“Enhancing beauty.”</p>
       </div>
-      <figure class="about-fig" data-r="down">
+      <figure class="about-fig" data-r="right">
         <div class="arch about-arch">
           <button class="photo-btn" type="button" data-view aria-label="View larger photo of Ria">
             <span class="ph" data-blurhash="USIXHg#lW.E1~WM{WBM{O=OAt5i{xas.M{t7">
@@ -145,10 +140,10 @@
     <div class="wrap">
       <div class="svc-head">
         <h2 data-r="left">Services and prices</h2>
-        <p class="lede" data-r="flip">Not sure what you need? Walk in and ask. Ria will help you choose.</p>
+        <p class="lede" data-r="right">Not sure what you need? Walk in and ask. Ria will help you choose.</p>
       </div>
 
-      <div class="tabs scroller" role="tablist" aria-label="Service categories" data-r="down">
+      <div class="tabs scroller" role="tablist" aria-label="Service categories" data-r="up">
         <button class="tab" role="tab" id="t0" aria-controls="p0" aria-selected="true">Cuts and styling</button>
         <button class="tab" role="tab" id="t1" aria-controls="p1" aria-selected="false" tabindex="-1">Color and balayage</button>
         <button class="tab" role="tab" id="t2" aria-controls="p2" aria-selected="false" tabindex="-1">Treatments</button>
@@ -203,10 +198,10 @@
   <section class="work on-dark" id="work">
     <div class="wrap work-head">
       <div>
-        <h2 data-r="flip">Gallery</h2>
-        <p class="lede" data-r="up">Recent work, straight from Ria's chair.</p>
+        <h2 data-r="left">Gallery</h2>
+        <p class="lede" data-r="left">Recent work, straight from Ria's chair.</p>
       </div>
-      <div class="rail-ctrl" data-r="down">
+      <div class="rail-ctrl" data-r="right">
         <button class="icon-btn chev-l" id="workPrev" type="button" aria-label="Previous photos" data-tip="Previous">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>
         </button>
@@ -216,7 +211,7 @@
       </div>
     </div>
     <ul class="rail scroller" id="rail" tabindex="0" aria-label="Recent work. Scroll sideways for more.">
-        <li data-r="flip">
+        <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Burgundy color">
               <span class="ph" data-blurhash="dbJ*6dx]~qn%^%tQRjni-:kWM{Rjs8WWRjs:xtozjFof"><img src="images/work-burgundy.webp" srcset="images/work-burgundy-480.webp 480w, images/work-burgundy.webp 765w" sizes="(max-width: 760px) 72vw, 300px" alt="Long hair from behind: burgundy color with glossy, soft-curled ends" loading="lazy" decoding="async"></span>
@@ -224,7 +219,7 @@
             <figcaption><b>Burgundy color</b><span>Color, soft curls</span></figcaption>
           </figure>
         </li>
-        <li data-r="flip">
+        <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Long layers">
               <span class="ph" data-blurhash="dTHU,,i]-:_2~WM{Rls:S4V@t6RQIVWBn%V[RPS4oKW;"><img src="images/work-layers.webp" srcset="images/work-layers-480.webp 480w, images/work-layers.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Side profile: long dark layers with face-framing pieces and soft highlights" loading="lazy" decoding="async"></span>
@@ -232,7 +227,7 @@
             <figcaption><b>Long layers</b><span>Cut, face framing</span></figcaption>
           </figure>
         </li>
-        <li data-r="flip">
+        <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Soft bob">
               <span class="ph" data-blurhash="dJGk?_?b9]9u%yNG$*oI0OIV%0adRgngI;IU9bbdsAVs"><img src="images/work-bob.webp" srcset="images/work-bob-480.webp 480w, images/work-bob.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="A smiling client with a soft blonde bob and bangs" loading="lazy" decoding="async"></span>
@@ -240,7 +235,7 @@
             <figcaption><b>Soft bob</b><span>Cut with bangs</span></figcaption>
           </figure>
         </li>
-        <li data-r="flip">
+        <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Caramel highlights">
               <span class="ph" data-blurhash="dJIOOgr_?vtSxpt6WYRj_N%MIBV@xt%MxExaadxtIoRP"><img src="images/work-caramel.webp" srcset="images/work-caramel-480.webp 480w, images/work-caramel.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Caramel highlights and long face-framing layers, styled in loose waves" loading="lazy" decoding="async"></span>
@@ -248,7 +243,7 @@
             <figcaption><b>Caramel highlights</b><span>Color and layers</span></figcaption>
           </figure>
         </li>
-        <li data-r="flip">
+        <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Honey balayage">
               <span class="ph" data-blurhash="dKGbYTa$%gbH~q%MIpWA?wRknhIo_NoexZRkt8t7R*Rk"><img src="images/work-balayage.webp" srcset="images/work-balayage-480.webp 480w, images/work-balayage.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Long hair from behind: honey balayage styled in full curls" loading="lazy" decoding="async"></span>
@@ -263,12 +258,12 @@
   <section class="reviews" id="reviews">
     <div class="wrap">
       <div>
-        <h2 data-r="down">What clients say</h2>
-        <div class="score" data-swr="rating" data-r="lift">4.5</div>
+        <h2 data-r="left">What clients say</h2>
+        <div class="score" data-swr="rating" data-r="left">4.5</div>
         <div class="score-meta" data-r="left"><span class="stars" data-stars="4.5" role="img" aria-label="4.5 out of 5 stars"></span><span><span class="num" data-swr="reviews">29</span> Google reviews</span></div>
         <p class="score-note" data-r="left">Read them all on <a class="src slop" href="https://www.google.com/maps/search/?api=1&amp;query=Ria%27s+Creations+Salon+Lilburn+GA" target="_blank" rel="noopener">Google</a> and <a class="src slop" href="https://www.yelp.com/biz/ria-s-creations-salon-lilburn" target="_blank" rel="noopener">Yelp</a>.</p>
       </div>
-      <div class="carousel" aria-roledescription="carousel" aria-label="Client reviews" data-r="up">
+      <div class="carousel" aria-roledescription="carousel" aria-label="Client reviews" data-r="right">
         <div class="viewport" id="viewport" tabindex="0" aria-label="Reviews. Drag, swipe or use the arrow keys.">
           <div class="track" id="track">
             <figure class="slide" aria-roledescription="slide" aria-label="1 of 5">
@@ -310,12 +305,12 @@
   <section class="book" id="book">
     <div class="wrap">
       <div>
-        <h2 data-r="right">Book a visit</h2>
-        <p class="lede" data-r="down">Pick a service and a time, then type the code we text you. You're booked.</p>
-        <p class="book-call" data-r="down">Rather talk? <a class="slop" href="tel:+17705570354">Call <span class="num">(770) 557-0354</span></a></p>
+        <h2 data-r="left">Book a visit</h2>
+        <p class="lede" data-r="left">Pick a service and a time, then type the code we text you. You're booked.</p>
+        <p class="book-call" data-r="left">Rather talk? <a class="slop" href="tel:+17705570354">Call <span class="num">(770) 557-0354</span></a></p>
       </div>
 
-      <div class="shell" data-r="up">
+      <div class="shell" data-r="right">
         <div class="card">
           <div class="form-box" id="formBox">
             <!-- Progress through a real process only: sent, code, confirmed. No numbers. -->
@@ -339,14 +334,14 @@
               <fieldset class="field full">
                 <legend>Time</legend>
                 <div class="slots scroller" role="radiogroup" aria-label="Time">
-                  <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">10:30 AM</button>
+                  <button type="button" class="slot" role="radio" aria-checked="false">10:30 AM</button>
                   <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">12:00 PM</button>
-                  <button type="button" class="slot" role="radio" aria-checked="true">1:30 PM</button>
+                  <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">1:30 PM</button>
                   <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">3:00 PM</button>
                   <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">4:30 PM</button>
                   <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">6:00 PM</button>
                 </div>
-                <span class="err"></span>
+                <span class="err" id="e-time" role="alert"></span>
               </fieldset>
               <label class="field" id="f-name"><span>First name</span>
                 <input type="text" name="name" autocomplete="given-name" autocapitalize="words" enterkeyhint="next" aria-describedby="e-name">
@@ -395,8 +390,8 @@
   <section class="visit on-dark" id="visit">
     <div class="wrap">
       <div>
-        <h2 data-r="lift">Location and hours</h2>
-        <dl class="info" data-r="right">
+        <h2 data-r="left">Location and hours</h2>
+        <dl class="info" data-r="left">
           <div><dt>Address</dt><dd class="num">375 Rockbridge Rd NW, Suite&nbsp;156<br>Lilburn, GA 30047</dd></div>
           <div><dt>Hours</dt><dd><span class="num">Monday to Saturday, 10:30 AM to 7:30 PM</span><br>Sunday closed<br><span class="hours-now" data-hours><span class="nowrap">Walk-ins</span> welcome</span></dd></div>
           <div><dt>Parking</dt><dd>Free, right outside</dd></div>
@@ -407,7 +402,7 @@
           <button class="btn btn-quiet" type="button" data-pop="callPop" aria-haspopup="dialog" aria-expanded="false" aria-controls="callPop"><span>Call the salon</span></button>
         </div>
       </div>
-      <figure class="map-frame" data-r="flip">
+      <figure class="map-frame" data-r="right">
         <div class="map-box">
           <div class="skeleton map-skel" aria-hidden="true"></div>
           <div class="map-fallback" aria-hidden="true">375 Rockbridge Rd NW<small>Lilburn, GA 30047</small></div>

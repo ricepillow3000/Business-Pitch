@@ -6,25 +6,29 @@
 
    espresso  #221713  ceiling and wood slat wall
    porcelain #FDFCFA  white walls and vanities
-   gold      #D6BC8A / #9C7A45  vase, sconces, mirror light, table legs
-   blush     #F7EFED  cherry blossom, used only as a whisper
+   gold      #DFB677 / #7F6135  the lit brass of her arched mirrors, measured from
+                                her salon photo (2026-11-19: the old #D6BC8A was paler
+                                and greyer than the store)
+   espresso  #201917            her ceiling and chairs (was #221713, a little redder)
+   white     #FAFAFB            her walls (was a warmer #FDFCFA)
+   blush     #F8EFF1  a whisper of her rose-pink flowers (#B24A63 in the photo)
    ════════════════════════════════════════════════════════════════════ */
 
 :root {
-  --espresso: #221713;
-  --espresso-2: #2c1f1a;
-  --gold: #d6bc8a;
+  --espresso: #201917;
+  --espresso-2: #2a221f;
+  --gold: #dfb677;
   --gold-ink: #7f6135;   /* 5.7:1 on white, 5.1:1 on blush */
   --danger: #b4524a;
   /* semantic colors, like a stoplight: good, needs attention, problem */
   --ok: #3d7a4a;
   --warn: #b07414;
 
-  --bg: #fdfcfa;
+  --bg: #fafafb;
   --surface: #ffffff;
-  --tint: #f7efed;
+  --tint: #f8eff1;
   --ink: #241914;
-  --muted: #74645b;
+  --muted: #6b625d;
   --line: rgb(36 25 20 / .12);
   --line-strong: rgb(36 25 20 / .24);
   --accent: var(--gold-ink);
@@ -93,13 +97,14 @@
 .theme-switching *, .theme-switching *::before, .theme-switching *::after { transition: none !important; }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
+@supports not (overflow: clip) { html, body { overflow-x: hidden; } }   /* older Safari */
 html { overflow-x: clip; scroll-behavior: smooth; scroll-padding-top: var(--nav-h); -webkit-text-size-adjust: 100%; }
 body {
   font: 400 1.0625rem/1.65 var(--sans);
   color: var(--ink); background: var(--bg);
   -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
 }
-::selection { background: #f1dcd8; color: #241914; }
+::selection { background: #f1dee3; color: #241914; }
 [hidden] { display: none !important; }
 img { display: block; max-width: 100%; }
 a { color: inherit; text-decoration: none; }
@@ -176,7 +181,7 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 }
 .nav.solid { background: var(--bg); color: var(--ink); border-color: var(--line); box-shadow: 0 8px 24px -20px rgb(var(--shadow) / .3); }
 /* Book now: always one tap away. Gold over the dark hero, espresso on light pages. */
-.nav-book { min-height: 40px; padding: 0 18px; font-size: .9rem; }
+.nav-book { min-height: 44px; padding: 0 18px; font-size: .9rem; }   /* 44 px: a comfortable thumb tap */
 .nav:not(.solid) .nav-book { --btn-bg: var(--gold); --btn-fg: var(--espresso); --btn-hi: rgb(255 255 255 / .35); }
 .nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 /* Her storefront sign: "Ria's Creations" stacked in a soft, bold serif beside a big SALON.
@@ -242,12 +247,12 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .arch img { width: 100%; height: 100%; object-fit: cover; }
 .arch::after {
   content: ""; position: absolute; inset: 12px; border-radius: 999px 999px 0 0; pointer-events: none;
-  box-shadow: inset 0 0 0 1px rgb(214 188 138 / .55); z-index: 2;
+  box-shadow: inset 0 0 0 1px rgb(223 182 119 / .55); z-index: 2;
 }
 .arch-glow { position: relative; }
 .arch-glow::before { /* the LED halo around her mirrors, kept faint */
   content: ""; position: absolute; inset: -1px; border-radius: 999px 999px var(--r-sm) var(--r-sm); opacity: var(--glow, 1);
-  box-shadow: 0 0 0 1px rgb(214 188 138 / .35);
+  box-shadow: 0 0 0 1px rgb(223 182 119 / .35);
 }
 
 /* CTAs live at the bottom of the hero, in a quiet information bar. */
@@ -398,7 +403,7 @@ select {
   background: var(--bg) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 10' fill='none' stroke='%2374645b' stroke-width='1.5'%3E%3Cpath d='M2 3.8l3 3 3-3'/%3E%3C/svg%3E") no-repeat calc(100% - 16px) 50% / 12px;
 }
 textarea { height: auto; min-height: 96px; padding: 13px 14px; resize: vertical; line-height: 1.5; }
-:is(input, select, textarea):focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px rgb(214 188 138 / .35); }
+:is(input, select, textarea):focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px rgb(223 182 119 / .35); }
 input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 :root[data-theme="dark"] :is(input, select, textarea) { color-scheme: dark; }
 .field[data-invalid] :is(input, select) { box-shadow: inset 0 0 0 1px var(--danger); }
@@ -685,7 +690,7 @@ dialog.dragging::backdrop { transition: none; }
   transform: scaleX(0); transform-origin: left; transition: transform 520ms var(--ease-in-out), background-color 200ms;
 }
 .progress span.done::after { transform: none; }
-.progress span.now::after { transform: none; background: #e8c4c0; }   /* blush: this step */
+.progress span.now::after { transform: none; background: #e8c9d0; }   /* her rose, lightened: this step */
 #confirmed .state-mark { background: var(--gold); color: var(--espresso); animation: pop 520ms var(--ease-out) both; }
 @keyframes pop { from { transform: scale(.6); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { #confirmed .state-mark { animation: none; } }
@@ -745,7 +750,7 @@ dialog.dragging::backdrop { transition: none; }
 .entry-door img { display: block; width: 100%; height: 100%; object-fit: cover; transform-origin: 50% 50%; }
 .entry-door::after {   /* the gold mirror line, concentric with the doorway */
   content: ""; position: absolute; inset: 10px; border-radius: 999px 999px 0 0; pointer-events: none;
-  box-shadow: inset 0 0 0 1px rgb(214 188 138 / .75);
+  box-shadow: inset 0 0 0 1px rgb(223 182 119 / .75);
 }
 .entry-status { position: absolute; left: 0; right: 0; top: calc(45% + min(200px, 38.67vw) + 30px); display: grid; justify-items: center; gap: 10px; }
 .entry-count { font: 400 clamp(2.6rem, 6vw, 3.6rem)/1 var(--serif); font-variant-numeric: tabular-nums lining-nums; }
@@ -821,18 +826,15 @@ footer.site .wrap.foot { align-items: start; }
 @media (hover: hover) { .mega .mega-foot a:hover { background: none; color: var(--ink); text-decoration-color: currentColor; } }
 
 /* ── The scroll story ─────────────────────────────────────────
-   After Arcas (rulebook M13 to M15) and Meliona ("Motion and scrolling"):
-   each block arrives once, when 15% of it is on screen. Six moves, mixed so no two
-   sections arrive alike (John, 2026-11-19: "try not to make it too repetitive"):
-   lift (a card lifted face up off the table, hinged on its bottom edge), flip (a card
-   turned over in the hand, hinged on its left edge; the gallery photos are dealt this
-   way), down (drops in from above), up (rises from below), left and right (slide in).
+   Each block arrives once, when 15% of it is on screen, flying in flat and easing into
+   place: text from the left, pictures and cards from the right, rows from below.
+   No turning, folding or opening like a book (John, 2026-11-19: "I don't like it when
+   it opens up like a book").
    Only opacity and transform move. Hidden states exist only under .reveal-on,
    which the head sets before first paint, never without the script and never
    under reduced motion; app.js hands each block back to its own styles once landed. */
 :root {
   --reveal-dur: 1000ms; --reveal-rise: 24px; --reveal-slide: 40px; --stagger: 90ms;
-  --lift-dur: 1200ms; --ease-lift: cubic-bezier(.33, 1, .68, 1);
 }
 .reveal-on [data-r] {
   opacity: 0; will-change: opacity, transform;
@@ -842,28 +844,11 @@ footer.site .wrap.foot { align-items: start; }
 .reveal-on [data-r="up"] { transform: translateY(var(--reveal-rise)); }
 .reveal-on [data-r="left"] { transform: translateX(calc(var(--reveal-slide) * -1)); }
 .reveal-on [data-r="right"] { transform: translateX(var(--reveal-slide)); }
-.reveal-on [data-r="lift"] {
-  transform: perspective(900px) rotateX(-95deg); transform-origin: 50% 100%;
-  transition: opacity calc(var(--lift-dur) * .5) var(--ease-out), transform var(--lift-dur) var(--ease-lift);
-  transition-delay: var(--d, 0ms);
-}
-/* drops in from above and eases into place */
-.reveal-on [data-r="down"] { transform: translateY(calc(var(--reveal-rise) * -1.5)); }
-/* turned over like a card in your hand: hinged on its left edge, it swings face up */
-.reveal-on [data-r="flip"] {
-  transform: perspective(1100px) rotateY(-100deg); transform-origin: 0% 50%; backface-visibility: hidden;
-  transition: opacity calc(var(--lift-dur) * .5) var(--ease-out), transform var(--lift-dur) var(--ease-lift);
-  transition-delay: var(--d, 0ms);
-}
 .reveal-on [data-r].in { opacity: 1; transform: none; }
-/* Apple's engine: the same hinges, folding open flat (no depth), so nothing can freeze mid-turn */
-.reveal-on.story-flat [data-r="lift"]:not(.in) { transform: scaleY(.02); }
-.reveal-on.story-flat [data-r="flip"]:not(.in) { transform: scaleX(.02); backface-visibility: visible; }
 .reveal-on [data-r].now { transition: none; }      /* a destination you jumped to is simply there */
-@media (max-width: 760px) {     /* phones: blocks rise, so nothing can open a sideways scroll */
-  .reveal-on [data-r="left"], .reveal-on [data-r="right"] { transform: translateY(var(--reveal-rise)); }
-  .reveal-on [data-r].in { transform: none; }
-}
+/* phones fly in from the sides too, a shorter way; the page clips sideways (html overflow-x: clip),
+   so a block waiting off to the side never opens a sideways scroll */
+@media (max-width: 760px) { :root { --reveal-slide: 28px; } }
 @media print { .reveal-on [data-r] { opacity: 1 !important; transform: none !important; } }
 
 /* Booking: the six times fit on one line once the form is wide enough */
@@ -876,15 +861,15 @@ footer.site .logo { color: var(--ink); }
 .map-frame { margin: 0; }
 .map-box {
   position: relative; aspect-ratio: 4 / 5; overflow: hidden; isolation: isolate;
-  background: var(--espresso-2); box-shadow: 0 0 0 1px rgb(214 188 138 / .35);
+  background: var(--espresso-2); box-shadow: 0 0 0 1px rgb(223 182 119 / .35);
 }
 .map-box::after {
   content: ""; position: absolute; inset: 10px; pointer-events: none; z-index: 2;
-  box-shadow: inset 0 0 0 1px rgb(214 188 138 / .55);
+  box-shadow: inset 0 0 0 1px rgb(223 182 119 / .55);
 }
 .map-plate {
   display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap;
-  margin-top: 14px; padding-top: 12px; border-top: 1px solid rgb(214 188 138 / .45);
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid rgb(223 182 119 / .45);
 }
 .map-plate span:first-child { font: 400 1.15rem/1.2 var(--serif); color: var(--gold); }
 .map-plate span + span { font-size: .85rem; color: rgb(244 237 230 / .72); }

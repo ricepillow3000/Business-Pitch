@@ -25,6 +25,13 @@ Not used: "Creations Salon Studio" (a different Lilburn salon) and a Booksy list
 Other ratings seen: Birdeye 4.6 from 26, Chamber of Commerce 4.8 from 17. The site quotes
 Google and Yelp only, and links to both so visitors can read every review.
 
+Birdeye shows 4.6 from 26 reviews on an unclaimed snapshot; the site keeps Google's own 4.5 from 29.
+
+## Colors
+
+Measured from her salon photo on 2026-11-19 (see AUDIT.md): the gold is the lit brass of her arched
+mirrors, the dark brown her ceiling and chairs, the white her walls, and the pink a whisper of her roses.
+
 ## Photos
 
 - Hero and entry: her salon floor, enlarged 4x with a light JPEG clean-up, Lanczos resize and a

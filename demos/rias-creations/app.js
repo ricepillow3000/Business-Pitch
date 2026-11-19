@@ -233,7 +233,7 @@
       const d = Math.min(i, CAP - 1) * STEP;
       el.style.setProperty("--d", d + "ms");
       el.classList.add("in");
-      const dur = el.dataset.r === "lift" || el.dataset.r === "flip" ? 1200 : 1000;
+      const dur = 1000;
       el._landT = setTimeout(() => land(el), d + dur + 250);   // lands even if no transition event comes
       const done = (e) => { if (e.target === el && e.propertyName === "transform") { el.removeEventListener("transitionend", done); land(el); } };
       el.addEventListener("transitionend", done);
@@ -891,16 +891,21 @@
   const refFor = (k) => "RC-" + k.replace(/-/g, "").slice(0, 6).toUpperCase();
   let idemKey = newKey(), booking = null, otpAbort = null;
 
-  const pick = (s) => slots.forEach((el) => { const on = el === s; el.setAttribute("aria-checked", on); el.tabIndex = on ? 0 : -1; });
+  // nothing is chosen for the client: she picks her own time (the first open one takes the Tab key until then)
+  const pick = (s) => {
+    slots.forEach((el) => { const on = el === s; el.setAttribute("aria-checked", on); el.tabIndex = on ? 0 : -1; });
+    if (!s) { const first = slots.find((el) => !el.disabled); if (first) first.tabIndex = 0; }
+    else $("#e-time").textContent = "";
+  };
   const slotMin = (el) => { const [, h, m, ap] = el.textContent.match(/(\d+):(\d+)\s*(AM|PM)/); return (+h % 12 + (ap === "PM" ? 12 : 0)) * 60 + +m; };
   function refreshSlots() {   // on today, times that have passed (or start within 30 minutes) are greyed out
     const now = dateIn.value === dateIn.min ? lilburnNow().min + 30 : -1;
     slots.forEach((el) => (el.disabled = slotMin(el) <= now));
     const chosen = $('.slot[aria-checked="true"]');
-    if (!chosen || chosen.disabled) pick(slots.find((el) => !el.disabled) || slots[slots.length - 1]);
+    if (!chosen || chosen.disabled) pick(null);                // a time that just passed is let go, never swapped silently
   }
   refreshSlots();
-  const slotTime = () => $('.slot[aria-checked="true"]').textContent;
+  const slotTime = () => $('.slot[aria-checked="true"]')?.textContent || "";
   const dayName = (v, long) => new Date(v + "T12:00").toLocaleDateString(undefined, long ? { weekday: "long", month: "long", day: "numeric" } : { weekday: "short" });
   const digits = (s) => s.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
   const fmtPhone = (p) => `(${p.slice(0, 3)})\u00a0${p.slice(3, 6)}-\u2060${p.slice(6)}`;   // never split across two lines
@@ -909,7 +914,7 @@
   function predict() {
     const s = form.elements.service.value;
     const dayOk = dateIn.value && dateIn.value >= dateIn.min && !isSunday(dateIn.value) && slots.some((el) => !el.disabled);
-    submitLabel.textContent = s && dayOk ? `Request ${s.toLowerCase()}, ${`${dayName(dateIn.value)} at ${slotTime()}`.replace(/ /g, "\u00a0")}` : "Send request";   // day and time stay together
+    submitLabel.textContent = s && dayOk && slotTime() ? `Request ${s.toLowerCase()}, ${`${dayName(dateIn.value)} at ${slotTime()}`.replace(/ /g, "\u00a0")}` : "Send request";   // day and time stay together
   }
   slots.forEach((s, i) => {
     s.addEventListener("click", () => { pick(s); predict(); });
@@ -977,6 +982,13 @@
       toast("Couldn't send your request. Check your connection and try again.", { tone: "error", action: "Retry", onAction: () => form.requestSubmit() });
     });
   }
+  // the mobile number formats itself as it is typed, like (770) 555-0123 (never while deleting)
+  form.elements.phone.addEventListener("input", (e) => {
+    const el = e.target;
+    if ((e.inputType || "").startsWith("delete") || el.selectionStart !== el.value.length) return;
+    const d = digits(el.value).slice(0, 10);
+    el.value = d.length > 6 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : d.length > 3 ? `(${d.slice(0, 3)}) ${d.slice(3)}` : d;
+  });
   // the phone keyboard says "Next" on these two: it moves on instead of sending early
   [["name", "phone"], ["phone", "notes"]].forEach(([from, to]) => form.elements[from].addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); form.elements[to].focus(); }
@@ -984,9 +996,14 @@
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     const bad = rules.filter(([n]) => !check(n));
-    if (bad.length) {
+    const noTime = !slotTime() && slots.some((el) => !el.disabled);
+    if (noTime) $("#e-time").textContent = "Choose a time.";
+    if (bad.length || noTime) {
       bad.forEach(([, fid]) => shake(document.getElementById(fid)));
-      form.elements[bad[0][0]].focus();
+      if (noTime) shake(slots[0].closest("fieldset"));
+      const firstBad = bad.find(([n]) => n === "service" || n === "date");
+      if (firstBad || !noTime) form.elements[bad[0][0]].focus();
+      else slots.find((el) => !el.disabled).focus();
       return;
     }
     const f = form.elements;
@@ -1050,14 +1067,16 @@
   $("#again").addEventListener("click", () => {
     booking = null; idemKey = newKey();
     const keep = { name: form.elements.name.value, phone: form.elements.phone.value };   // same person: no typing twice
-    form.reset(); dateIn.value = firstOpenDay(); pick(slots[2]); refreshSlots();
+    form.reset(); dateIn.value = firstOpenDay(); pick(null); refreshSlots();
     form.elements.name.value = keep.name; form.elements.phone.value = keep.phone;
     rules.forEach(([n, fid]) => { document.getElementById(fid).removeAttribute("data-invalid"); document.getElementById("e-" + n).textContent = ""; });
     predict(); showState("form");
     form.elements.service.focus({ preventScroll: true });
   });
 
-  function goBook() { go("#book"); setTimeout(() => (form.hidden ? null : form.elements.service.focus({ preventScroll: true })), reduced ? 0 : 500); }
+  const bookTarget = () => (matchMedia("(max-width: 900px)").matches ? "#book .shell" : "#book");   // one column: straight to the form
+  $$('a[href="#book"]').forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); goBook(); }));
+  function goBook() { go(bookTarget()); setTimeout(() => (form.hidden ? null : form.elements.service.focus({ preventScroll: true })), reduced ? 0 : 500); }
   function bookService(name) {
     form.elements.service.value = name;
     if (document.getElementById("e-service").textContent) check("service");
