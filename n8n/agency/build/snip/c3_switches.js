@@ -1,0 +1,20 @@
+// Every switch must say "go" before anything else happens. Any doubt = stop.
+const cfg = $input.first().json || {};
+const s = cfg.settings || {};
+const clean = (v) => String(v === undefined || v === null ? '' : v).trim();
+const filled = (k) => clean(s[k]) && clean(s[k]).indexOf('[FILL IN]') === -1;
+const reasons = [];
+if (cfg.ok !== true) reasons.push('Config not OK: ' + clean(cfg.problems));
+if (cfg.systemPaused !== false) reasons.push('SYSTEM_PAUSED is not NO');
+if (cfg.outreachPaused !== false) reasons.push('OUTREACH_PAUSED is not NO');
+if (clean(s.GMAIL_SENDING_ENABLED).toUpperCase() !== 'YES') reasons.push('GMAIL_SENDING_ENABLED is not YES');
+['SENDER_NAME', 'SENDER_EMAIL', 'AGENCY_NAME', 'AGENCY_MAILING_ADDRESS'].forEach((k) => { if (!filled(k)) reasons.push(k + ' is not filled in'); });
+if (filled('SENDER_EMAIL') && clean(s.SENDER_EMAIL).split('@').length !== 2) reasons.push('SENDER_EMAIL is not a valid address');
+const limit = Number(s.DAILY_SEND_LIMIT);
+if (!(limit > 0)) reasons.push('DAILY_SEND_LIMIT is not a positive number');
+const now = DateTime.now().setZone(cfg.timezone || 'America/New_York');
+const startH = Number(clean(s.SEND_WINDOW_START) || 9);
+const endH = Number(clean(s.SEND_WINDOW_END) || 16);
+if (now.weekday > 5) reasons.push('Weekend - no sending');
+if (now.hour < startH || now.hour >= endH) reasons.push('Outside sending hours (' + startH + ':00-' + endH + ':00 ' + (cfg.timezone || 'America/New_York') + ')');
+return [{ json: { allowed: reasons.length === 0, reasons: reasons.join(' | '), checkedAt: now.toFormat('yyyy-LL-dd HH:mm') } }];
