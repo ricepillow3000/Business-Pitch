@@ -165,6 +165,11 @@ Services menu, search, each filling in the service); every control on the phone 
 (the header's Book now was 40 px tall, fixed); mistakes explained where they happen; a call is one tap.
 From the judge's walk-through: no time is chosen for the client any more ("Choose a time." if she skips
 it), the Book buttons land on the form itself on a phone, and the mobile number formats as it is typed.
+A second fresh judge scored the final version: color match 8/10, glamour 7/10, ease 8/10, and confirmed
+"nothing turns, folds or flips". From its notes: times that have already passed today are now hidden
+(crossed-out rows read as "fully booked"), and the Services subtitle arrives from the left like its heading.
+Both judges found the two-line "Ria's Creations" next to a big "SALON" the weakest part of the look:
+her real logo file (still to get from Ria) should replace it.
 
 ## The council: cut until nothing is left
 

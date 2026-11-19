@@ -420,7 +420,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
 }
 .slot:active { transform: scale(.97); }
 .slot[aria-checked="true"] { background: var(--btn-bg); color: var(--btn-fg); box-shadow: inset 0 1px 0 var(--btn-hi); }
-.slot:disabled { opacity: .35; text-decoration: line-through; cursor: default; }   /* already passed today */
+.slot:disabled { display: none; }   /* already passed today: not shown, so the day never looks fully booked */
 @media (hover: hover) { .slot:not([aria-checked="true"]):hover { background: rgb(127 127 127 / .08); } }
 form .btn { width: 100%; margin-top: 8px; }
 
