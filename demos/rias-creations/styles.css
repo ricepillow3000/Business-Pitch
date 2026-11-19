@@ -314,7 +314,7 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 
 .tabs { position: relative; display: flex; gap: 36px; margin: 40px 0 8px; border-bottom: 1px solid var(--line); }
 @media (max-width: 760px) {
-  .tabs { gap: 28px; padding-right: 48px; -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 56px), transparent); }
+  .tabs { flex-wrap: wrap; gap: 0 26px; overflow: visible; }   /* every category in sight, on two rows if needed */
 }
 .tab { position: relative; flex: none; padding: 14px 0; font-size: 1rem; color: var(--muted); transition: color 200ms var(--ease-out); }
 .tab[aria-selected="true"] { color: var(--ink); }

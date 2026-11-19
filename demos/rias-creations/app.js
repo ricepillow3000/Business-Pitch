@@ -879,7 +879,8 @@
   /* Predictive feedback: the button says exactly what will be requested. */
   function predict() {
     const s = form.elements.service.value;
-    submitLabel.textContent = s && dateIn.value ? `Request ${s.toLowerCase()}, ${dayName(dateIn.value)} at ${slotTime()}` : "Send request";
+    const dayOk = dateIn.value && dateIn.value >= dateIn.min && !isSunday(dateIn.value);
+    submitLabel.textContent = s && dayOk ? `Request ${s.toLowerCase()}, ${dayName(dateIn.value)} at ${slotTime()}` : "Send request";
   }
   slots.forEach((s, i) => {
     s.addEventListener("click", () => { pick(s); predict(); });
@@ -904,7 +905,7 @@
     return good;
   }
   rules.forEach(([n]) => form.elements[n].addEventListener(n === "service" || n === "date" ? "change" : "input", () => {
-    if (document.getElementById("e-" + n).textContent) check(n);
+    if (n === "date" || document.getElementById("e-" + n).textContent) check(n);   // a closed day says so at once
     predict();
   }));
 
@@ -981,7 +982,7 @@
       if (booking !== b) return;
       otpAbort?.abort();
       const p = b.payload;
-      $("#confirmedText").textContent = `See you ${dayName(p.date, true)} at ${p.time}, ${p.name}. We'll text you a reminder the day before.`;
+      $("#confirmedText").textContent = `${p.service} on ${dayName(p.date, true)} at ${p.time}. See you then, ${p.name}! We'll text you a reminder the day before.`;
       $("#confirmedRef").textContent = `Reference ${refFor(b.key)}`;
       progress(2);
       showState("confirmed");
