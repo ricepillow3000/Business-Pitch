@@ -38,7 +38,7 @@ used only once, so until that file exists the lounge card stays hidden.
 - Press **Ctrl K** (or **⌘K**, or **/**) for the search menu. **T** switches day/evening. **B** jumps to booking.
 - Click a photo. It grows into a viewer; drag it up or down to close.
 - On a phone, the menu button opens a sheet you can swipe down to close.
-- Book a visit: the button previews your request, "Request sent" shows instantly,
+- Book a visit: the button previews your request, "Check your texts" shows instantly,
   then a 6-digit code box appears (any 6 digits work in the demo). **Cancel request** gives you 5 seconds to undo.
 
 ## Speed

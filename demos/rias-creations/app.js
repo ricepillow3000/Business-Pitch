@@ -470,8 +470,10 @@
     openPop = pop; openTrigger = trigger;
     if (focus) pop.querySelector("a, button")?.focus({ preventScroll: true });
   }
+  const phoneCall = matchMedia("(pointer: coarse)");
   $$("[data-pop]").forEach((t) => t.addEventListener("click", (e) => {
     e.preventDefault(); e.stopPropagation();
+    if (t.dataset.pop === "callPop" && phoneCall.matches) { location.href = "tel:+17705570354"; return; }
     if (openTrigger !== t) return openPopFor(t);
     closePop(false);
     if (t.id === "svcTrigger") go("#services");               // menu already open (hover): the label itself goes to the section
@@ -830,7 +832,7 @@
   document.fonts?.ready.then(() => setIdx(idx));
 
   /* ── Booking ─────────────────────────────────────────────────
-     Optimistic: "Request sent" shows the moment you press send.
+     Optimistic: "Check your texts" shows the moment you press send.
      Idempotent: one key per request, so retries and double-taps never book twice.
      If sending fails, the form comes back exactly as you left it. */
   const form = $("#bookForm"), box = $("#formBox"), sent = $("#sent"), confirmed = $("#confirmed");
@@ -954,8 +956,7 @@
     const f = form.elements;
     const payload = { service: f.service.value, date: f.date.value, time: slotTime(), name: f.name.value.trim(), phone: digits(f.phone.value), notes: f.notes.value.trim() };
     booking = { key: idemKey, payload };
-    $("#sentText").textContent = `Thanks, ${payload.name}. Your ${payload.service.toLowerCase()} on ${dayName(payload.date, true)} at ${payload.time} is on its way to Ria.`;
-    $("#sentRef").textContent = `Reference ${refFor(idemKey)}`;
+    $("#sentText").textContent = `${payload.service} on ${dayName(payload.date, true)} at ${payload.time}, ${payload.name}. Type the code below to lock it in.`;
     setStatus("sending", "Sending to Ria…");
     progress(0); otpSkel.hidden = false;                        // skeleton holds the code box's place
     otpBox.hidden = true; otp.value = ""; clearOtpError();

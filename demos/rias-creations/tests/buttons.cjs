@@ -55,6 +55,10 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
       let note = '';
       const partner = { workPrev: '#workNext', prev: '#next' }[await p.$eval(sel, (e) => (e.disabled ? e.id : ''))];
       if (partner) { await p.click(partner); await p.waitForTimeout(900); note = '(off on the first item; after Next) '; }
+      // the header's Book now waits at the very top (the hero's own button is there): scroll a little first
+      if (await p.$eval(sel, (e) => getComputedStyle(e).visibility === 'hidden' && !!e.closest('#nav'))) {
+        await p.evaluate(() => scrollBy(0, 200)); await p.waitForTimeout(400); note = '(appears once you scroll) ';
+      }
       const before = await snap(p);
       let effect = note, ok = true;
       if (info.href && /^tel:/.test(info.href)) { effect = `calls ${info.href.slice(4)}`; }
