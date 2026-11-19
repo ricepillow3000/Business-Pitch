@@ -116,6 +116,7 @@ good and what was boring, wordy, confusing or broken, and the fixes went in befo
 | 3 | A Sunday could be picked and the button agreed; the confirmation dropped the service | "Closed Sundays" shows at once; "Balayage on Monday ... See you then, Maria!" |
 | 4 | At 320 px the menu button was cut off; the Notes hint was cut off; the phone number split over two lines | Everything fits at 320 px; "Example: long layers"; the number stays on one line |
 | 5 | The review arrows moved as quotes changed length; at 320 px the booking card briefly ran past the screen | The reviews box is as tall as the longest review; the booking column never grows past the screen |
+| 6 | "Book another visit" emptied name and phone; on a laptop both Book buttons showed just below the hero; gallery titles showed faintly behind the photo viewer | Name and phone are kept; the header's Book now waits until the hero's button is gone; the viewer's backdrop is solid |
 
 ## Not applicable to a website
 

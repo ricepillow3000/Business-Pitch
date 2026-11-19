@@ -425,6 +425,7 @@
   }
 
   /* ── Nav turns solid past the hero; mobile bar shows between hero and booking ── */
+  const heroCta = $(".hero-cta");
   const nav = $("#nav"), mbar = $("#mbar"), hero = $(".hero"), book = $("#book"), visit = $("#visit");   // mbar: optional mobile bar
   const seen = new Map();
   new IntersectionObserver((es) => {
@@ -440,6 +441,7 @@
     const h = nav.offsetHeight, vr = visit.getBoundingClientRect();
     const overHero = hero.getBoundingClientRect().bottom > h, moved = scrollY > 4;   // see-through only at the very top
     nav.classList.toggle("solid", !overHero || moved);
+    nav.classList.toggle("cta-gone", heroCta.getBoundingClientRect().bottom < h);   // the header's Book now waits for the hero's to leave
     nav.classList.toggle("over-dark", moved && (overHero || (vr.top < h && vr.bottom > 0)));   // a dark bar over the photo and the dark Location band
   };
   addEventListener("scroll", onScroll, { passive: true }); onScroll();
@@ -1014,7 +1016,9 @@
   });
   $("#again").addEventListener("click", () => {
     booking = null; idemKey = newKey();
+    const keep = { name: form.elements.name.value, phone: form.elements.phone.value };   // same person: no typing twice
     form.reset(); dateIn.value = firstOpenDay(); pick(slots[2]);
+    form.elements.name.value = keep.name; form.elements.phone.value = keep.phone;
     rules.forEach(([n, fid]) => { document.getElementById(fid).removeAttribute("data-invalid"); document.getElementById("e-" + n).textContent = ""; });
     predict(); showState("form");
     form.elements.service.focus({ preventScroll: true });
