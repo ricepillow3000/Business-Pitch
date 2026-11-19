@@ -1,0 +1,94 @@
+// Plans the Phase C additions to the DEMO CRM. Only adds what is missing (safe to run twice).
+// Never deletes or overwrites existing rows.
+const cfg = $('Load Agency Config').first().json;
+const clean = (v) => String(v === undefined || v === null ? '' : v).trim();
+const meta = $('Read CRM Structure').first().json || {};
+const vals = $input.first().json || {};
+if (meta.error || vals.error) throw new Error('A0b could not read the CRM structure');
+const sheets = (meta.sheets || []).map((s) => s.properties || {});
+const byTitle = {};
+const colsOf = {};
+sheets.forEach((p) => { byTitle[p.title] = p.sheetId; colsOf[p.title] = Number((p.gridProperties || {}).columnCount) || 0; });
+const ranges = vals.valueRanges || [];
+const rangeVals = (i) => ((ranges[i] || {}).values || []);
+const settingsKeys = rangeVals(0).map((r) => clean(r[0]));
+const ledgerHeader = (rangeVals(1)[0] || []).map(clean);
+const leadsHeader = (rangeVals(2)[0] || []).map(clean);
+const repliesHeader = (rangeVals(3)[0] || []).map(clean);
+// Header rows of the Phase C tabs that already exist are read after the first 4 ranges, in this fixed order.
+const PHASE_C_TITLES = ['Outreach Drafts', 'Draft History', 'Unsubscribe Requests'];
+const existingHead = {};
+PHASE_C_TITLES.filter((t) => byTitle[t] !== undefined).forEach((t, i) => { existingHead[t] = (rangeVals(4 + i)[0] || []).map(clean).filter(Boolean); });
+const NEW_TABS = [
+  { id: 1300, title: 'Outreach Drafts', headers: ['Draft ID', 'Lead ID', 'Step', 'Version', 'Created At', 'Updated At', 'Business Name', 'To Email', 'Subject', 'Body', 'Evidence Used', 'Research Sources', 'Removed Claims', 'Draft Hash', 'Review Status', 'Reviewed By', 'Reviewed At', 'Approved Hash', 'Approved At', 'Review Notes', 'Send Status', 'Ledger Row ID', 'Gmail Message ID', 'Gmail Thread ID', 'Sent At', 'Unsubscribe Token', 'Last Error'] },
+  { id: 1400, title: 'Draft History', headers: ['Time', 'Draft ID', 'Version', 'Event', 'Draft Hash', 'Subject', 'Body', 'By'] },
+  { id: 1500, title: 'Unsubscribe Requests', headers: ['Time', 'Channel', 'Reference', 'Email', 'Lead ID', 'Result', 'Details'] }
+];
+const NEW_SETTINGS = [
+  ['GMAIL_SENDING_ENABLED', 'NO', 'Second lock for sending. Must be YES (and OUTREACH_PAUSED = NO) before C3 will send. Leave NO until go-live is approved.'],
+  ['SEND_BATCH_SIZE', '3', 'Most emails C3 may send in one run (max 10).'],
+  ['DRAFT_BATCH_SIZE', '5', 'Most drafts C1 may write in one run (max 10).'],
+  ['SEND_WINDOW_START', '9', 'Earliest hour (24h, in TIMEZONE) emails may be sent, weekdays only.'],
+  ['SEND_WINDOW_END', '16', 'Sending stops at this hour.'],
+  ['DISCOVERY_CALL_MINUTES', '20', 'Length of the discovery call offered in emails.'],
+  ['AGENCY_WEBSITE', '[FILL IN]', 'Shown in the email footer (optional).'],
+  ['AD_DISCLOSURE_LINE', '', 'Optional line identifying the email as a business offer, if your lawyer recommends one.'],
+  ['UNSUBSCRIBE_BASE_URL', '', 'Production URL of C4 Unsubscribe once it is approved and active. Empty = reply-STOP opt-out only.'],
+  ['ONE_CLICK_UNSUBSCRIBE_VERIFIED', 'NO', 'Set YES only after a real one-click unsubscribe test has passed.'],
+  ['MAX_FOLLOWUPS', '2', 'Most follow-up emails per lead (0, 1 or 2). Each one still needs approval.'],
+  ['FOLLOWUP_GAP_BUSINESS_DAYS', '5', 'Business days to wait before a follow-up is drafted.'],
+  ['REPLY_CHECK_BATCH', '20', 'Most of our own Gmail threads checked for replies per run (max 50).']
+];
+const LEDGER_EXTRA = ['Ledger Row ID', 'Draft ID', 'Run ID', 'Gmail Thread ID'];
+const REPLIES_EXTRA = ['From Email', 'Subject', 'Reply Draft', 'Rulebook Topics'];
+const requests = [];
+const data = [];
+const colLetter = (n) => { let s = ''; n++; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); } return s; };
+const q = (t) => "'" + t + "'";
+const dropdown = (sheetId, col, values) => ({ setDataValidation: { range: { sheetId, startRowIndex: 1, endRowIndex: 5000, startColumnIndex: col, endColumnIndex: col + 1 }, rule: { condition: { type: 'ONE_OF_LIST', values: values.map((v) => ({ userEnteredValue: v })) }, showCustomUi: true, strict: false } } });
+const added = [];
+// Make sure a tab is wide enough before writing into a column (Google rejects writes past the last column).
+const widen = (title, needCols) => { if (colsOf[title] && needCols > colsOf[title]) { requests.push({ appendDimension: { sheetId: byTitle[title], dimension: 'COLUMNS', length: needCols - colsOf[title] } }); colsOf[title] = needCols; } };
+NEW_TABS.forEach((t) => {
+  if (byTitle[t.title] === undefined) {
+    requests.push({ addSheet: { properties: { sheetId: t.id, title: t.title, gridProperties: { rowCount: 1000, columnCount: t.headers.length, frozenRowCount: 1 } } } });
+    byTitle[t.title] = t.id;
+    colsOf[t.title] = t.headers.length;
+    added.push('tab ' + t.title);
+  } else if ((existingHead[t.title] || []).length) {
+    return;
+  } else {
+    widen(t.title, t.headers.length);
+    added.push('headings for empty tab ' + t.title);
+  }
+  data.push({ range: q(t.title) + '!A1:' + colLetter(t.headers.length - 1) + '1', values: [t.headers] });
+});
+const draftsId = byTitle['Outreach Drafts'];
+requests.push(dropdown(draftsId, 14, ['Pending review', 'Approved', 'Rejected']));
+requests.push(dropdown(draftsId, 20, ['Not sent', 'Sending', 'Sent', 'Failed', 'Suppressed']));
+if (byTitle['Send Ledger'] === undefined || byTitle.Settings === undefined || byTitle.Leads === undefined) throw new Error('This does not look like the Agency CRM (missing Leads, Settings or Send Ledger tab)');
+const missingLedger = LEDGER_EXTRA.filter((h) => ledgerHeader.indexOf(h) === -1);
+if (missingLedger.length) {
+  const start = ledgerHeader.length;
+  widen('Send Ledger', start + missingLedger.length);
+  data.push({ range: q('Send Ledger') + '!' + colLetter(start) + '1:' + colLetter(start + missingLedger.length - 1) + '1', values: [missingLedger] });
+  added.push('Send Ledger columns: ' + missingLedger.join(', '));
+}
+const missingReplies = repliesHeader.length ? REPLIES_EXTRA.filter((h) => repliesHeader.indexOf(h) === -1) : [];
+if (byTitle.Replies !== undefined && missingReplies.length) {
+  const start = repliesHeader.length;
+  widen('Replies', start + missingReplies.length);
+  data.push({ range: q('Replies') + '!' + colLetter(start) + '1:' + colLetter(start + missingReplies.length - 1) + '1', values: [missingReplies] });
+  added.push('Replies columns: ' + missingReplies.join(', '));
+}
+const statusCol = ledgerHeader.indexOf('Status');
+if (statusCol !== -1) requests.push(dropdown(byTitle['Send Ledger'], statusCol, ['Sending', 'Sent', 'Failed', 'Not sent - duplicate', 'Not sent - paused', 'Not sent - suppressed', 'Not sent - Gmail step off', 'Not sent - could not verify', 'Cleared for retry']));
+const outCol = leadsHeader.indexOf('Outreach Status');
+if (outCol !== -1) requests.push(dropdown(byTitle.Leads, outCol, ['Pending', 'Approved', 'Sending', 'Sent', 'Failed', 'Suppressed', 'Rejected']));
+const missingSettings = NEW_SETTINGS.filter((r) => settingsKeys.indexOf(r[0]) === -1);
+if (missingSettings.length) {
+  const start = settingsKeys.length + 1;
+  data.push({ range: q('Settings') + '!A' + start + ':C' + (start + missingSettings.length - 1), values: missingSettings });
+  added.push('Settings: ' + missingSettings.map((r) => r[0]).join(', '));
+}
+return [{ json: { crmId: cfg.crmId, structureBody: { requests }, valuesBody: { valueInputOption: 'RAW', data }, added, hasValues: data.length > 0 } }];
