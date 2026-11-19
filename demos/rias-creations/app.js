@@ -882,7 +882,7 @@
   function predict() {
     const s = form.elements.service.value;
     const dayOk = dateIn.value && dateIn.value >= dateIn.min && !isSunday(dateIn.value);
-    submitLabel.textContent = s && dayOk ? `Request ${s.toLowerCase()}, ${dayName(dateIn.value)} at ${slotTime()}` : "Send request";
+    submitLabel.textContent = s && dayOk ? `Request ${s.toLowerCase()}, ${`${dayName(dateIn.value)} at ${slotTime()}`.replace(/ /g, "\u00a0")}` : "Send request";   // day and time stay together
   }
   slots.forEach((s, i) => {
     s.addEventListener("click", () => { pick(s); predict(); });

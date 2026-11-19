@@ -317,6 +317,9 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 @media (max-width: 760px) {
   .tabs { flex-wrap: wrap; gap: 0 26px; overflow: visible; }   /* every category in sight, on two rows if needed */
 }
+@media (max-width: 400px) {
+  .tabs { gap: 0 18px; } .tab { padding: 8px 0; font-size: .94rem; }   /* the smallest phones: compact rows */
+}
 .tab { position: relative; flex: none; padding: 14px 0; font-size: 1rem; color: var(--muted); transition: color 200ms var(--ease-out); }
 .tab[aria-selected="true"] { color: var(--ink); }
 @media (hover: hover) { .tab:hover { color: var(--ink); } }
@@ -645,6 +648,12 @@ dialog.dragging::backdrop { transition: none; }
 .rail figcaption { margin-top: 16px; display: grid; gap: 2px; }
 .rail figcaption b { font-family: var(--serif); font-weight: 400; font-size: 1.25rem; line-height: 1.2; }
 .rail figcaption span { font-size: .88rem; color: var(--muted); }
+/* laptops: all five photos in one row, nothing to scroll, no arrows */
+@media (min-width: 1024px) {
+  .rail { grid-auto-flow: row; grid-template-columns: 1.25fr repeat(4, 1fr); overflow: visible; }
+  .rail li, .rail li:not(:first-child), .rail li:first-child { width: auto; }
+  .rail-ctrl { display: none; }
+}
 @media (max-width: 640px) {
   .rail { grid-auto-columns: 72vw; margin-top: 40px; }
   .rail-ctrl { display: none; }   /* phones swipe */
