@@ -18,7 +18,7 @@
     get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} },
   };
-  const go = (sel) => document.querySelector(sel).scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+  const go = (sel) => { const el = document.querySelector(sel); window.__arrive?.(el); el.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" }); };
   const rubber = (over, dim) => (1 - 1 / ((over * 0.55) / dim + 1)) * dim;   // resistance grows the further you pull
   const afterTransition = (el, ms = 450) => new Promise((r) => {
     const done = () => { clearTimeout(t); el.removeEventListener("transitionend", onEnd); r(); };
@@ -39,10 +39,6 @@
   const shake = (el) => !reduced && el.animate(
     { transform: ["translateX(0)", "translateX(-7px)", "translateX(6px)", "translateX(-4px)", "translateX(3px)", "translateX(-1px)", "translateX(0)"] },
     { duration: 420, easing: "ease-out" });
-
-  /* ── Olive branches: one drawing, cloned where it is used ───── */
-  const olive = $("#oliveTpl").content;
-  $$("[data-olive]").forEach((el) => el.appendChild(olive.cloneNode(true)));
 
   /* ── Entry: walk through the arched doorway into the salon ───
      The counter follows real loading (fonts, the hero photo, the page) with a short
@@ -133,16 +129,20 @@
     const split = $$(".hero h1 .ln > span").map((el) => A.splitText(el, { chars: true }));
     const chars = split.flatMap((s) => s.chars);
     const lede = $(".hero .lede"), nav = $("#nav");
+    const brand = $("#nav .logo");
+    const navItems = $$("#nav .nav-links > a, #nav .search-btn, #nav .nav-book, #nav .nav-tools > button").filter((el) => el.offsetParent);
     const facts = $$(".hero-bar .hero-note"), stars = $$(".hero-bar .stars svg"), ctas = $$(".hero-cta .btn");
     const rating = $('.hero-bar [data-swr="rating"]'), target = parseFloat(rating.textContent) || 4.5, count = { v: 0 };
 
     // starting poses, set before anything is revealed so nothing flashes
     A.set(chars, { y: "108%" });
-    A.set(lede, { opacity: 0, y: 14 });
+    A.set(lede, { opacity: 0, x: -40 });
     A.set(heroImg, { scale: 1.04 });
     A.set(scrim, { opacity: 0 });
-    A.set(nav, { opacity: 0 });
-    A.set([...facts, ...ctas], { opacity: 0, y: 12 });
+    A.set(brand, { opacity: 0, x: -40 });
+    A.set(navItems, { opacity: 0, x: 40 });
+    A.set(facts, { opacity: 0, x: -40 });
+    A.set(ctas, { opacity: 0, x: 40 });
     A.set(stars, { opacity: 0, scale: 0.6 });
     rating.textContent = "0.0";
     rating.dataset.counting = "1";                            // the rating refresh waits for the count-up
@@ -152,23 +152,82 @@
     tl.add(heroImg, { scale: 1, duration: 2600, ease: "out(3)" }, 0)
       .add(scrim, { opacity: 1, duration: 1000, ease: "out(2)" }, 0)
       .add(chars, { y: "0%", duration: 1100, delay: A.stagger(16) }, 180)
-      .add(nav, { opacity: 1, duration: 700 }, 300)
-      .add(lede, { opacity: 1, y: 0, duration: 900 }, 560)
-      .add(facts, { opacity: 1, y: 0, duration: 800, delay: A.stagger(90) }, 820)
+      .add(brand, { opacity: 1, x: 0, duration: 1400 }, 120)
+      .add(navItems, { opacity: 1, x: 0, duration: 1400, delay: A.stagger(75) }, 240)
+      .add(lede, { opacity: 1, x: 0, duration: 1200 }, 560)
+      .add(facts, { opacity: 1, x: 0, duration: 1100, delay: A.stagger(90) }, 820)
       .add(stars, { opacity: 1, scale: 1, duration: 600, delay: A.stagger(60), ease: "out(3)" }, 980)
       .add(count, { v: target, duration: 1000, ease: "out(3)", onUpdate: () => (rating.textContent = count.v.toFixed(1)) }, 920)
-      .add(ctas, { opacity: 1, y: 0, duration: 700, delay: A.stagger(80) }, 1150)
+      .add(ctas, { opacity: 1, x: 0, duration: 1100, delay: A.stagger(80) }, 1150)
       .then(() => {
         delete rating.dataset.counting;
         rating.textContent = String(store.get(PLACE_KEY)?.data?.rating ?? target);
         // hand the elements back to CSS so hover, press and theme styles work normally
-        [lede, heroImg, scrim, nav, ...facts, ...stars, ...ctas].forEach((el) => {
+        [lede, heroImg, scrim, nav, brand, ...navItems, ...facts, ...stars, ...ctas].forEach((el) => {
           ["transform", "opacity", "translate", "scale"].forEach((p) => el.style.removeProperty(p));
         });
         root.classList.add("intro-done");
       });
   }
   runEntry(heroIntro);
+
+  /* ── The scroll story ─────────────────────────────────────────
+     Blocks marked data-r arrive once, when 15% of them is on screen. Blocks that
+     arrive together step in 90 ms apart, leftmost and topmost first, at most 6 steps.
+     A section you jump to (a link, the search menu, a deep link) is simply there.
+     Once a block lands it is handed back to its own styles, so presses, hovers and
+     the tabs behave as before. If a move is cut short, the block lands at once. */
+  (function story() {
+    if (!root.classList.contains("reveal-on")) return;
+    const STEP = 90, CAP = 6;
+    const land = (el) => {
+      if (!el.hasAttribute("data-r")) return;
+      clearTimeout(el._landT);
+      el.removeAttribute("data-r"); el.classList.remove("in", "now"); el.style.removeProperty("--d");
+    };
+    const show = (el, i, instant) => {
+      if (!el.hasAttribute("data-r") || el.classList.contains("in")) return;
+      if (instant) { el.classList.add("now", "in"); requestAnimationFrame(() => land(el)); return; }
+      const d = Math.min(i, CAP - 1) * STEP;
+      el.style.setProperty("--d", d + "ms");
+      el.classList.add("in");
+      const dur = el.dataset.r === "lift" ? 1200 : 1000;
+      el._landT = setTimeout(() => land(el), d + dur + 250);   // lands even if no transition event comes
+      const done = (e) => { if (e.target === el && e.propertyName === "transform") { el.removeEventListener("transitionend", done); land(el); } };
+      el.addEventListener("transitionend", done);
+      el.addEventListener("transitioncancel", (e) => { if (e.target === el) land(el); }, { once: true });
+    };
+    // a block inside a sideways scroller (the gallery) arrives with its row, even if it sits off to the side
+    const groups = new Map();
+    const blocks = $$("[data-r]");
+    blocks.forEach((el) => {
+      const t = el.parentElement.closest(".scroller") || el;
+      if (!groups.has(t)) groups.set(t, []);
+      groups.get(t).push(el);
+    });
+    const io = new IntersectionObserver((entries) => {
+      const seen = entries.filter((e) => e.isIntersecting).flatMap((e) => { io.unobserve(e.target); return groups.get(e.target) || []; });
+      seen.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+      seen.forEach((el, i) => show(el, i, false));
+    }, { threshold: 0.15, rootMargin: "0px 0px -6% 0px" });
+    groups.forEach((_, t) => io.observe(t));
+    // jumping to a section: everything in it is already in place when you land
+    const arrive = (id) => {
+      const sec = typeof id === "string" ? id && document.getElementById(id) : id;
+      if (!sec) return;
+      const s = sec.closest("section") || sec;
+      $$("[data-r]", s).forEach((el) => { io.unobserve(el); show(el, 0, true); });
+    };
+    window.__arrive = arrive;
+    document.addEventListener("click", (e) => {
+      const a = e.target.closest('a[href^="#"]');
+      if (a && a.getAttribute("href").length > 1) arrive(a.getAttribute("href").slice(1));
+    }, true);
+    addEventListener("hashchange", () => arrive(location.hash.slice(1)));
+    if (location.hash) arrive(location.hash.slice(1));
+    window.__story = { revealAll: () => blocks.forEach((el) => { io.unobserve(el); show(el, 0, true); }) };
+    root.classList.add("reveal-ready");
+  })();
 
   /* ── BlurHash placeholders ──────────────────────────────────── */
   const B83 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz#$%*+,-.:;=?@[]^_{|}~";
@@ -577,6 +636,12 @@
     withVT(() => {
       img.style.viewTransitionName = "";
       vImg.src = img.currentSrc || img.src; vImg.alt = img.alt; vCap.textContent = img.alt;
+      // the page may show a small copy; the viewer swaps to the full-size photo once it is ready
+      const full = img.getAttribute("src");
+      if (full && vImg.src !== new URL(full, location.href).href) {
+        const hi = new Image(); hi.src = full;
+        hi.decode().then(() => { if (vImg.alt === img.alt) vImg.src = hi.src; }).catch(() => {});
+      }
       vImg.style.viewTransitionName = "photo";
       vInner.style.cssText = "";
       viewer.showModal(); viewer.classList.add("open");
@@ -678,7 +743,8 @@
     idx = Math.max(0, Math.min(N - 1, i));
     prev.disabled = idx === 0; next.disabled = idx === N - 1;
     count.textContent = `${idx + 1} / ${N}`;
-    slides.forEach((s, k) => s.setAttribute("aria-hidden", k !== idx));
+    // reviews you are not on are out of reach: no Tab stop or click lands in a hidden card
+    slides.forEach((s, k) => { s.setAttribute("aria-hidden", k !== idx); s.inert = k !== idx; });
     vp.style.height = slides[idx].offsetHeight + "px";       // smooth height: the box fits the review you're on
   }
   function springTo(target, v0 = 0) {
@@ -988,7 +1054,7 @@
   idle(() => $$('img[loading="lazy"]').forEach(predecode));
   $$("[data-prefetch]").forEach((a) => ["pointerenter", "focus", "touchstart"].forEach((ev) => a.addEventListener(ev, () => predecode(lounge), { once: true, passive: true })));
   const mapFrame = $("#mapFrame");
-  const mapArch = mapFrame.closest(".arch");
+  const mapArch = mapFrame.closest(".map-box");
   mapFrame.addEventListener("load", () => { mapArch.classList.remove("map-loading"); mapArch.classList.add("map-ready"); }, { once: true });
   new IntersectionObserver((es, o) => {                       // skeleton pulses only once the map is in view, and gives up after 10s
     if (!es[0].isIntersecting) return;
