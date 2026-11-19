@@ -27,7 +27,8 @@ Google and Yelp only, and links to both so visitors can read every review.
 
 ## Photos
 
-- Hero and entry: her salon floor, enlarged 4x with EDSR super-resolution (a neural upscaler
-  that sharpens existing detail without inventing objects). A higher-resolution original from
-  Ria would still be better.
+- Hero and entry: her salon floor, enlarged 4x with a light JPEG clean-up, Lanczos resize and a
+  gentle sharpen. An AI upscaler (EDSR) was tried first but bent the wood slats reflected in the
+  mirrors and invented marble veins, so it was dropped: nothing in the photo is altered. A
+  higher-resolution original from Ria would still be better.
 - Meet Ria: her own photo, supplied for the pitch.
