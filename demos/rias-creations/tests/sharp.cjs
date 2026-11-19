@@ -1,5 +1,5 @@
 // The walk-in never blurs the photo: freezes the doorway at its last frame on an iPhone-sized
-// screen and compares its sharpness with the finished hero at the same 4% zoom.
+// screen and compares its sharpness with the finished hero (the walk-in lands exactly on it).
 // (Before the fix the doorway was a small box zoomed about 9x, so the photo inside went soft
 // and blocky until the hero replaced it.)
 // Run: node tests/sharp.cjs <site folder> <folder for two screenshots>
@@ -30,7 +30,7 @@ const site = process.argv[2], out = process.argv[3] || '/tmp';
   await p.screenshot({ path: out + '/sharp-walk.png', clip });
   await p.evaluate(() => (window.__rafOff = false));
   await p.waitForFunction(() => document.documentElement.classList.contains('intro-done'), null, { timeout: 15000 });
-  await p.addStyleTag({ content: '.hero-main, .hero-bar, .hero-scrim, #nav { visibility: hidden !important; } #heroImg { transform: scale(1.04) !important; }' });
+  await p.addStyleTag({ content: '.hero-main, .hero-bar, .hero-scrim, #nav { visibility: hidden !important; }' });
   await p.waitForTimeout(200);
   await p.screenshot({ path: out + '/sharp-hero.png', clip });
   await b.close();

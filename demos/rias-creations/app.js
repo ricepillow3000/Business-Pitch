@@ -45,6 +45,7 @@
      minimum so it can be read. At 100% the doorway grows past the edges of the screen
      while the room inside grows more slowly, like stepping through a door. The photo
      lands exactly where the hero shows it, so the hand-off has no visible cut. */
+  let walkedIn = false;
   function runEntry(done) {
     const entry = $("#entry"), heroImg = $("#heroImg");
     if (!entry || root.classList.contains("no-entry")) { entry?.remove(); return done(); }
@@ -65,7 +66,7 @@
       lineIdx = i; line.classList.add("swap");
       setTimeout(() => { line.textContent = LINES[i][1]; line.classList.remove("swap"); }, 200);
     };
-    heroImg.style.transform = "scale(1.04)";                  // the hero's starting pose, so the landing matches it
+    walkedIn = true;                                           // the hero then stays exactly where the walk lands it
     /* The doorway's photo is laid out at the size it lands at (the hero's) and shrunk to fit the door.
        It only ever shrinks, never stretches, so it stays as sharp as the hero the whole way in
        (phones decode a photo at the size it is laid out, and a stretched one goes blocky). */
@@ -108,28 +109,31 @@
     function walk() {
       if (finished || walking) return;
       walking = true;
-      setTimeout(() => finish(), 1300 + 1400);                 // the walk lasts 1.3 s; if frames stall, land anyway
+      setTimeout(() => finish(), 1500 + 1400);                 // the walk lasts 1.5 s; if frames stall, land anyway
       const vw = innerWidth, vh = innerHeight, r = door.getBoundingClientRect();
       Object.assign(door.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px", transform: "none" });
       const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-      // where the hero shows the photo: object-fit cover, positioned 50% 45%, scaled 1.04
+      // where the hero shows the photo: object-fit cover, positioned 50% 45%
       const hb = heroImg.getBoundingClientRect(), nw = heroImg.naturalWidth || 1530, nh = heroImg.naturalHeight || 2040;
       const s = Math.max(hb.width / nw, hb.height / nh), cw = nw * s, ch = nh * s;
       const tx = hb.left + (hb.width - cw) * 0.5 + cw / 2, ty = hb.top + (hb.height - ch) * 0.45 + ch / 2;
-      const I0 = 1.15, I1 = cw / r.width;                        // photo: a slight crop through the door → hero size
+      const I1 = cw / r.width;                                   // photo: from the doorway's size to the hero's
       const D1 = 4 * Math.max(vw / r.width, vh / r.height, I1);   // doorway: grows well past the screen edges
       entry.classList.add("walking");
-      const dur = 1300, start = performance.now();
-      const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);   // step in, glide through, settle
+      const dur = 1500, start = performance.now();
       const step = (now) => {
         if (finished) return;
-        const p = Math.min(1, (now - start) / dur), e = ease(p);
-        // equal steps in scale feel like walking at a steady pace; the door outruns the room (depth),
-        // but the room always fills the opening until it is big enough to fill the screen
-        const D = Math.exp(Math.log(D1) * e);
-        const I = Math.min(I1, Math.max(I0 * Math.exp(Math.log(I1 / I0) * e), D));
-        // the door really grows (its size, not a zoom of a small picture of it), and drifts to where the photo lands
-        const W = r.width * D, H = r.height * D, mx = cx + (tx - cx) * e, my = cy + (ty - cy) * e;
+        const p = Math.min(1, (now - start) / dur);
+        // One shot, everything ending on the same frame:
+        // the room (photo) glides in and settles softly onto the hero, its size and its place on one curve,
+        // so it never lands and then readjusts; the doorway holds, then rushes past you at the end.
+        // These two curves keep the photo covering every part of the doorway that is on screen
+        // (checked from 320 px phones to 2560 px screens: never more than 0.64 px short, and the doorway
+        // is see-through while walking, so even that shows only the blush around it).
+        const q = 1 - Math.pow(1 - p, 5), I = Math.pow(I1, q);
+        const D = Math.pow(D1, Math.pow(p, 3));
+        // the door really grows (its size, not a zoom of a small picture of it), and drifts with the photo
+        const W = r.width * D, H = r.height * D, mx = cx + (tx - cx) * q, my = cy + (ty - cy) * q;
         Object.assign(door.style, { left: mx - W / 2 + "px", top: my - H / 2 + "px", width: W + "px", height: H + "px" });
         dimg.style.transform = `scale(${(I * r.width) / cw})`;   // only ever shrunk: ends at exactly 1, the photo at its own size
         if (p < 1) requestAnimationFrame(step);
@@ -148,7 +152,7 @@
   }
 
   /* ── Hero intro, played by anime.js ──────────────────────────
-     Picks up where the walk-in ends: the room settles, the light dims a little
+     Picks up where the walk-in ends (the photo already in place, it never moves again): the light dims a little
      behind the words, the headline rises, then the bar and the button. */
   function heroIntro() {
     const A = window.anime, heroImg = $("#heroImg"), scrim = $(".hero-scrim");
@@ -167,7 +171,7 @@
     // starting poses, set before anything is revealed so nothing flashes
     A.set(chars, { y: "108%" });
     A.set(lede, { opacity: 0, x: -40 });
-    A.set(heroImg, { scale: 1.04 });
+    if (!walkedIn) A.set(heroImg, { scale: 1.04 });             // after the walk-in the photo is already in place: no settle
     A.set(scrim, { opacity: 0 });
     A.set(brand, { opacity: 0, x: -40 });
     A.set(navItems, { opacity: 0, x: 40 });
@@ -195,8 +199,8 @@
     let tl;
     try {
     tl = A.createTimeline({ defaults: { ease: "out(4)" } });
-    tl.add(heroImg, { scale: 1, duration: 2600, ease: "out(3)" }, 0)
-      .add(scrim, { opacity: 1, duration: 1000, ease: "out(2)" }, 0)
+    if (!walkedIn) tl.add(heroImg, { scale: 1, duration: 2600, ease: "out(3)" }, 0);
+    tl.add(scrim, { opacity: 1, duration: 1000, ease: "out(2)" }, 0)
       .add(chars, { y: "0%", duration: 1100, delay: A.stagger(16) }, 180)
       .add(brand, { opacity: 1, x: 0, duration: 1400 }, 120)
       .add(navItems, { opacity: 1, x: 0, duration: 1400, delay: A.stagger(75) }, 240)

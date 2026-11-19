@@ -120,6 +120,24 @@ finished hero at the same zoom: before the fix 64% as sharp (FAIL), now 100% (PA
 node demos/rias-creations/tests/sharp.cjs "$PWD/demos/rias-creations" /tmp
 ```
 
+## The walk-in lands in one shot
+
+John (2026-11-19): "it zooms in into frame, but then readjusts last second". Measured frame by frame:
+the photo reached its full size early and then kept sliding (20 px on a phone, 40 px on a laptop), the
+hero then eased back out 4% over 2.6 s (20 to 51 px), and the walk started with a 12% jump in one frame.
+Now the photo's size and place move on one curve that settles softly onto the hero and ends on the same
+frame as the doorway clearing the screen; the hero keeps that exact framing (no settle after a walk-in).
+The doorway stays just inside the photo until the photo fills the screen, then sweeps past the edges
+(checked from 320 px phones to 2560 px screens: the photo is never more than 0.64 px short of the
+doorway, and the doorway is see-through while walking, so that sliver shows only blush).
+
+`tests/handoff.cjs` records the photo on every frame on a laptop and an iPhone: no jump, no slide after
+the zoom, no readjust after the hand-off. Before: FAIL on all three; now PASS.
+
+```bash
+node demos/rias-creations/tests/handoff.cjs "$PWD/demos/rias-creations"
+```
+
 ## The council: cut until nothing is left
 
 A fresh critic used the whole site each round (laptop, iPhone 13, dark mode, 320 px), wrote what was

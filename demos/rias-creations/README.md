@@ -26,6 +26,7 @@ used only once, so until that file exists the lounge card stays hidden.
 | `tests/buttons.cjs` | Presses every button, link, tab and menu item on a laptop and a phone |
 | `tests/motion.cjs` | Tries to freeze the animations (slow CPU, paused page, rotation, scroll storm) and checks everything still lands |
 | `tests/sharp.cjs` | Holds the walk-in at its last frame and checks the photo is as sharp as the finished hero |
+| `tests/handoff.cjs` | Records the walk-in frame by frame: one shot, no jump, no slide, no readjust after it lands |
 
 ## Things to try
 
