@@ -69,7 +69,7 @@ PASS  No sideways scroll on phone
 | Entry walk-in | Loads on a blush screen with her salon in the arched doorway, then walks you in; plays once per visit |
 | Hero text over the photo | Worst-case contrast measured on the brightest 5% of pixels behind each line: 5.1 to 6.1 |
 | Scroll story | Six moves mixed so no two sections arrive alike: a card lifted face up, a card flipped over (gallery photos dealt like a deck), drop from above, rise from below, slide from either side; once each, at 15% in view; all 32 blocks land; none hidden without the script or under reduced motion; a jumped-to section is already in place |
-| Short page | 4,797 px at 1280×800 (6.0 screens, was 7.9); 7,004 px on an iPhone 13 (8.3 screens, was 9.5) |
+| Short page | 4,711 px at 1280×800 (5.9 screens, was 7.9); 6,510 px on an iPhone 13 (was 7,004); about 600 words on the whole page |
 | Page weight | 1,443 KB before; now 681 KB (laptop), 964 KB (retina laptop), 1,266 KB (iPhone); the background downloads once |
 
 ## Every button
@@ -103,6 +103,18 @@ half-turned.
 ```bash
 node demos/rias-creations/tests/motion.cjs "$PWD/demos/rias-creations"
 ```
+
+## The council: cut until nothing is left
+
+A fresh critic used the whole site each round (laptop, iPhone 13, dark mode, 320 px), wrote what was
+good and what was boring, wordy, confusing or broken, and the fixes went in before the next critic looked.
+
+| Round | What the critic found | What changed |
+|---|---|---|
+| 1 | Rating counted up from "3.0"; a long intro with a dead pause; on phones the logo sat on the headline; two gold buttons at once; internal notes visible; wordy Meet Ria, reviews and booking; a theme switch and "Ctrl K" badge; search put Balayage last; the missing lounge photo | 4.5 from the start; a shorter walk-in; the header turns solid on scroll; one gold button at a time; Meet Ria in one sentence and the motto; one score line; booking in one line plus a call link; no theme switch or badge; best name match first; lounge card removed |
+| 2 | Two service tabs hidden off-screen on phones; "Request sent" looked finished before the code; calling took two taps; the card tucked under the header; the menu icon showed through the photo viewer | Tabs wrap on phones; "Check your texts"; one-tap call on phones; the card scrolls clear of the header; the viewer hides the header |
+| 3 | A Sunday could be picked and the button agreed; the confirmation dropped the service | "Closed Sundays" shows at once; "Balayage on Monday ... See you then, Maria!" |
+| 4 | At 320 px the menu button was cut off; the Notes hint was cut off; the phone number split over two lines | Everything fits at 320 px; "Example: long layers"; the number stays on one line |
 
 ## Not applicable to a website
 
