@@ -874,7 +874,7 @@
   const slotTime = () => $('.slot[aria-checked="true"]').textContent;
   const dayName = (v, long) => new Date(v + "T12:00").toLocaleDateString(undefined, long ? { weekday: "long", month: "long", day: "numeric" } : { weekday: "short" });
   const digits = (s) => s.replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "");
-  const fmtPhone = (p) => `(${p.slice(0, 3)}) ${p.slice(3, 6)}-${p.slice(6)}`;
+  const fmtPhone = (p) => `(${p.slice(0, 3)})\u00a0${p.slice(3, 6)}-\u2060${p.slice(6)}`;   // never split across two lines
 
   /* Predictive feedback: the button says exactly what will be requested. */
   function predict() {

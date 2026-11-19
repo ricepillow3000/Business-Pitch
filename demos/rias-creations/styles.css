@@ -208,6 +208,7 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 #menuBtn { display: none; }
 @media (max-width: 900px) { .nav-links, .search-btn { display: none; } #menuBtn { display: grid; } }
 @media (max-width: 520px) { .nav-right { gap: 8px; } .nav-book { padding: 0 14px; } }
+@media (max-width: 359px) { .nav-right { gap: 4px; } .nav-book { padding: 0 10px; font-size: .85rem; } .nav .logo-salon { font-size: 1.4rem; } }   /* the smallest phones: everything fits, menu button included */
 /* one gold button at a time: the header's appears once the hero's own button is behind you */
 .nav-book { transition: opacity 240ms var(--ease-out), visibility 240ms; }
 .nav:not(.solid) .nav-book { opacity: 0; visibility: hidden; }
