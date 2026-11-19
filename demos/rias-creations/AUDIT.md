@@ -121,6 +121,7 @@ good and what was boring, wordy, confusing or broken, and the fixes went in befo
 | 8 | Late in the day, times that had already passed could still be booked; keyboard hints showed in the phone menu; the photo viewer's caption was a long description | Passed times (and any within 30 minutes) are struck through and the next open one is picked; a day with none left says so; no keyboard hints on touch screens; the viewer shows the photo's short title |
 | 9 | At 1024 px one gallery caption wrapped and knocked its photo out of line | Captions stay on one line, so the row of photos is even from 1024 px up |
 | 10 | At 320 px the time buttons were squeezed edge to edge | Under 360 px the times sit two to a row, each with room around it |
+| 11 | Nothing: "nothing left to improve" (laptop, 1024 px, iPhone 13 light and dark, 320 px) | Done |
 
 ## Not applicable to a website
 
