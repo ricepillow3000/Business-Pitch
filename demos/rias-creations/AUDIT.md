@@ -104,6 +104,22 @@ half-turned.
 node demos/rias-creations/tests/motion.cjs "$PWD/demos/rias-creations"
 ```
 
+## The walk-in never blurs the photo
+
+John's screen recording (iPhone, 2026-11-19): right after walking through the doorway, the salon photo
+went soft and blocky for a moment, then snapped sharp when the hero took over. The doorway was a small
+box (about 230 px wide on a phone) zoomed about 9x, so the photo inside was drawn small and stretched;
+iPhones also decode a large photo at the small size it is first laid out. Now the doorway really grows
+(its size, not a zoom), and its photo is laid out at the size it lands at and only ever shrunk, ending
+at exactly 1:1 where the hero takes over.
+
+`tests/sharp.cjs` holds the walk at its last frame on an iPhone 13 screen and compares it with the
+finished hero at the same zoom: before the fix 64% as sharp (FAIL), now 100% (PASS).
+
+```bash
+node demos/rias-creations/tests/sharp.cjs "$PWD/demos/rias-creations" /tmp
+```
+
 ## The council: cut until nothing is left
 
 A fresh critic used the whole site each round (laptop, iPhone 13, dark mode, 320 px), wrote what was

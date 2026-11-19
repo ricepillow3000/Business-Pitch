@@ -66,6 +66,19 @@
       setTimeout(() => { line.textContent = LINES[i][1]; line.classList.remove("swap"); }, 200);
     };
     heroImg.style.transform = "scale(1.04)";                  // the hero's starting pose, so the landing matches it
+    /* The doorway's photo is laid out at the size it lands at (the hero's) and shrunk to fit the door.
+       It only ever shrinks, never stretches, so it stays as sharp as the hero the whole way in
+       (phones decode a photo at the size it is laid out, and a stretched one goes blocky). */
+    let k0 = 1;
+    const fitDoor = () => {
+      const hb = heroImg.getBoundingClientRect(), nw = heroImg.naturalWidth || 1530, nh = heroImg.naturalHeight || 2040;
+      const s = Math.max(hb.width / nw, hb.height / nh), cw = nw * s, ch = nh * s, dw = door.offsetWidth, dh = door.offsetHeight;
+      k0 = Math.max(dw / cw, dh / ch);
+      Object.assign(dimg.style, { position: "absolute", maxWidth: "none", width: cw + "px", height: ch + "px",
+        left: "50%", top: "50%", marginLeft: -cw / 2 + "px", marginTop: -ch / 2 + "px", transform: `scale(${k0})` });
+    };
+    fitDoor();
+    heroImg.addEventListener("load", () => { if (!walking) fitDoor(); }, { once: true });
     const scrim = $(".hero-scrim"); scrim.style.opacity = "0";
     const tasks = [
       document.fonts ? document.fonts.ready : Promise.resolve(),
@@ -115,8 +128,10 @@
         // but the room always fills the opening until it is big enough to fill the screen
         const D = Math.exp(Math.log(D1) * e);
         const I = Math.min(I1, Math.max(I0 * Math.exp(Math.log(I1 / I0) * e), D));
-        door.style.transform = `translate(${(tx - cx) * e}px, ${(ty - cy) * e}px) scale(${D})`;   // the door drifts to where the photo lands
-        dimg.style.transform = `scale(${I / D})`;
+        // the door really grows (its size, not a zoom of a small picture of it), and drifts to where the photo lands
+        const W = r.width * D, H = r.height * D, mx = cx + (tx - cx) * e, my = cy + (ty - cy) * e;
+        Object.assign(door.style, { left: mx - W / 2 + "px", top: my - H / 2 + "px", width: W + "px", height: H + "px" });
+        dimg.style.transform = `scale(${(I * r.width) / cw})`;   // only ever shrunk: ends at exactly 1, the photo at its own size
         if (p < 1) requestAnimationFrame(step);
         else finish();
       };
