@@ -111,7 +111,7 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
   await p.screenshot({ path: `${out}/audit-desktop-full.png`, fullPage: true });
   await p.screenshot({ path: `${out}/audit-desktop-hero.png` });
   // dark theme contrast: the same check again after switching to evening
-  await p.keyboard.press('t'); await p.waitForTimeout(300);
+  await p.evaluate(() => document.getElementById('modeBtn').click()); await p.waitForTimeout(300);   // "Dark mode", beside Services and Gallery
   const dark = await p.evaluate(() => {
     const parse = (c) => { const v = c.match(/[\d.]+/g).map(Number); return { r: v[0], g: v[1], b: v[2], a: v[3] ?? 1 }; };
     const lum = ({ r, g, b }) => [r, g, b].map((x) => { x /= 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }).reduce((s, x, i) => s + x * [0.2126, 0.7152, 0.0722][i], 0);

@@ -171,7 +171,19 @@ A second fresh judge scored the final version: color match 8/10, glamour 7/10, e
 Both judges found the two-line "Ria's Creations" next to a big "SALON" the weakest part of the look:
 her real logo file (still to get from Ria) should replace it.
 
-## The darker bands are back (2026-11-20, latest)
+## Light version, Light mode / Dark mode, an even gallery (2026-11-20, latest)
+
+John chose the light version to match her logo: the Gallery and Location bands are light again (as in the bright
+design). Four fixes on top:
+- **Dark mode / Light mode** is a plain link beside Services, Stylist, Gallery and Location (on phones, in the menu
+  right under them). It was hidden in the menu and on the "t" key, and the choice stuck, so the site kept opening
+  dark. Light mode is the default on every visit; an older saved evening choice is ignored. `tests/look.cjs`.
+- Below 960 px the header switches to the menu a little earlier, so the new link never wraps.
+- **Gallery:** all five photos the same size (the burgundy one was a bigger "featured" photo and read as a bug).
+- **Hover:** the whole photo grows smoothly (6% over about half a second) and settles back; none on phones or with
+  reduced motion.
+
+## The darker bands are back (2026-11-20)
 
 John: "I like the darker bands ... bring that back and keep intact all our transitions, animations and scroll
 animations". The Gallery and Location bands are espresso again and the photo's tint is back to 60%, exactly
