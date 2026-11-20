@@ -457,11 +457,8 @@
   });
   io2.observe(book); io2.observe(visit);
   const onScroll = () => {
-    const h = nav.offsetHeight, vr = visit.getBoundingClientRect();
-    const overHero = hero.getBoundingClientRect().bottom > h, moved = scrollY > 4;   // see-through only at the very top
-    nav.classList.toggle("solid", !overHero || moved);
-    nav.classList.toggle("cta-gone", heroCta.getBoundingClientRect().bottom < h);   // the header's Book now waits for the hero's to leave
-    nav.classList.toggle("over-dark", moved && (overHero || (vr.top < h && vr.bottom > 0)));   // a dark bar over the photo and the dark Location band
+    // the header is always solid white (her logo sits on white); only Book now waits for the hero's own button to leave
+    nav.classList.toggle("cta-gone", heroCta.getBoundingClientRect().bottom < nav.offsetHeight);
   };
   addEventListener("scroll", onScroll, { passive: true }); onScroll();
 

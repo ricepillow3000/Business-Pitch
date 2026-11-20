@@ -171,18 +171,19 @@ A second fresh judge scored the final version: color match 8/10, glamour 7/10, e
 Both judges found the two-line "Ria's Creations" next to a big "SALON" the weakest part of the look:
 her real logo file (still to get from Ria) should replace it.
 
-## Her logo, in her salon's colors (2026-11-20, later)
+## Her logo, exactly, on a white header (2026-11-20, final)
 
-John: "it has a white background and it is incredibly ugly ... implement her design logo while having it
-complement the overall color scheme of her place". The sign's white backing and slate blue suit brick
-outdoors; the page needs her salon's own colors. Kept her shape exactly (the stacked serif name, the pink
-apostrophe and i-dots, the big heavy SALON, and the proportions); the name is now her mirror brass gold
-(#DFB677 over the dark photo and dark sections, 9.1:1; the deeper gold #7F6135 on white, 5.5:1), SALON is
-warm white on dark and espresso on white, and the pink is her roses' (a lighter shade of it on dark).
-The loading screen's logo is about twice as large (343 px wide on an iPhone 13, was 162; 465 px on a
-laptop, was 204), stops short of the doorway's ring on short screens, and is left off a sideways phone,
-where the doorway fills the screen. `tests/logo.cjs` now checks the gold, that there is no backing, and
-that the name reads at 4.5:1 or better both over the photo and on the white header.
+John first found the sign's white backing ugly over the dark photo; a version in the salon's gold was tried,
+then John: "we want to keep the exact design of her current logo". Chosen: her logo exactly as on her sign
+(slate blue #506895 stacked name, the white panel, the pink apostrophe and i-dots, the big heavy SALON),
+on a header that is solid white from the very top, so the panel blends in like a letterhead instead of
+looking like a sticker. SALON is espresso there (white letters cannot show on white); in evening mode the
+white panel shows, exactly as on the sign. The loading screen's logo is about twice as large (343 px wide
+on an iPhone 13, was 162; 465 px on a laptop, was 204), stops short of the doorway's ring on short screens,
+and is left off a sideways phone, where the doorway fills the screen.
+`tests/logo.cjs` (9 checks): the slate name, the panel, the solid white header at the top, 5.4:1 on white,
+the pink accents, the heavy SALON, the sign's proportions, bigger, and every phone header fits.
+`LOGO-REQUEST.md`: a ready-to-send note asking Ria for her original logo file, which would make it exact.
 
 ## Her logo, from her storefront sign (2026-11-20)
 

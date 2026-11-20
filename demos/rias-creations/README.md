@@ -64,7 +64,7 @@ used only once, so until that file exists the lounge card stays hidden.
 - The remaining prices (real so far: keratin from $150, eyebrow tint or wax $20, lashes from $40, Brazilian $35, full-body wax $65)
 - The privacy and terms drafts
 - Whether booking requests should text her phone
-- Her logo file, if she has one: the site rebuilds her storefront sign in type (see AUDIT.md)
+- Her logo file: the site rebuilds her storefront sign in type; `LOGO-REQUEST.md` has a ready-to-send note
 - A full-size original of the salon photo (the page uses her photo enlarged 4 times)
 
 Booking, the text code and the rating refresh are simulated in this demo. A real site

@@ -1,7 +1,7 @@
 // The logo is her storefront sign: measured from the page's own pixels, it must keep the sign's DNA
 // and proportions, be bigger than the old wordmark, and fit every phone header.
-//   - "Ria's / Creations" stacked, in her salon's colors (John 2026-11-20: no white backing): her mirror
-//     brass gold, deeper gold on white; readable wherever it sits
+//   - exactly her sign (John 2026-11-20: "keep the exact design of her current logo"): "Ria's / Creations"
+//     stacked in slate blue (#506895, measured from the sign) on its white panel, on a solid white header
 //   - the apostrophe and both i-dots in pink; "SALON" in heavy capitals beside it
 //   - name width / SALON width 0.82 and name height / SALON height 0.87 on the sign (within 8%)
 //   - on a laptop the logo is at least 240 px wide (the old wordmark was 204 px)
@@ -30,18 +30,20 @@ const rec = (name, ok, detail) => { if (!ok) failed++; console.log(`${ok ? 'PASS
     return { ink: cs.color, family: cs.fontFamily, lines: n.querySelectorAll(':scope > br').length + 1, panel: !!document.querySelector('.logo-panel'),
              dots, ap, salonText: salon.textContent, salonUpper: ss.textTransform, salonWeight: +ss.fontWeight, salonFamily: ss.fontFamily, text: n.textContent };
   });
-  const pinks = ['rgb(194, 79, 124)', 'rgb(217, 112, 143)'];   // her roses' pink; a lighter shade of it over dark areas
-  rec('gold name in two stacked lines', parts.ink === 'rgb(223, 182, 119)' && parts.lines === 2 && /Merriweather/.test(parts.family),
-    `${parts.ink} (her mirror brass, over the photo), ${parts.lines} lines, ${parts.family.split(',')[0]}`);
-  rec('no white backing', !parts.panel, parts.panel ? 'a backing is still there' : 'the letters sit straight on the page');
-  // the name is read on what is behind it: gold over the dark photo, deeper gold on the white header
+  const pinks = ['rgb(194, 79, 124)'];   // the pink of her sign's dots
+  rec('slate name in two stacked lines', parts.ink === 'rgb(80, 104, 149)' && parts.lines === 2 && /Merriweather/.test(parts.family),
+    `${parts.ink} (her sign's slate blue), ${parts.lines} lines, ${parts.family.split(',')[0]}`);
+  rec('her white panel behind the name', parts.panel, parts.panel ? 'one panel layer behind every letter' : 'missing');
+  const top = await p.evaluate(() => getComputedStyle(document.getElementById('nav')).backgroundColor);
+  rec('on a solid white header from the top', /^rgb\(250, 250, 251\)$/.test(top), `header at the very top: ${top}`);
+  // the name is read on white: at the very top and after scrolling (the header never changes)
   const lum = (h) => { const c = h.match(/\d+/g).slice(0, 3).map((v) => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * c[0] + .7152 * c[1] + .0722 * c[2]; };
   const cr = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((m, n) => n - m); return (x + .05) / (y + .05); };
   await p.evaluate(() => scrollTo(0, document.getElementById('services').offsetTop)); await p.waitForTimeout(600);
   const light = await p.evaluate(() => [getComputedStyle(document.querySelector('#nav .logo-name')).color, getComputedStyle(document.getElementById('nav')).backgroundColor]);
   await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(400);
-  const onDark = cr(parts.ink, 'rgb(32, 25, 23)'), onLight = cr(light[0], light[1]);
-  rec('the name reads clearly everywhere', onDark >= 4.5 && onLight >= 4.5, `${onDark.toFixed(1)}:1 gold over the dark photo, ${onLight.toFixed(1)}:1 deeper gold on the white header (4.5 needed)`);
+  const atTop = cr(parts.ink, top), onLight = cr(light[0], light[1]);
+  rec('the name reads clearly', atTop >= 4.5 && onLight >= 4.5, `${atTop.toFixed(1)}:1 at the top, ${onLight.toFixed(1)}:1 after scrolling (4.5 needed)`);
   rec('pink apostrophe and both i-dots', pinks.includes(parts.ap) && parts.dots.length === 2 && parts.dots.every((d) => pinks.includes(d)), `apostrophe ${parts.ap}, dots ${parts.dots.join(' / ')}`);
   rec('a heavy SALON in capitals', /salon/i.test(parts.salonText) && parts.salonUpper === 'uppercase' && parts.salonWeight >= 800 && /Archivo/.test(parts.salonFamily),
     `${parts.salonFamily.split(',')[0]} ${parts.salonWeight}, ${parts.salonUpper}`);
@@ -50,12 +52,13 @@ const rec = (name, ok, detail) => { if (!ok) failed++; console.log(`${ok ? 'PASS
   await p.evaluate(() => {
     const card = document.createElement('div');
     card.style.cssText = 'position:fixed;left:0;top:0;z-index:9999;background:#808080;padding:30px;font-size:40px';
-    const l = document.querySelector('#nav .logo').cloneNode(true); l.style.cssText = 'color:#ffffff;--logo-ink:rgb(80,104,149);--logo-pink:#808080';   // letters only: the dots blend into the card
+    const l = document.querySelector('#nav .logo').cloneNode(true); l.style.cssText = 'color:#ffffff;--logo-ink:rgb(80,104,149);--logo-pink:#808080;--logo-panel:#808080';   // letters only: the dots and panel blend into the card
     card.appendChild(l); document.body.appendChild(card);
   });
   await p.waitForTimeout(300);
   const shot = path.join(os.tmpdir(), 'ria-logo-measure.png');
-  await p.screenshot({ path: shot, clip: { x: 0, y: 0, width: 1000, height: 300 } });
+  const cardBox = await p.evaluate(() => { const r = document.querySelector('body > div:last-child').getBoundingClientRect(); return { x: r.x, y: r.y, width: r.width, height: r.height }; });
+  await p.screenshot({ path: shot, clip: cardBox });   // just the card: nothing white around it
   const m = JSON.parse(execFileSync('python3', ['-c', `
 import numpy as np, json
 from PIL import Image

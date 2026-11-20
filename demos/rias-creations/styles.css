@@ -189,23 +189,29 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .nav.solid { background: var(--bg); color: var(--ink); border-color: var(--line); box-shadow: 0 8px 24px -20px rgb(var(--shadow) / .3); }
 /* Book now: always one tap away. Gold over the dark hero, espresso on light pages. */
 .nav-book { min-height: 44px; padding: 0 18px; font-size: .9rem; }   /* 44 px: a comfortable thumb tap */
-.nav:not(.solid) .nav-book { --btn-bg: var(--gold); --btn-fg: var(--espresso); --btn-ring: var(--espresso); }
 .nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 /* Her storefront sign: "Ria's Creations" stacked in a soft, bold serif beside a big SALON.
    The one place capitals are used, because her sign uses them. */
-/* Her logo, from her storefront sign: "Ria's / Creations" stacked tight and centered in a sturdy, wide bold
-   serif, the apostrophe and both i-dots in pink, beside a big, heavy, compact SALON. The shape is hers,
-   measured against her sign (name / SALON width 0.80, sign 0.82; height 0.87, sign 0.87). The colors are her
-   salon's: the sign's white backing and slate blue suit brick outdoors, not this page (John, 2026-11-20), so the
-   name is her mirror brass, gold over the dark photo and a deeper gold on white; SALON is warm white on dark and
-   espresso on white; the pink is her roses'. Fonts: Merriweather ExtraBold at 112% width (its sturdy small-size
-   design) and Archivo Black at 66% width, the closest free match to the sign's letters. */
-.logo { --logo-ink: var(--gold-ink); --logo-pink: #c24f7c; display: inline-flex; align-items: center; gap: .28em; line-height: 1; font-size: 1rem; }
-.nav:not(.solid) .logo, .nav.over-dark .logo, .on-dark .logo, :root[data-theme="dark"] .logo { --logo-ink: var(--gold); --logo-pink: #d9708f; }
+/* Her logo, exactly as on her storefront sign (John, 2026-11-20: "keep the exact design of her current logo"):
+   "Ria's / Creations" stacked tight and centered in a sturdy, wide bold serif, slate blue (#506895, measured
+   from her sign) on a white panel, the apostrophe and both i-dots in pink, beside a big, heavy, compact SALON.
+   It always sits on white (the header is a solid white bar), so the panel blends in like a letterhead instead
+   of looking like a sticker; SALON is dark there, as white letters cannot show on white. Measured against
+   the sign: name / SALON width 0.80 (sign 0.82), height 0.87 to 0.89 (sign 0.87). Fonts: Merriweather ExtraBold
+   at 112% width (its sturdy small-size design) and Archivo Black at 66% width, the closest free match to the
+   sign's letters, until her original logo file replaces them. */
+.logo { --logo-ink: #506895; --logo-pink: #c24f7c; --logo-panel: var(--bg); display: inline-flex; align-items: center; gap: .28em; line-height: 1; font-size: 1rem; }
+.entry-logo { --logo-panel: var(--tint); }                     /* on the blush loading screen it blends the same way */
+:root[data-theme="dark"] .logo { --logo-panel: #ffffff; }     /* evening mode: the white panel shows, exactly as on her sign */
 .logo-name {
   font: 800 1.32em/.8 "Merriweather", Georgia, serif; font-stretch: 112%; font-variation-settings: "opsz" 18;
-  letter-spacing: .02em; text-align: center; color: var(--logo-ink);
+  letter-spacing: .02em; text-align: center; color: var(--logo-ink); position: relative; z-index: 0;
 }
+/* the panel: one layer behind every letter (a copy of the name, fattened), each line on its own rounded shape */
+.logo-panel { position: absolute; inset: 0; z-index: -1; color: var(--logo-panel); text-shadow: 0.160em 0.000em 0 var(--logo-panel), 0.157em 0.031em 0 var(--logo-panel), 0.148em 0.061em 0 var(--logo-panel), 0.133em 0.089em 0 var(--logo-panel), 0.113em 0.113em 0 var(--logo-panel), 0.089em 0.133em 0 var(--logo-panel), 0.061em 0.148em 0 var(--logo-panel), 0.031em 0.157em 0 var(--logo-panel), 0.000em 0.160em 0 var(--logo-panel), -0.031em 0.157em 0 var(--logo-panel), -0.061em 0.148em 0 var(--logo-panel), -0.089em 0.133em 0 var(--logo-panel), -0.113em 0.113em 0 var(--logo-panel), -0.133em 0.089em 0 var(--logo-panel), -0.148em 0.061em 0 var(--logo-panel), -0.157em 0.031em 0 var(--logo-panel), -0.160em 0.000em 0 var(--logo-panel), -0.157em -0.031em 0 var(--logo-panel), -0.148em -0.061em 0 var(--logo-panel), -0.133em -0.089em 0 var(--logo-panel), -0.113em -0.113em 0 var(--logo-panel), -0.089em -0.133em 0 var(--logo-panel), -0.061em -0.148em 0 var(--logo-panel), -0.031em -0.157em 0 var(--logo-panel), -0.000em -0.160em 0 var(--logo-panel), 0.031em -0.157em 0 var(--logo-panel), 0.061em -0.148em 0 var(--logo-panel), 0.089em -0.133em 0 var(--logo-panel), 0.113em -0.113em 0 var(--logo-panel), 0.133em -0.089em 0 var(--logo-panel), 0.148em -0.061em 0 var(--logo-panel), 0.157em -0.031em 0 var(--logo-panel), 0.088em 0.000em 0 var(--logo-panel), 0.076em 0.044em 0 var(--logo-panel), 0.044em 0.076em 0 var(--logo-panel), 0.000em 0.088em 0 var(--logo-panel), -0.044em 0.076em 0 var(--logo-panel), -0.076em 0.044em 0 var(--logo-panel), -0.088em 0.000em 0 var(--logo-panel), -0.076em -0.044em 0 var(--logo-panel), -0.044em -0.076em 0 var(--logo-panel), -0.000em -0.088em 0 var(--logo-panel), 0.044em -0.076em 0 var(--logo-panel), 0.076em -0.044em 0 var(--logo-panel); }
+.logo-panel .logo-ap { color: inherit; }
+.logo-panel .logo-i::after { background: var(--logo-panel); }
+.logo-panel > span { background: var(--logo-panel); padding: 0 .06em; border-radius: .3em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
 .logo-i { position: relative; }
 .logo-i::after {   /* the pink dot, exactly where Merriweather draws an i's dot */
   content: ""; position: absolute; left: 53%; top: .175em; width: .17em; height: .17em; border-radius: 50%;
@@ -834,8 +840,6 @@ footer.site .wrap.foot-legal { display: flex; justify-content: space-between; ga
 @media (max-width: 560px) { footer.site .wrap.foot { flex-direction: column; align-items: start; } }
 
 /* nav over the dark Location band: solid espresso, so nothing scrolls under the logo */
-.nav.solid.over-dark { background: var(--espresso); color: #f4ede6; border-color: rgb(244 237 230 / .14); }
-.nav.over-dark .nav-book { --btn-bg: var(--gold); --btn-fg: var(--espresso); --btn-ring: var(--espresso); }
 /* the footer sits inside the Location band; keep that band's centred two-column grid out of it */
 footer.site .wrap.foot { align-items: start; }
 
