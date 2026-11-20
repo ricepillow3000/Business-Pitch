@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { gsap, useGSAP } from "@/lib/gsap";
-import { reveal } from "@/lib/intro";
+import { introMode, reveal } from "@/lib/intro";
 
 /*
  * THE "JIDO" INTRO
@@ -51,17 +51,27 @@ export function Loader() {
         return;
       }
 
+      const intro = introMode();
+      const seen = intro !== "full";
+      root.current!.dataset.intro = intro;
+      if (intro === "none") {
+        // moving between pages of this site: no curtain, the view transition does the work
+        gsap.set(root.current, { display: "none" });
+        finish();
+        return;
+      }
+
       const progress = { v: 0 };
       const tl = gsap.timeline({ paused: true, onComplete: () => gsap.set(root.current, { display: "none" }) });
 
-      tl.from(word, { autoAlpha: 0, yPercent: 12, duration: 1.2 })
-        .from(count, { autoAlpha: 0, duration: 0.6 }, 0.2)
+      tl.from(word, { autoAlpha: 0, yPercent: 12, duration: seen ? 0.5 : 1.2 })
+        .from(count, { autoAlpha: 0, duration: seen ? 0.2 : 0.6 }, seen ? 0.05 : 0.2)
         .to(progress, {
           v: 100,
-          duration: 1.8,
+          duration: seen ? 0.4 : 1.8,
           ease: "power2.inOut",
           onUpdate: () => void (count.textContent = pct(progress.v)),
-        }, 0.2)
+        }, seen ? 0.05 : 0.2)
 
         // 100% → numbers fade, word reaches toward the viewer
         .to(count, { autoAlpha: 0, y: 6, duration: 0.35, ease: "power2.in" }, ">+0.1")
@@ -69,11 +79,22 @@ export function Loader() {
 
         // peak → the word fractures, the curtain opens
         .addLabel("split")
+        .call(() => void tl.timeScale(1), [], "split") // a skipped intro still splits at full grace
         .call(finish, [], "split")
         .to(word, { scale: 2.4, duration: SPLIT, ease: "split" }, "split")
         .to(left, { x: () => -off(), duration: SPLIT, ease: "split" }, "split")
         .to(right, { x: () => off(), duration: SPLIT, ease: "split" }, "split")
         .to(bg, { autoAlpha: 0, duration: SPLIT, ease: "split" }, "split");
+
+      // Interruptible: a click, key, scroll or tap fast-forwards smoothly to the split
+      // (speeds the running timeline up instead of jumping, so nothing pops).
+      const skip = () => {
+        if (tl.time() < tl.labels.split) gsap.to(tl, { timeScale: 6, duration: 0.2, overwrite: true });
+        stopListening();
+      };
+      const events = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
+      const stopListening = () => events.forEach((e) => removeEventListener(e, skip));
+      events.forEach((e) => addEventListener(e, skip, { passive: true }));
 
       let alive = true;
       document.fonts.ready.then(() => {
@@ -81,6 +102,7 @@ export function Loader() {
       });
       return () => {
         alive = false;
+        stopListening();
       };
     },
     { scope: root },
@@ -89,7 +111,8 @@ export function Loader() {
   return (
     <div ref={root} data-loader className="fixed inset-0 z-[100] grid place-items-center overflow-hidden" aria-hidden>
       <div data-bg className="absolute inset-0 bg-slate" />
-      <div className="relative flex flex-col items-center">
+      {/* optical centre: a block of text looks centred slightly ABOVE the true middle */}
+      <div data-optical className="relative -mt-[8vh] flex flex-col items-center">
         <div data-word className="flex font-wide text-[clamp(5rem,21vw,24rem)] leading-none font-[500] text-beige will-change-transform">
           <span data-left className="block">JI</span>
           <span data-right className="block">DO</span>

@@ -1,14 +1,17 @@
 "use client";
 
-import { useRef } from "react";
+import { Arrow } from "@/components/Arrow";
+import { useRef, useState } from "react";
 import { ContactMenu } from "@/components/ContactMenu";
-import { Logo } from "@/components/Logo";
+import { CopyEmail } from "@/components/CopyEmail";
+import { TopicCombobox } from "@/components/TopicCombobox";
 import { Plus } from "@/components/Plus";
+import { SiteFooter } from "@/components/SiteFooter";
 import { WorkflowGraph } from "@/components/WorkflowGraph";
+import { EMAIL, GMAIL, SHOW_EMAIL } from "@/lib/contact";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 import { onReveal } from "@/lib/intro";
 
-const EMAIL = "john7000.nguyen@gmail.com";
 const TASKS = ["Re-typing form entries", "Chasing unpaid invoices", "Booking and rebooking", "Updating the CRM"];
 const WORKFLOWS = [
   { name: "Invoicing", line: "Completed jobs become invoices. Payments are matched to them." },
@@ -18,11 +21,11 @@ const WORKFLOWS = [
 
 /* ── small building blocks ─────────────────────────────────────────── */
 
-/** `[[002]] // THE FRICTION ───────` */
-function Tag({ n, children }: { n: string; children: string }) {
+/** `■ // THE FRICTION ───────` (the square echoes a block of the logo) */
+function Tag({ children }: { children: string }) {
   return (
-    <div data-reveal className="flex items-center gap-4 font-hud text-flag">
-      <span className="text-beige">[[{n}]]</span>
+    <div className="flex items-center gap-4 font-label text-flag">
+      <span className="h-1.5 w-1.5 bg-beige" />
       <span>// {children}</span>
       <span className="h-px flex-1 bg-slate-line" />
     </div>
@@ -51,10 +54,11 @@ function Line({ children, className = "" }: { children: string; className?: stri
 
 export default function Home() {
   const root = useRef<HTMLElement>(null);
+  const [topic, setTopic] = useState("");
 
   useGSAP(
     (_, contextSafe) => {
-      // [[001]] HERO: waits for the loader. Same ease + duration as the curtain split,
+      // HERO: waits for the loader. Same ease + duration as the curtain split,
       // so the page appears to be *uncovered* by the letters rather than animate after them.
       gsap.set("[data-hero-line]", { yPercent: 110 });
       gsap.set("[data-hero-fade]", { autoAlpha: 0, y: 24 });
@@ -75,15 +79,10 @@ export default function Home() {
         scrollTrigger: { trigger: "#top", start: "top top", end: "bottom top", scrub: true },
       });
 
-      // Generic staggered reveals for everything marked [data-reveal].
-      gsap.set("[data-reveal]", { autoAlpha: 0, y: 40 });
-      gsap.utils.toArray<HTMLElement>("section").forEach((section) => {
-        const items = section.querySelectorAll("[data-reveal]");
-        if (items.length)
-          gsap.to(items, { autoAlpha: 1, y: 0, stagger: 0.08, scrollTrigger: { trigger: section, start: "top 78%" } });
-      });
-
-      // Section headlines: masked line-by-line rise.
+      // No fade-up on every section. Each section has its own single entrance:
+      //   hero: uncovered by the loader · friction: words light up, tasks get struck off
+      //   automation: the diagram assembles · initiation: the headline rises from its mask
+      // Everything else is simply there.
       gsap.utils.toArray<HTMLElement>("[data-lines]").forEach((el) =>
         SplitText.create(el, {
           type: "lines",
@@ -94,7 +93,7 @@ export default function Home() {
         }),
       );
 
-      // [[002]] FRICTION: the statement lights up word by word as you read it.
+      // FRICTION: the statement lights up word by word as you read it (scrubbed, not a fade-in).
       SplitText.create("[data-words]", {
         type: "words",
         autoSplit: true,
@@ -110,7 +109,7 @@ export default function Home() {
       // …and the manual tasks get struck off, one after another.
       gsap.timeline({ scrollTrigger: { trigger: "[data-strikes]", start: "top 75%", end: "bottom 50%", scrub: true } })
         .to("[data-bar]", { scaleX: 1, stagger: 0.5, ease: "none" })
-        .to("[data-task]", { opacity: 0.35, stagger: 0.5, ease: "none" }, 0.25);
+        .to("[data-task]", { opacity: 0.85, stagger: 0.5, ease: "none" }, 0.25); // struck off, still readable (4.5:1+)
 
       return offReveal;
     },
@@ -119,10 +118,11 @@ export default function Home() {
 
   return (
     <main ref={root}>
-      {/* ── [[001]] THE HERO ─────────────────────────────────────── */}
-      <section id="top" data-section data-label="OVERVIEW" className="gutter relative flex min-h-svh flex-col justify-end overflow-hidden pt-28 pb-20 md:pb-24">
+      {/* ── THE HERO ─────────────────────────────────────── */}
+      {/* Upright screens (phones, tablets): the hero is as tall as its content, so the next section
+          follows instead of a screen of empty space. Wide screens: a full-screen hero, centred. */}
+      <section id="top" data-section data-label="OVERVIEW" className="gutter relative flex flex-col justify-center overflow-hidden pt-[calc(4rem+12svh)] pb-10 landscape:min-h-svh landscape:pt-28 landscape:pb-20 md:landscape:pb-24">
         <div data-hero className="flex flex-col gap-10 md:gap-14">
-          <p data-hero-fade className="font-hud text-flag">[ AI automation // local business ]</p>
           <h1 className="quiet font-wide text-mega text-beige">
             <Line>Intelligent</Line>
             <Line className="md:pl-[12vw]">workflows.</Line>
@@ -132,21 +132,21 @@ export default function Home() {
             <p data-hero-fade className="quiet max-w-[36ch] text-lead text-flag md:col-span-6">
               We build intelligent workflows for local businesses. Automate the repetitive, focus on the essential.
             </p>
-            <a href="#friction" data-hero-fade className="w-fit font-hud text-flag md:col-span-2 md:col-start-11 md:justify-self-end">
-              Scroll ↓
+            <a href="#friction" data-hero-fade className="hit flex w-fit items-center gap-2 font-label text-flag md:col-span-2 md:col-start-11 md:justify-self-end">
+              Scroll <Arrow dir="down" />
             </a>
           </div>
         </div>
       </section>
 
-      {/* ── [[002]] THE FRICTION ─────────────────────────────────── */}
-      <section id="friction" data-section data-label="FRICTION" className="gutter relative py-32 md:py-48">
-        <Tag n="002">The friction</Tag>
+      {/* ── THE FRICTION ─────────────────────────────────── */}
+      <section id="friction" data-section data-label="FRICTION" className="gutter relative pt-16 pb-32 md:pb-48 landscape:pt-32 md:landscape:pt-48">
+        <Tag>The friction</Tag>
         <h2 data-words className="quiet mt-16 max-w-[17ch] font-wide text-display text-beige md:mt-24">
           The average business loses hours a week to manual tasks.
         </h2>
         <div className="mt-20 grid gap-14 md:mt-32 md:grid-cols-12">
-          <ul data-strikes className="quiet space-y-4 font-hud text-flag md:col-span-4">
+          <ul data-strikes className="quiet space-y-4 font-label text-flag md:col-span-4">
             {TASKS.map((t) => (
               <li key={t} className="relative w-fit">
                 <span data-task>{t}</span>
@@ -154,30 +154,32 @@ export default function Home() {
               </li>
             ))}
           </ul>
-          <p data-lines className="quiet font-wide text-[clamp(1.5rem,2.6vw,2.75rem)] leading-[1.05] text-beige md:col-span-7 md:col-start-6 md:text-right">
+          <p className="quiet font-wide text-[clamp(1.5rem,2.6vw,2.75rem)] leading-[1.05] text-beige md:col-span-7 md:col-start-6 md:text-right">
             We implement systems to reclaim that time.
           </p>
         </div>
       </section>
 
-      {/* ── [[003]] THE AUTOMATION ───────────────────────────────── */}
+      {/* ── THE AUTOMATION ───────────────────────────────── */}
       <section id="automation" data-section data-label="AUTOMATION" className="gutter relative py-32 md:py-48">
-        <Tag n="003">The automation</Tag>
-        <h2 data-lines className="quiet mt-16 w-fit font-wide text-display text-beige md:mt-24">Connected, quietly.</h2>
+        <Tag>The automation</Tag>
+        <h2 className="quiet mt-16 w-fit font-wide text-display text-beige md:mt-24">Connected, quietly.</h2>
         <div className="mt-12 grid items-center gap-20 md:mt-16 md:grid-cols-12">
           <div className="quiet md:col-span-5">
-            <p data-reveal className="mt-8 max-w-[38ch] text-lead text-flag">
+            <p className="mt-8 max-w-[38ch] text-lead text-flag">
               We connect the tools you already use. Routine work moves between them on its own.
             </p>
             <ol className="mt-14 border-t border-slate-line">
-              {WORKFLOWS.map((w, i) => (
-                <li key={w.name} data-reveal className="grid grid-cols-[3.5rem_1fr] gap-y-1 border-b border-slate-line py-5">
-                  <span className="font-hud text-flag">0{i + 1}</span>
+              {WORKFLOWS.map((w) => (
+                <li key={w.name} className="grid gap-x-6 gap-y-1 border-b border-slate-line py-5 sm:grid-cols-[8rem_1fr]">
                   <span className="font-wide text-sm text-beige">{w.name}</span>
-                  <span className="col-start-2 text-sm leading-relaxed text-flag">{w.line}</span>
+                  <span className="text-sm leading-relaxed text-flag">{w.line}</span>
                 </li>
               ))}
             </ol>
+            <a href="/services" className="mt-6 inline-flex min-h-11 items-center font-label text-beige">
+              See everything we automate
+            </a>
           </div>
           <div className="md:col-span-6 md:col-start-7">
             <WorkflowGraph />
@@ -185,38 +187,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── [[004]] THE INITIATION ───────────────────────────────── */}
+      {/* ── THE INITIATION ───────────────────────────────── */}
       <section id="initiation" data-section data-label="INITIATION" className="gutter relative flex min-h-svh flex-col pt-32 pb-24 md:pt-48">
-        <Tag n="004">The initiation</Tag>
-        <h2 data-lines className="quiet mt-16 max-w-[18ch] font-wide text-display text-beige md:mt-24">
+        <Tag>The initiation</Tag>
+        <h2 data-lines className="quiet mt-16 max-w-[20ch] font-wide text-display text-beige md:mt-24">
           Let systems handle the mechanical.
         </h2>
-        <p data-reveal className="quiet mt-8 w-fit text-lead text-flag">Focus on what you do best.</p>
+        <p className="quiet mt-8 w-fit text-lead text-flag">Focus on what you do best.</p>
 
-        {/* z-20: the reveal transform makes this a stacking context; keep the open menu above what follows */}
-        <div data-reveal className="relative z-20 mt-16 md:mt-20">
-          <ContactMenu email={EMAIL} />
+        {/* z-30 / z-20: keep the open lists above what follows */}
+        <div className="relative z-30 mt-14 md:mt-16">
+          <TopicCombobox value={topic} onChange={setTopic} />
+        </div>
+        <div className="relative z-20 mt-10 md:mt-12">
+          <ContactMenu topic={topic} />
         </div>
 
-        <dl data-reveal className="quiet mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 md:mt-14">
-          <dt className="self-center font-hud text-flag">Email</dt>
-          <dd>
-            <a href={`mailto:${EMAIL}`} className="text-lead break-all text-beige">{EMAIL}</a>
-          </dd>
-        </dl>
+        {SHOW_EMAIL && (
+          <dl className="quiet mt-12 grid w-fit grid-cols-[5rem_1fr] gap-x-6 md:mt-14">
+            <dt className="self-center font-label text-flag">Email</dt>
+            <dd className="flex flex-wrap items-center gap-x-6 gap-y-3">
+              <a href={GMAIL} target="_blank" rel="noopener noreferrer" className="hit text-lead break-all text-beige">{EMAIL}&nbsp;<Arrow /><span className="sr-only"> (opens Gmail in a new tab)</span></a>
+              <CopyEmail />
+            </dd>
+          </dl>
+        )}
 
-        <footer className="mt-auto grid gap-y-6 pt-32 font-hud text-flag md:grid-cols-4">
-          <div className="col-span-full mb-4 flex justify-between text-flag/70">
-            {Array.from({ length: 5 }, (_, i) => <Plus key={i} />)}
-          </div>
-          <span className="flex flex-col gap-3">
-            <Logo markClassName="h-8 w-8" />
-            <span>© 2026 JIDO</span>
-          </span>
-          <a href={`mailto:${EMAIL}`} className="w-fit normal-case tracking-wider">{EMAIL}</a>
-          <span>SYS.STATUS // ONLINE</span>
-          <a href="#top" className="w-fit md:justify-self-end">Back to top ↑</a>
-        </footer>
+        <SiteFooter />
       </section>
     </main>
   );

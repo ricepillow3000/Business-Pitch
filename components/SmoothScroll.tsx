@@ -22,7 +22,28 @@ export function SmoothScroll() {
     gsap.ticker.add(raf);
     gsap.ticker.lagSmoothing(0);
 
-    const off = onReveal(() => lenis.start());
+    const off = onReveal(() => {
+      lenis.start();
+      // arriving from another page with a #section (e.g. /#initiation): glide to it
+      const target = location.hash && document.getElementById(decodeURIComponent(location.hash.slice(1)));
+      if (!target) return;
+      // Let Lenis measure the page first (when the intro is skipped this runs instantly), and
+      // aim again once fonts and images have settled, unless the visitor has started scrolling.
+      let userMoved = false;
+      const moved = () => (userMoved = true);
+      addEventListener("wheel", moved, { once: true, passive: true });
+      addEventListener("touchstart", moved, { once: true, passive: true });
+      addEventListener("keydown", moved, { once: true });
+      const go = (duration: number) => {
+        if (userMoved) return;
+        lenis.resize();
+        lenis.scrollTo(target, { duration, force: true });
+      };
+      requestAnimationFrame(() => go(1.4));
+      document.fonts.ready.then(() => go(1.4));
+      if (document.readyState === "complete") setTimeout(() => go(0.8), 600);
+      else addEventListener("load", () => setTimeout(() => go(0.8), 300), { once: true });
+    });
     document.fonts.ready.then(() => ScrollTrigger.refresh());
 
     return () => {
