@@ -171,6 +171,13 @@ A second fresh judge scored the final version: color match 8/10, glamour 7/10, e
 Both judges found the two-line "Ria's Creations" next to a big "SALON" the weakest part of the look:
 her real logo file (still to get from Ria) should replace it.
 
+## Always the bright design (2026-11-20)
+
+John saw the old dark look on his iPhone and laptop. The site was never stale: it followed the phone's Dark
+Mode and the Claude app's dark setting into its evening look. It now always opens bright; evening mode is
+only a visitor's own choice in the menu (saved under a new key, so older saved choices reset).
+`tests/logo.cjs` checks an iPhone in Dark Mode with the page marked dark: bright (FAIL before, PASS now).
+
 ## A bright site, like her salon (2026-11-20)
 
 John: "do you think switching to a bright version of the website would be better? ... make the changes".

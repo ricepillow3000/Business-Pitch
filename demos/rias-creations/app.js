@@ -440,7 +440,7 @@
     root.dataset.theme = next;
     void root.offsetWidth;                                     // flush styles while transitions are off
     requestAnimationFrame(() => root.classList.remove("theme-switching"));
-    try { localStorage.setItem("ria-theme", next); } catch (e) {}
+    try { localStorage.setItem("ria-theme-choice", next); } catch (e) {}
   }
 
   /* ── Nav turns solid past the hero; mobile bar shows between hero and booking ── */
