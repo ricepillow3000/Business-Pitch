@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ria's Creations Salon, Lilburn GA</title>
+<meta name="description" content="Enhancing beauty in Lilburn, Georgia: haircuts, color, balayage, keratin, bridal hair, threading, lashes, waxing, facials and massage. Walk-ins welcome, free parking.">
+<meta name="theme-color" content="#201917">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Ria's Creations Salon">
+<meta property="og:title" content="Ria's Creations Salon, Lilburn GA">
+<meta property="og:description" content="Enhancing beauty. A full service salon at Lilburn Corner: cuts, color, balayage, keratin, threading, lashes, waxing, facials and massage. Walk-ins welcome.">
+<meta property="og:image" content="og-image.png">
+<meta property="og:image:alt" content="Ria's Creations Salon: lit arched mirrors and styling chairs">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="format-detection" content="telephone=yes">
+<script>
+  /* Before first paint: mark JS as present and set the theme, so there is never a flash. */
+  (function () {
+    var d = document.documentElement, t = null;
+    d.classList.add("js");
+    /* always the bright design (John, 2026-11-20): a phone in Dark Mode no longer turns the site dark;
+       evening mode only if the visitor chooses it in the menu (saved under a new key, so older saved choices reset) */
+    try { t = localStorage.getItem("ria-theme-choice"); } catch (e) {}
+    if (t !== "light" && t !== "dark") t = "light";
+    d.dataset.theme = t;
+    /* the entry plays once per visit; skipped for deep links and for reduced motion */
+    var seen = false;
+    try { seen = sessionStorage.getItem("ria-entered") === "1"; } catch (e) {}
+    var still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (seen || location.hash || still) d.classList.add("no-entry");
+    /* blocks arrive as you scroll; never without the script, never under reduced motion */
+    if (!still && "IntersectionObserver" in window) d.classList.add("reveal-on");
+    /* failsafe: if the scripts never run, drop the entry and show the hero with the CSS intro */
+    setTimeout(function () {
+      if (!/intro-(run|css)|entry-playing/.test(d.className)) { d.classList.add("intro-css"); d.classList.add("no-entry"); }
+      if (!/reveal-ready/.test(d.className)) d.classList.remove("reveal-on");
+    }, 2500);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400..600&family=Merriweather:opsz,wdth,wght@18,112,800&family=Archivo:wdth,wght@66,900&family=Jost:wght@400..600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<script src="vendor/anime.hero.min.js" defer></script>
+<script src="app.js" defer></script>
+</head>
+<body>
+<!-- Entry: the salon through its arched doorway, counting to 100%, then you walk in. -->
+<div class="entry" id="entry" aria-hidden="true">
+  <div class="entry-logo logo"><span class="logo-name"><span class="logo-panel" aria-hidden="true"><span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span></span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span><span class="logo-salon">Salon</span></div>
+  <div class="entry-portal" id="entryDoor">
+    <!-- the gold mirror light draws around the doorway as the page loads -->
+    <svg class="entry-ring" viewBox="0 0 328 428" aria-hidden="true"><path class="ring-track" d="M1 427V164A163 163 0 0 1 327 164V427"/><path class="ring-line" id="entryRing" pathLength="100" d="M1 427V164A163 163 0 0 1 327 164V427"/></svg>
+    <div class="entry-door"><img id="entryImg" alt="" decoding="async"></div>
+  </div>
+  <!-- her services, very large and very faint, drifting behind the doorway -->
+  <div class="entry-words" aria-hidden="true"><div class="entry-words-track"><span>Cuts</span><span>Color</span><span>Balayage</span><span>Keratin</span><span>Brows</span><span>Lashes</span><span>Facials</span><span>Cuts</span><span>Color</span><span>Balayage</span><span>Keratin</span><span>Brows</span><span>Lashes</span><span>Facials</span></div></div>
+  <p class="entry-corner entry-corner-l">Lilburn, Georgia</p>
+  <p class="entry-corner entry-corner-r num">Mon to Sat, 10:30 to 7:30</p>
+  <div class="entry-status">
+    <p class="entry-count"><span class="num" id="entryCount">0</span><small>%</small></p>
+    <p class="entry-line"><svg class="entry-snips" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><g class="blade-a"><circle cx="6" cy="18" r="2.6"/><path d="M8 16.4L20 5"/></g><g class="blade-b"><circle cx="6" cy="6" r="2.6"/><path d="M8 7.6L20 19"/></g></svg><span id="entryLine">Warming up the dryers</span></p>
+  </div>
+</div>
+
+<header class="nav solid" id="nav">
+  <div class="wrap">
+    <a href="#top" class="logo" aria-label="Ria's Creations Salon, back to top"><span class="logo-name"><span class="logo-panel" aria-hidden="true"><span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span></span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span><span class="logo-salon">Salon</span></a>
+    <div class="nav-right">
+      <nav class="nav-links" aria-label="Main">
+        <a href="#services" class="slop" id="svcTrigger" data-pop="svcMenu" aria-haspopup="menu" aria-expanded="false" aria-controls="svcMenu">Services
+          <svg class="caret" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M2 3.8l3 3 3-3"/></svg></a>
+        <a href="#stylist" class="slop">Stylist</a>
+        <a href="#work" class="slop">Gallery</a>
+        <a href="#visit" class="slop">Location</a>
+      </nav>
+      <button class="search-btn" type="button" id="searchBtn" aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K /">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+        <span>Search</span>
+      </button>
+      <a class="btn nav-book" href="#book" data-prefetch><span>Book now</span></a>
+      <div class="nav-tools">
+        <button class="icon-btn" id="menuBtn" type="button" aria-label="Open menu" aria-haspopup="dialog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M4 8.5h16M4 15.5h16"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ═══ HERO ═══ -->
+  <!-- The photo you walk into from the entry screen; it lands here pixel for pixel. -->
+  <section class="hero on-dark" aria-label="Welcome">
+    <div class="hero-bg"><img id="heroImg" src="images/salon-floor.webp" srcset="images/salon-floor-1200.webp 1200w, images/salon-floor-1800.webp 1800w, images/salon-floor-2400.webp 2400w, images/salon-floor.webp 3060w" sizes="(orientation: portrait) and (max-width: 600px) 150vw, 100vw" alt="Inside Ria's Creations Salon: lit arched mirrors, black styling chairs and a marble relaxation suite" fetchpriority="high" decoding="async"></div>
+    <div class="hero-scrim" aria-hidden="true"></div>
+    <div class="wrap hero-main">
+      <div>
+        <h1><span class="ln"><span>Hair, brows and lashes,</span></span><span class="ln"><span>done <em>beautifully</em>.</span></span></h1>
+        <p class="lede">Ria's Creations is a full service salon at Lilburn Corner. Cuts, color, keratin, threading, lashes and facials. <span class="nowrap">Walk-ins</span> welcome.</p>
+      </div>
+    </div>
+
+    <div class="hero-bar" id="heroBar">
+      <div class="wrap">
+        <p class="hero-note">
+          <span class="stars" data-stars="4.5" role="img" aria-label="4.5 out of 5 stars"></span>
+          <span>Rated <a href="#reviews" class="num slop" data-swr="rating" data-tip="Average of 29 Google reviews">4.5</a> on Google. <span data-hours>Open Monday to Saturday until 7:30 PM</span>.</span>
+        </p>
+        <div class="hero-cta"><a class="btn" href="#book" data-prefetch><span>Book a visit</span></a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ STYLIST ═══ -->
+  <section class="about" id="stylist">
+    <div class="wrap">
+      <div>
+        <h2 data-r="left">Meet Ria</h2>
+        <p class="lede" data-r="left">The stylist and owner behind Ria's Creations. Clients come back for even cuts, rich color and clean brows, and for how welcome she makes them feel.</p>
+        <p class="motto" data-r="up">“Enhancing beauty.”</p>
+      </div>
+      <figure class="about-fig" data-r="right">
+        <div class="arch about-arch">
+          <button class="photo-btn" type="button" data-view aria-label="View larger photo of Ria">
+            <span class="ph" data-blurhash="USIXHg#lW.E1~WM{WBM{O=OAt5i{xas.M{t7">
+              <img src="images/ria.webp" srcset="images/ria-720.webp 720w, images/ria.webp 1080w" sizes="330px" alt="Ria smiling in a silver dress beside a dress form covered in pink roses" loading="lazy" decoding="async">
+            </span>
+          </button>
+        </div>
+        <figcaption>Ria, salon owner</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ═══ SERVICES ═══ -->
+  <section class="services" id="services">
+    <div class="wrap">
+      <div class="svc-head">
+        <h2 data-r="left">Services and prices</h2>
+        <p class="lede" data-r="left">Not sure what you need? Walk in and ask. Ria will help you choose.</p>
+      </div>
+
+      <div class="tabs scroller" role="tablist" aria-label="Service categories" data-r="up">
+        <button class="tab" role="tab" id="t0" aria-controls="p0" aria-selected="true">Cuts and styling</button>
+        <button class="tab" role="tab" id="t1" aria-controls="p1" aria-selected="false" tabindex="-1">Color and balayage</button>
+        <button class="tab" role="tab" id="t2" aria-controls="p2" aria-selected="false" tabindex="-1">Treatments</button>
+        <button class="tab" role="tab" id="t3" aria-controls="p3" aria-selected="false" tabindex="-1">Brows and lashes</button>
+        <button class="tab" role="tab" id="t4" aria-controls="p4" aria-selected="false" tabindex="-1">Waxing</button>
+        <span class="tab-ink" aria-hidden="true"></span>
+      </div>
+
+      <!-- Pre-rendered: this list is the single source for the nav menu, search and booking form. -->
+      <div class="panels" id="panels" data-r="up">
+        <ul class="menu" id="p0" role="tabpanel" aria-labelledby="t0">
+          <li><h3>Women's haircut</h3><span class="price">$35</span><p>Consultation, wash, cut and style.</p><span class="dur num">45 min</span></li>
+          <li><h3>Long layers and face framing</h3><span class="price">$45</span><p>Soft movement that grows out well.</p><span class="dur num">1 hr</span></li>
+          <li><h3>Curly haircut</h3><span class="price">$45</span><p>Cut to suit your curl pattern.</p><span class="dur num">1 hr</span></li>
+          <li><h3>Men's haircut</h3><span class="price">$20</span><p>Clean, sharp and quick.</p><span class="dur num">30 min</span></li>
+          <li><h3>Beard trim</h3><span class="price">$10</span><p>Shaped and tidied to match your cut.</p><span class="dur num">15 min</span></li>
+          <li><h3>Kids' haircut</h3><span class="price">$15</span><p>Patient and gentle, ages 12 and under.</p><span class="dur num">30 min</span></li>
+          <li><h3>Wash and blow-dry</h3><span class="price">$30</span><p>Smooth, full and ready for the weekend.</p><span class="dur num">45 min</span></li>
+          <li><h3>Bridal hair</h3><span class="price">$120</span><p>Trial and wedding-day styling.</p><span class="dur num">1 hr 30 min</span></li>
+        </ul>
+        <ul class="menu" id="p1" role="tabpanel" aria-labelledby="t1" hidden>
+          <li><h3>Hair color</h3><span class="price">$60</span><p>All-over color, from first-timers to refreshes.</p><span class="dur num">1 hr 30 min</span></li>
+          <li><h3>Highlights</h3><span class="price">$85</span><p>Brightness placed where the light falls.</p><span class="dur num">2 hr</span></li>
+          <li><h3>Hair extensions</h3><span class="price">Ask</span><p>Length and fullness. Priced at a consultation.</p><span class="dur num">Varies</span></li>
+          <li><h3>Balayage</h3><span class="price">$120</span><p>Soft, hand-painted color that grows out gently.</p><span class="dur num">2 hr 30 min</span></li>
+        </ul>
+        <ul class="menu" id="p2" role="tabpanel" aria-labelledby="t2" hidden>
+          <li><h3>Keratin treatment</h3><span class="price"><small>from</small> $150</span><p>Smooth, frizz-free hair that lasts for weeks.</p><span class="dur num">2 hr 30 min</span></li>
+          <li><h3>Chemical treatments</h3><span class="price"><small>from</small> $80</span><p>Perms and relaxers. Price depends on length.</p><span class="dur num">2 hr</span></li>
+          <li><h3>Signature facial</h3><span class="price">$55</span><p>Cleanse, exfoliate, mask and a slow facial massage.</p><span class="dur num">1 hr</span></li>
+          <li><h3>Express facial</h3><span class="price">$35</span><p>Thirty minutes for a busy day.</p><span class="dur num">30 min</span></li>
+          <li><h3>Relaxing massage</h3><span class="price">$40</span><p>Eases the neck, shoulders and back.</p><span class="dur num">30 min</span></li>
+        </ul>
+        <ul class="menu" id="p3" role="tabpanel" aria-labelledby="t3" hidden>
+          <li><h3>Eyebrow threading</h3><span class="price">$10</span><p>Precise shaping that frames the face.</p><span class="dur num">15 min</span></li>
+          <li><h3>Eyebrow tint or wax</h3><span class="price">$20</span><p>Defined, fuller-looking brows.</p><span class="dur num">20 min</span></li>
+          <li><h3>Upper lip</h3><span class="price">$6</span><p>Quick and gentle.</p><span class="dur num">5 min</span></li>
+          <li><h3>Full face threading</h3><span class="price">$30</span><p>Brows, lip, chin, cheeks and forehead.</p><span class="dur num">30 min</span></li>
+          <li><h3>Eyelash extensions</h3><span class="price"><small>from</small> $40</span><p>Longer, fuller lashes. Price depends on the set.</p><span class="dur num">1 hr</span></li>
+        </ul>
+        <ul class="menu" id="p4" role="tabpanel" aria-labelledby="t4" hidden>
+          <li><h3>Brazilian wax <button class="tag slop" type="button" data-tip="Current in-salon special">Special</button></h3><span class="price">$35</span><p>Ask about our painless Brazilian.</p><span class="dur num">30 min</span></li>
+          <li><h3>Full-body wax <button class="tag slop" type="button" data-tip="Holiday price, for a limited time">Holiday</button></h3><span class="price">$65</span><p>Smooth from head to toe.</p><span class="dur num">1 hr 30 min</span></li>
+          <li><h3>Underarm wax</h3><span class="price">$12</span><p>Fast and long-lasting.</p><span class="dur num">10 min</span></li>
+          <li><h3>Leg wax</h3><span class="price">$35</span><p>Half or full legs.</p><span class="dur num">45 min</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ RECENT WORK ═══ -->
+  <section class="work on-dark" id="work">
+    <div class="wrap work-head">
+      <div>
+        <h2 data-r="left">Gallery</h2>
+        <p class="lede" data-r="left">Recent work, straight from Ria's chair.</p>
+      </div>
+      <div class="rail-ctrl" data-r="right">
+        <button class="icon-btn chev-l" id="workPrev" type="button" aria-label="Previous photos" data-tip="Previous">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>
+        </button>
+        <button class="icon-btn chev-r" id="workNext" type="button" aria-label="Next photos" data-tip="Next">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <ul class="rail scroller" id="rail" tabindex="0" aria-label="Recent work. Scroll sideways for more.">
+        <li data-r="up">
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Burgundy color">
+              <span class="ph" data-blurhash="dbJ*6dx]~qn%^%tQRjni-:kWM{Rjs8WWRjs:xtozjFof"><img src="images/work-burgundy.webp" srcset="images/work-burgundy-480.webp 480w, images/work-burgundy.webp 765w" sizes="(max-width: 760px) 72vw, 300px" alt="Long hair from behind: burgundy color with glossy, soft-curled ends" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Burgundy color</b><span>Color, soft curls</span></figcaption>
+          </figure>
+        </li>
+        <li data-r="up">
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Long layers">
+              <span class="ph" data-blurhash="dTHU,,i]-:_2~WM{Rls:S4V@t6RQIVWBn%V[RPS4oKW;"><img src="images/work-layers.webp" srcset="images/work-layers-480.webp 480w, images/work-layers.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Side profile: long dark layers with face-framing pieces and soft highlights" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Long layers</b><span>Cut, face framing</span></figcaption>
+          </figure>
+        </li>
+        <li data-r="up">
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Soft bob">
+              <span class="ph" data-blurhash="dJGk?_?b9]9u%yNG$*oI0OIV%0adRgngI;IU9bbdsAVs"><img src="images/work-bob.webp" srcset="images/work-bob-480.webp 480w, images/work-bob.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="A smiling client with a soft blonde bob and bangs" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Soft bob</b><span>Cut with bangs</span></figcaption>
+          </figure>
+        </li>
+        <li data-r="up">
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Caramel highlights">
+              <span class="ph" data-blurhash="dJIOOgr_?vtSxpt6WYRj_N%MIBV@xt%MxExaadxtIoRP"><img src="images/work-caramel.webp" srcset="images/work-caramel-480.webp 480w, images/work-caramel.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Caramel highlights and long face-framing layers, styled in loose waves" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Caramel highlights</b><span>Color and layers</span></figcaption>
+          </figure>
+        </li>
+        <li data-r="up">
+          <figure>
+            <button class="photo-btn" type="button" data-view aria-label="View larger: Honey balayage">
+              <span class="ph" data-blurhash="dKGbYTa$%gbH~q%MIpWA?wRknhIo_NoexZRkt8t7R*Rk"><img src="images/work-balayage.webp" srcset="images/work-balayage-480.webp 480w, images/work-balayage.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Long hair from behind: honey balayage styled in full curls" loading="lazy" decoding="async"></span>
+            </button>
+            <figcaption><b>Honey balayage</b><span>Color and curls</span></figcaption>
+          </figure>
+        </li>
+    </ul>
+  </section>
+
+  <!-- ═══ REVIEWS ═══ -->
+  <section class="reviews" id="reviews">
+    <div class="wrap">
+      <div>
+        <h2 data-r="left">What clients say</h2>
+        <div class="score" data-swr="rating" data-r="left">4.5</div>
+        <div class="score-meta" data-r="left"><span class="stars" data-stars="4.5" role="img" aria-label="4.5 out of 5 stars"></span><span><span class="num" data-swr="reviews">29</span> Google reviews</span></div>
+        <p class="score-note" data-r="left">Read them all on <a class="src slop" href="https://www.google.com/maps/search/?api=1&amp;query=Ria%27s+Creations+Salon+Lilburn+GA" target="_blank" rel="noopener">Google</a> and <a class="src slop" href="https://www.yelp.com/biz/ria-s-creations-salon-lilburn" target="_blank" rel="noopener">Yelp</a>.</p>
+      </div>
+      <div class="carousel" aria-roledescription="carousel" aria-label="Client reviews" data-r="right">
+        <div class="viewport" id="viewport" tabindex="0" aria-label="Reviews. Drag, swipe or use the arrow keys.">
+          <div class="track" id="track">
+            <figure class="slide" aria-roledescription="slide" aria-label="1 of 5">
+              <blockquote>“I discovered Ria’s hair salon nearly a year ago, and I’m so happy I did. Ria is so nice and personable. She also cuts my hair evenly and does perfect layers for me!”</blockquote>
+              <footer><b>Christyne S.</b>, haircut and layers, on <a class="src slop" href="https://www.google.com/maps/search/?api=1&amp;query=Ria%27s+Creations+Salon+Lilburn+GA" target="_blank" rel="noopener">Google</a></footer>
+            </figure>
+            <figure class="slide" aria-roledescription="slide" aria-label="2 of 5">
+              <blockquote>“I went here to color my hair for the first time… oh my god I loved it! What an excellent job she did on my hair. I would recommend Ria’s Creations Salon to all my friends and my family.”</blockquote>
+              <footer><b>Roberto B.</b>, hair color, on <a class="src slop" href="https://www.yelp.com/biz/ria-s-creations-salon-lilburn" target="_blank" rel="noopener">Yelp</a></footer>
+            </figure>
+            <figure class="slide" aria-roledescription="slide" aria-label="3 of 5">
+              <blockquote>“Great salon! Very clean, and professional. Ria is very courteous and shows great respect for her clients. I was very impressed with the way she threaded my eyebrows.”</blockquote>
+              <footer><b>P. D.</b>, eyebrow threading, on <a class="src slop" href="https://www.yelp.com/biz/ria-s-creations-salon-lilburn" target="_blank" rel="noopener">Yelp</a></footer>
+            </figure>
+            <figure class="slide" aria-roledescription="slide" aria-label="4 of 5">
+              <blockquote>“My skin felt great and the facial massage was relaxing.”</blockquote>
+              <footer><b>Tracey P.</b>, facial, on <a class="src slop" href="https://www.google.com/maps/search/?api=1&amp;query=Ria%27s+Creations+Salon+Lilburn+GA" target="_blank" rel="noopener">Google</a></footer>
+            </figure>
+            <figure class="slide" aria-roledescription="slide" aria-label="5 of 5">
+              <blockquote>“Fantastic salon. Highly experienced and highly professional. She is way too cheap for her talents.”</blockquote>
+              <footer><b>Jim R.</b>, the first review on <a class="src slop" href="https://www.yelp.com/biz/ria-s-creations-salon-lilburn" target="_blank" rel="noopener">Yelp</a></footer>
+            </figure>
+          </div>
+        </div>
+        <div class="car-ctrl">
+          <button class="icon-btn chev-l" id="prev" type="button" aria-label="Previous review" data-tip="Previous review" data-kbd="←">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M14.5 6l-6 6 6 6"/></svg>
+          </button>
+          <button class="icon-btn chev-r" id="next" type="button" aria-label="Next review" data-tip="Next review" data-kbd="→">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M9.5 6l6 6-6 6"/></svg>
+          </button>
+          <span class="count num" id="count" aria-live="polite">1 / 5</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ BOOK ═══ -->
+  <section class="book" id="book">
+    <div class="wrap">
+      <div>
+        <h2 data-r="left">Book a visit</h2>
+        <p class="lede" data-r="left">Pick a service and a time, then type the code we text you. You're booked.</p>
+        <p class="book-call" data-r="left">Rather talk? <a class="slop" href="tel:+17705570354">Call <span class="num">(770) 557-0354</span></a></p>
+      </div>
+
+      <div class="shell" data-r="right">
+        <div class="card">
+          <div class="form-box" id="formBox">
+            <!-- Progress through a real process only: sent, code, confirmed. No numbers. -->
+            <div class="progress" id="progress" role="progressbar" aria-label="Booking progress" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1" hidden><span></span><span></span><span></span></div>
+            <form id="bookForm" novalidate>
+              <label class="field" id="f-service"><span>Service</span>
+                <select name="service" aria-describedby="e-service">
+                  <option value="">Choose a service</option>
+                  <optgroup label="Cuts and styling"><option>Women's haircut</option><option>Long layers and face framing</option><option>Curly haircut</option><option>Men's haircut</option><option>Beard trim</option><option>Kids' haircut</option><option>Wash and blow-dry</option><option>Bridal hair</option></optgroup>
+                  <optgroup label="Color and balayage"><option>Hair color</option><option>Highlights</option><option>Hair extensions</option><option>Balayage</option></optgroup>
+                  <optgroup label="Treatments"><option>Keratin treatment</option><option>Chemical treatments</option><option>Signature facial</option><option>Express facial</option><option>Relaxing massage</option></optgroup>
+                  <optgroup label="Brows and lashes"><option>Eyebrow threading</option><option>Eyebrow tint or wax</option><option>Upper lip</option><option>Full face threading</option><option>Eyelash extensions</option></optgroup>
+                  <optgroup label="Waxing"><option>Brazilian wax</option><option>Full-body wax</option><option>Underarm wax</option><option>Leg wax</option></optgroup>
+                </select>
+                <span class="err" id="e-service"></span>
+              </label>
+              <label class="field" id="f-date"><span>Day</span>
+                <input type="date" name="date" aria-describedby="e-date">
+                <span class="err" id="e-date"></span>
+              </label>
+              <fieldset class="field full">
+                <legend>Time</legend>
+                <div class="slots scroller" role="radiogroup" aria-label="Time">
+                  <button type="button" class="slot" role="radio" aria-checked="false">10:30 AM</button>
+                  <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">12:00 PM</button>
+                  <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">1:30 PM</button>
+                  <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">3:00 PM</button>
+                  <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">4:30 PM</button>
+                  <button type="button" class="slot" role="radio" aria-checked="false" tabindex="-1">6:00 PM</button>
+                </div>
+                <span class="err" id="e-time" role="alert"></span>
+              </fieldset>
+              <label class="field" id="f-name"><span>First name</span>
+                <input type="text" name="name" autocomplete="given-name" autocapitalize="words" enterkeyhint="next" aria-describedby="e-name">
+                <span class="err" id="e-name"></span>
+              </label>
+              <label class="field" id="f-phone"><span>Mobile, for your text</span>
+                <input type="tel" name="phone" autocomplete="tel" inputmode="tel" enterkeyhint="next" placeholder="(770) 555-0123" aria-describedby="e-phone">
+                <span class="err" id="e-phone"></span>
+              </label>
+              <label class="field full"><span>Notes for Ria (optional)</span>
+                <input type="text" name="notes" enterkeyhint="send" placeholder="Example: long layers">
+              </label>
+              <div class="field full"><button class="btn" type="submit" id="submitBtn"><span id="submitLabel">Send request</span></button>
+                <p class="consent">We only use your number to text about this visit. Reply STOP to opt out. <a href="privacy.html">Privacy</a></p></div>
+            </form>
+
+            <!-- Shown the instant you press send (optimistic), before the salon has answered. -->
+            <div class="state" id="sent" hidden tabindex="-1">
+              <h3>Check your texts</h3>
+              <p id="sentText"></p>
+              <p class="status" id="sentStatus" data-state="sending" role="status">Sending to Ria…</p>
+              <div class="skeleton otp-skel" id="otpSkel" aria-hidden="true"></div>
+              <div class="otp field" id="otpBox" hidden>
+                <label for="otp" class="hint" style="font-size:.85rem">Enter the 6-digit code we texted you</label>
+                <input id="otp" name="otp" autocomplete="one-time-code" inputmode="numeric" pattern="[0-9]*" maxlength="6" enterkeyhint="done" aria-describedby="e-otp otpHint">
+                <span class="err" id="e-otp"></span>
+                <span class="hint" id="otpHint">Demo: any 6 digits work.</span>
+              </div>
+              <div class="state-actions"><button class="link-btn slop" type="button" id="cancelReq">Cancel request</button></div>
+            </div>
+
+            <div class="state" id="confirmed" hidden tabindex="-1">
+              <div class="state-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+              <h3>Visit confirmed</h3>
+              <p id="confirmedText"></p>
+              <p class="ref num" id="confirmedRef"></p>
+              <div class="state-actions"><button class="btn btn-quiet" type="button" id="again"><span>Book another visit</span></button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ VISIT ═══ -->
+  <section class="visit on-dark" id="visit">
+    <div class="wrap">
+      <div>
+        <h2 data-r="left">Location and hours</h2>
+        <dl class="info" data-r="left">
+          <div><dt>Address</dt><dd class="num">375 Rockbridge Rd NW, Suite&nbsp;156<br>Lilburn, GA 30047</dd></div>
+          <div><dt>Hours</dt><dd><span class="num">Monday to Saturday, 10:30 AM to 7:30 PM</span><br>Sunday closed<br><span class="hours-now" data-hours><span class="nowrap">Walk-ins</span> welcome</span></dd></div>
+          <div><dt>Parking</dt><dd>Free, right outside</dd></div>
+          <div><dt>Payment</dt><dd>Cards, checks and tap to pay</dd></div>
+        </dl>
+        <div class="cta" data-r="up">
+          <a class="btn" href="https://www.google.com/maps/dir/?api=1&amp;destination=375+Rockbridge+Rd+NW+Ste+156%2C+Lilburn%2C+GA+30047" target="_blank" rel="noopener" data-prefetch-map><span>Get directions</span></a>
+          <button class="btn btn-quiet" type="button" data-pop="callPop" aria-haspopup="dialog" aria-expanded="false" aria-controls="callPop"><span>Call the salon</span></button>
+        </div>
+      </div>
+      <figure class="map-frame" data-r="right">
+        <div class="map-box">
+          <div class="skeleton map-skel" aria-hidden="true"></div>
+          <div class="map-fallback" aria-hidden="true">375 Rockbridge Rd NW<small>Lilburn, GA 30047</small></div>
+          <iframe id="mapFrame" title="Map showing Ria's Creations Salon at Lilburn Corner" loading="lazy" referrerpolicy="no-referrer-when-downgrade"
+            src="https://maps.google.com/maps?q=375%20Rockbridge%20Rd%20NW%20Ste%20156%2C%20Lilburn%2C%20GA%2030047&amp;z=15&amp;output=embed"></iframe>
+        </div>
+        <figcaption class="map-plate"><span>Lilburn Corner</span><span class="num">Suite 156, free parking</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- the footer sits on white below the dark Location band, so her logo's white panel blends in -->
+  <footer class="site">
+    <div class="wrap foot">
+      <a href="#top" class="logo" aria-label="Ria's Creations Salon, back to top"><span class="logo-name"><span class="logo-panel" aria-hidden="true"><span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span></span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span><span class="logo-salon">Salon</span></a>
+      <p class="foot-contact"><a class="num slop" href="tel:+17705570354">(770) 557-0354</a><a class="slop" href="https://www.instagram.com/riascreationssalon/" target="_blank" rel="noopener">@riascreationssalon</a></p>
+      <nav class="legal" aria-label="Legal"><a class="slop" href="privacy.html">Privacy</a><a class="slop" href="terms.html">Terms</a><span class="num">© 2026 Ria's Creations</span></nav>
+    </div>
+  </footer>
+</main>
+
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<!-- Popovers -->
+<div class="pop" id="callPop" role="dialog" aria-label="Call the salon">
+  <div class="pop-head"><small>Ria's Creations Salon</small><strong>(770) 557-0354</strong></div>
+  <hr>
+  <a href="tel:+17705570354">Call now</a>
+  <button type="button" id="copyBtn">Copy number</button>
+</div>
+<div class="pop mega" id="svcMenu" role="menu" aria-label="Services">
+  <div class="mega-cats" id="megaCats" role="group" aria-label="Categories"></div>
+  <div class="mega-items" id="megaItems" role="group" aria-label="Services"></div>
+  <div class="mega-foot"><span>Choose a service to book it</span><a href="#services">See the full menu</a></div>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<!-- Command menu: a centred dialog on desktop, a swipe-to-dismiss sheet on phones -->
+<dialog class="cmd" id="cmd" aria-label="Search">
+  <div class="cmd-handle" aria-hidden="true"></div>
+  <div class="cmd-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    <input id="cmdInput" type="text" role="combobox" aria-expanded="true" aria-controls="cmdList" aria-autocomplete="list" enterkeyhint="go" placeholder="Search services, hours or actions" autocomplete="off" spellcheck="false">
+    <kbd>esc</kbd>
+  </div>
+  <div class="cmd-list" id="cmdList" role="listbox" aria-label="Results"></div>
+  <div class="cmd-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> choose</span><span><kbd>esc</kbd> close</span></div>
+</dialog>
+
+<!-- Photo viewer: the photo morphs in with a view transition; swipe it away to close -->
+<dialog class="viewer" id="viewer" aria-label="Photo">
+  <div class="viewer-inner" id="viewerInner">
+    <img class="viewer-img" id="viewerImg" alt="" draggable="false">
+    <p class="viewer-cap" id="viewerCap"></p>
+  </div>
+  <button class="icon-btn viewer-close" id="viewerClose" type="button" aria-label="Close photo" data-tip="Close" data-kbd="esc">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+  </button>
+</dialog>
+
+</body>
+</html>

@@ -1,0 +1,72 @@
+# Ria's Creations Salon: website demo
+
+A one-page website mock-up to show Ria (Lilburn, GA). No install needed.
+
+**To open it:** double-click `index.html`. It opens in your web browser.
+Fonts and the map need internet; everything else works offline.
+
+## Add the lounge photo
+
+Save the waiting-lounge photo (brown chairs, olive tree, lit oval mirror) as
+`images/lounge.webp`. It appears next to the booking form. Every photo on the page is
+used only once, so until that file exists the lounge card stays hidden.
+
+## Files
+
+| File | What |
+|---|---|
+| `index.html` | All content, already rendered (works before the script loads) |
+| `styles.css` | Colors, type, layout, motion |
+| `app.js` | Interactions (plain JS) |
+| `vendor/anime.hero.min.js` | Anime.js v4.5.0 (MIT), a slim build used only for the hero intro. If it fails to load, a CSS version of the intro plays instead |
+| `images/` | One photo per spot, each in a small and a full size (see "Speed") |
+| `privacy.html`, `terms.html` | Plain-language drafts for Ria to review |
+| `_headers` | Cache rules for Cloudflare Pages or Netlify |
+| `tests/audit.cjs` | The design audit; results in `AUDIT.md` |
+| `tests/buttons.cjs` | Presses every button, link, tab and menu item on a laptop and a phone |
+| `tests/motion.cjs` | Tries to freeze the animations (slow CPU, paused page, rotation, scroll storm) and checks everything still lands |
+| `tests/sharp.cjs` | Holds the walk-in at its last frame and checks the photo is as sharp as the finished hero |
+| `tests/handoff.cjs` | Records the walk-in frame by frame: one shot, no jump, no slide, no readjust after it lands |
+| `tests/reveal.cjs` | Every scroll animation is a flat slide from the left, right or bottom: no turning, folding or book-opening |
+| `tests/logo.cjs` | The logo is her storefront sign: its parts, colors and proportions measured, bigger, fits every phone |
+| `tests/booking.cjs` | A first-time client books from the first screen: taps counted, every route in, thumb-sized buttons, clear mistakes |
+
+## Things to try
+
+- Open the page fresh: it counts to 100% with her salon in the arched doorway, then walks you inside.
+  It plays once per visit (close the tab to see it again); links like `index.html#book` skip it.
+- Scroll down slowly. Each block arrives once, flying in flat and easing into place: text from the
+  left, pictures and cards from the right, rows and photos from below. Nothing turns or opens like a book.
+  Jump with a link or the search menu and the section is simply there, already in place.
+- Hover **Services** in the top bar. Move diagonally into the list; the category won't flip on the way (safe triangle).
+- Press **Ctrl K** (or **⌘K**, or **/**) for the search menu. **T** switches day/evening. **B** jumps to booking.
+- Click a photo. It grows into a viewer; drag it up or down to close.
+- On a phone, the menu button opens a sheet you can swipe down to close.
+- Book a visit: the button previews your request, "Check your texts" shows instantly,
+  then a 6-digit code box appears (any 6 digits work in the demo). **Cancel request** gives you 5 seconds to undo.
+
+## Speed
+
+- Plain files: nothing is built or fetched from a database on a visit, and the script makes no data requests.
+- Each photo comes in a small and a full size, and the browser picks the one the screen needs
+  (`srcset`), downloading it once (the entry doorway reuses the hero's file). Whole page, measured:
+  1,443 KB before, now 681 KB on a laptop, 964 KB on a retina laptop, 1,266 KB on an iPhone (its sharper
+  screen needs the bigger photos). The photo viewer swaps to the full size only when you open a photo.
+- Photos below the first screen load only when you scroll near them; the map loads only near the
+  Location section.
+- Reviews show one at a time, services one category at a time, the gallery five photos: nothing long
+  is drawn at once.
+- `_headers` lets browsers keep photos for a year. A changed photo must get a new file name
+  (as `salon-floor.webp` did), or visitors keep the old one.
+
+## Things to confirm with Ria
+
+- The remaining prices (real so far: keratin from $150, eyebrow tint or wax $20, lashes from $40, Brazilian $35, full-body wax $65)
+- The privacy and terms drafts
+- Whether booking requests should text her phone
+- Her logo file: the site rebuilds her storefront sign in type; `LOGO-REQUEST.md` has a ready-to-send note
+- A full-size original of the salon photo (the page uses her photo enlarged 4 times)
+
+Booking, the text code and the rating refresh are simulated in this demo. A real site
+would send them to a small server (for example, SMS through a texting service and the
+rating from Google).
