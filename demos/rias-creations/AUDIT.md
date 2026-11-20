@@ -171,6 +171,18 @@ A second fresh judge scored the final version: color match 8/10, glamour 7/10, e
 Both judges found the two-line "Ria's Creations" next to a big "SALON" the weakest part of the look:
 her real logo file (still to get from Ria) should replace it.
 
+## A bright site, like her salon (2026-11-20)
+
+John: "do you think switching to a bright version of the website would be better? ... make the changes".
+Her logo is made for a light background and her salon is bright where clients look (white walls and
+vanities, lit mirrors, a pale floor); the page swung light, dark, light, dark. Now the only dark band is
+the hero over her photo: the Gallery is white and Location (with the footer) is a soft blush, with
+espresso and gold kept as accents (text, buttons, hairlines). The photo's tint went from 60% to 53%, the
+lightest that keeps every hero line readable over the photo's brightest 5% of pixels (laptop and iPhone:
+headline 4.0:1 and up, needs 3; paragraph 4.7:1 and up, needs 4.5). The map frame, its name plate and
+its fallback address text moved to light-background colors, and the logo's panel blends into the blush
+footer as it does on the loading screen.
+
 ## Her logo, exactly, on a white header (2026-11-20, final)
 
 John first found the sign's white backing ugly over the dark photo; a version in the salon's gold was tried,
