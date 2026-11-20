@@ -171,6 +171,14 @@ A second fresh judge scored the final version: color match 8/10, glamour 7/10, e
 Both judges found the two-line "Ria's Creations" next to a big "SALON" the weakest part of the look:
 her real logo file (still to get from Ria) should replace it.
 
+## The darker bands are back (2026-11-20, latest)
+
+John: "I like the darker bands ... bring that back and keep intact all our transitions, animations and scroll
+animations". The Gallery and Location bands are espresso again and the photo's tint is back to 60%, exactly
+as before the bright version; everything else stays (her exact logo on the white header, the site always
+opening in its day colors, every motion). The footer moved out of the dark Location band onto white, so her
+logo's white panel blends in there too, with no sticker look. All tests pass, the motion ones included.
+
 ## Always the bright design (2026-11-20)
 
 John saw the old dark look on his iPhone and laptop. The site was never stale: it followed the phone's Dark
