@@ -182,6 +182,10 @@ lightest that keeps every hero line readable over the photo's brightest 5% of pi
 headline 4.0:1 and up, needs 3; paragraph 4.7:1 and up, needs 4.5). The map frame, its name plate and
 its fallback address text moved to light-background colors, and the logo's panel blends into the blush
 footer as it does on the loading screen.
+A blind judge compared the two full pages (shuffled, store photo for reference) and scored them even,
+40 to 40: the bright version cleaner and easier to read (9 and 9, against 8 and 8), the darker one more
+glamorous and closer to her salon's black ceiling, black chairs and gold mirror light (8 and 8, against
+7 and 7), with the hair photos standing out more on dark. A trade-off, not a clear win: John's choice.
 
 ## Her logo, exactly, on a white header (2026-11-20, final)
 
