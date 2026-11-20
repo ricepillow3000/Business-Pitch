@@ -34,9 +34,10 @@ mirrors, the dark brown her ceiling and chairs, the white her walls, and the pin
 
 ## Logo
 
-Rebuilt from her photo of the storefront sign: slate blue #506895 and the pink of the dots (#B6688A in the
-photo, a few pixels wide, so drawn a little richer as #C24F7C) are measured from it. Her original logo
-file, if one exists, would be better still.
+The shape is rebuilt from her photo of the storefront sign (stacked name, pink apostrophe and i-dots,
+big SALON, its proportions). On the site it is drawn in her salon's colors (her mirror brass gold, her
+roses' pink, espresso and warm white) instead of the sign's slate blue on a white backing, at John's
+request. Her original logo file, if one exists, would be better still.
 
 ## Photos
 

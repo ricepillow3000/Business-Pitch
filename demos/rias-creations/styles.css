@@ -193,27 +193,19 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 /* Her storefront sign: "Ria's Creations" stacked in a soft, bold serif beside a big SALON.
    The one place capitals are used, because her sign uses them. */
-/* Her storefront sign, exactly (from her photo of it): "Ria's / Creations" stacked tight and centered in a
-   sturdy, wide bold serif, slate blue on a white panel that hugs the letters, the apostrophe and both i-dots
-   in pink; beside it a big, heavy, compact SALON. Fonts: Merriweather Bold at 112% width (its sturdy
-   small-size design) and Archivo Black at 66% width, the closest match to the sign's letters.
-   Measured against the sign: name / SALON width 0.79 (sign 0.82), height 0.87 (0.87), SALON's shape 3.60 (3.64).
-   Colors from the sign: slate #506895; pink #B6688A in the photo, where the dots are a few pixels wide,
-   so the same hue a little richer, #C24F7C. */
-:root { --logo-ink: #506895; --logo-pink: #c24f7c; --logo-panel: #ffffff; }
-.logo { display: inline-flex; align-items: center; gap: .28em; line-height: 1; font-size: 1rem; }
+/* Her logo, from her storefront sign: "Ria's / Creations" stacked tight and centered in a sturdy, wide bold
+   serif, the apostrophe and both i-dots in pink, beside a big, heavy, compact SALON. The shape is hers,
+   measured against her sign (name / SALON width 0.80, sign 0.82; height 0.87, sign 0.87). The colors are her
+   salon's: the sign's white backing and slate blue suit brick outdoors, not this page (John, 2026-11-20), so the
+   name is her mirror brass, gold over the dark photo and a deeper gold on white; SALON is warm white on dark and
+   espresso on white; the pink is her roses'. Fonts: Merriweather ExtraBold at 112% width (its sturdy small-size
+   design) and Archivo Black at 66% width, the closest free match to the sign's letters. */
+.logo { --logo-ink: var(--gold-ink); --logo-pink: #c24f7c; display: inline-flex; align-items: center; gap: .28em; line-height: 1; font-size: 1rem; }
+.nav:not(.solid) .logo, .nav.over-dark .logo, .on-dark .logo, :root[data-theme="dark"] .logo { --logo-ink: var(--gold); --logo-pink: #d9708f; }
 .logo-name {
   font: 800 1.32em/.8 "Merriweather", Georgia, serif; font-stretch: 112%; font-variation-settings: "opsz" 18;
   letter-spacing: .02em; text-align: center; color: var(--logo-ink);
-  position: relative; z-index: 0;
 }
-/* the white panel: one layer behind every letter, like the sign (a copy of the name, fattened in white) */
-.logo-panel { position: absolute; inset: 0; z-index: -1; color: var(--logo-panel); text-shadow: 0.160em 0.000em 0 var(--logo-panel), 0.157em 0.031em 0 var(--logo-panel), 0.148em 0.061em 0 var(--logo-panel), 0.133em 0.089em 0 var(--logo-panel), 0.113em 0.113em 0 var(--logo-panel), 0.089em 0.133em 0 var(--logo-panel), 0.061em 0.148em 0 var(--logo-panel), 0.031em 0.157em 0 var(--logo-panel), 0.000em 0.160em 0 var(--logo-panel), -0.031em 0.157em 0 var(--logo-panel), -0.061em 0.148em 0 var(--logo-panel), -0.089em 0.133em 0 var(--logo-panel), -0.113em 0.113em 0 var(--logo-panel), -0.133em 0.089em 0 var(--logo-panel), -0.148em 0.061em 0 var(--logo-panel), -0.157em 0.031em 0 var(--logo-panel), -0.160em 0.000em 0 var(--logo-panel), -0.157em -0.031em 0 var(--logo-panel), -0.148em -0.061em 0 var(--logo-panel), -0.133em -0.089em 0 var(--logo-panel), -0.113em -0.113em 0 var(--logo-panel), -0.089em -0.133em 0 var(--logo-panel), -0.061em -0.148em 0 var(--logo-panel), -0.031em -0.157em 0 var(--logo-panel), -0.000em -0.160em 0 var(--logo-panel), 0.031em -0.157em 0 var(--logo-panel), 0.061em -0.148em 0 var(--logo-panel), 0.089em -0.133em 0 var(--logo-panel), 0.113em -0.113em 0 var(--logo-panel), 0.133em -0.089em 0 var(--logo-panel), 0.148em -0.061em 0 var(--logo-panel), 0.157em -0.031em 0 var(--logo-panel), 0.088em 0.000em 0 var(--logo-panel), 0.076em 0.044em 0 var(--logo-panel), 0.044em 0.076em 0 var(--logo-panel), 0.000em 0.088em 0 var(--logo-panel), -0.044em 0.076em 0 var(--logo-panel), -0.076em 0.044em 0 var(--logo-panel), -0.088em 0.000em 0 var(--logo-panel), -0.076em -0.044em 0 var(--logo-panel), -0.044em -0.076em 0 var(--logo-panel), -0.000em -0.088em 0 var(--logo-panel), 0.044em -0.076em 0 var(--logo-panel), 0.076em -0.044em 0 var(--logo-panel); }
-.logo-panel .logo-ap { color: inherit; }
-/* each line sits on its own rounded white shape, a narrow one for "Ria's", a wide one for "Creations",
-   and the two overlap into one panel, as on her sign; nothing of the wall shows inside a letter */
-.logo-panel > span { background: var(--logo-panel); padding: 0 .06em; border-radius: .3em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-.logo-panel .logo-i::after { background: var(--logo-panel); box-shadow: 0 0 0 .08em var(--logo-panel); }
 .logo-i { position: relative; }
 .logo-i::after {   /* the pink dot, exactly where Merriweather draws an i's dot */
   content: ""; position: absolute; left: 53%; top: .175em; width: .17em; height: .17em; border-radius: 50%;
@@ -763,8 +755,10 @@ dialog.dragging::backdrop { transition: none; }
 .entry { display: none; position: fixed; inset: 0; z-index: 200; background: var(--tint); color: var(--ink); overflow: hidden; }
 .js:not(.no-entry) .entry { display: block; }
 .js:not(.no-entry) body { overflow: hidden; }
-.entry-logo { position: absolute; top: 24px; left: 0; right: 0; display: flex; justify-content: center; font-size: 1.2rem; }   /* the sign, larger, over the doorway */
-@media (max-width: 520px) { .entry-logo { font-size: .95rem; } }
+/* the sign, large, over the doorway: grows with the screen, about 85% of a phone's width, and stops
+   short of the doorway's gold ring on short screens */
+.entry-logo { position: absolute; top: 24px; left: 0; right: 0; display: flex; justify-content: center; font-size: min(5.6vw, 2.05rem, calc(4.2vh - 4px)); }
+@media (max-height: 480px) { .entry-logo { display: none; } }
 .entry-portal {
   position: absolute; left: 50%; top: 45%; width: min(300px, 58vw); aspect-ratio: 3 / 4;
   transform: translate(-50%, -50%); transform-origin: 50% 50%;
