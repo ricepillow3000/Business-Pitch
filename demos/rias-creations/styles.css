@@ -193,9 +193,34 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 /* Her storefront sign: "Ria's Creations" stacked in a soft, bold serif beside a big SALON.
    The one place capitals are used, because her sign uses them. */
-.logo { display: inline-flex; align-items: center; gap: 10px; line-height: 1; }
-.logo-name { font: 700 1.02rem/0.98 "Fraunces", "Cooper Black", Georgia, serif; font-variation-settings: "SOFT" 100, "opsz" 72; letter-spacing: -.005em; }
-.logo-salon { font: 600 2.1rem/0.9 var(--sans); text-transform: uppercase; letter-spacing: .04em; }
+/* Her storefront sign, exactly (from her photo of it): "Ria's / Creations" stacked tight and centered in a
+   sturdy, wide bold serif, slate blue on a white panel that hugs the letters, the apostrophe and both i-dots
+   in pink; beside it a big, heavy, compact SALON. Fonts: Merriweather Bold at 112% width (its sturdy
+   small-size design) and Archivo Black at 66% width, the closest match to the sign's letters.
+   Measured against the sign: name / SALON width 0.79 (sign 0.82), height 0.87 (0.87), SALON's shape 3.60 (3.64).
+   Colors from the sign: slate #506895; pink #B6688A in the photo, where the dots are a few pixels wide,
+   so the same hue a little richer, #C24F7C. */
+:root { --logo-ink: #506895; --logo-pink: #c24f7c; --logo-panel: #ffffff; }
+.logo { display: inline-flex; align-items: center; gap: .28em; line-height: 1; font-size: 1rem; }
+.logo-name {
+  font: 800 1.32em/.8 "Merriweather", Georgia, serif; font-stretch: 112%; font-variation-settings: "opsz" 18;
+  letter-spacing: .02em; text-align: center; color: var(--logo-ink);
+  position: relative; z-index: 0;
+}
+/* the white panel: one layer behind every letter, like the sign (a copy of the name, fattened in white) */
+.logo-panel { position: absolute; inset: 0; z-index: -1; color: var(--logo-panel); text-shadow: 0.160em 0.000em 0 var(--logo-panel), 0.157em 0.031em 0 var(--logo-panel), 0.148em 0.061em 0 var(--logo-panel), 0.133em 0.089em 0 var(--logo-panel), 0.113em 0.113em 0 var(--logo-panel), 0.089em 0.133em 0 var(--logo-panel), 0.061em 0.148em 0 var(--logo-panel), 0.031em 0.157em 0 var(--logo-panel), 0.000em 0.160em 0 var(--logo-panel), -0.031em 0.157em 0 var(--logo-panel), -0.061em 0.148em 0 var(--logo-panel), -0.089em 0.133em 0 var(--logo-panel), -0.113em 0.113em 0 var(--logo-panel), -0.133em 0.089em 0 var(--logo-panel), -0.148em 0.061em 0 var(--logo-panel), -0.157em 0.031em 0 var(--logo-panel), -0.160em 0.000em 0 var(--logo-panel), -0.157em -0.031em 0 var(--logo-panel), -0.148em -0.061em 0 var(--logo-panel), -0.133em -0.089em 0 var(--logo-panel), -0.113em -0.113em 0 var(--logo-panel), -0.089em -0.133em 0 var(--logo-panel), -0.061em -0.148em 0 var(--logo-panel), -0.031em -0.157em 0 var(--logo-panel), -0.000em -0.160em 0 var(--logo-panel), 0.031em -0.157em 0 var(--logo-panel), 0.061em -0.148em 0 var(--logo-panel), 0.089em -0.133em 0 var(--logo-panel), 0.113em -0.113em 0 var(--logo-panel), 0.133em -0.089em 0 var(--logo-panel), 0.148em -0.061em 0 var(--logo-panel), 0.157em -0.031em 0 var(--logo-panel), 0.088em 0.000em 0 var(--logo-panel), 0.076em 0.044em 0 var(--logo-panel), 0.044em 0.076em 0 var(--logo-panel), 0.000em 0.088em 0 var(--logo-panel), -0.044em 0.076em 0 var(--logo-panel), -0.076em 0.044em 0 var(--logo-panel), -0.088em 0.000em 0 var(--logo-panel), -0.076em -0.044em 0 var(--logo-panel), -0.044em -0.076em 0 var(--logo-panel), -0.000em -0.088em 0 var(--logo-panel), 0.044em -0.076em 0 var(--logo-panel), 0.076em -0.044em 0 var(--logo-panel); }
+.logo-panel .logo-ap { color: inherit; }
+/* each line sits on its own rounded white shape, a narrow one for "Ria's", a wide one for "Creations",
+   and the two overlap into one panel, as on her sign; nothing of the wall shows inside a letter */
+.logo-panel > span { background: var(--logo-panel); padding: 0 .06em; border-radius: .3em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.logo-panel .logo-i::after { background: var(--logo-panel); box-shadow: 0 0 0 .08em var(--logo-panel); }
+.logo-i { position: relative; }
+.logo-i::after {   /* the pink dot, exactly where Merriweather draws an i's dot */
+  content: ""; position: absolute; left: 53%; top: .175em; width: .17em; height: .17em; border-radius: 50%;
+  translate: -50% 0; background: var(--logo-pink);
+}
+.logo-ap { color: var(--logo-pink); }
+.logo-salon { font: 900 3.3em/.78 "Archivo", var(--sans); font-stretch: 66%; text-transform: uppercase; letter-spacing: 0; }
 .nav-right { display: flex; align-items: center; gap: 24px; }
 .nav-links { display: flex; align-items: center; gap: 28px; font-size: .95rem; }
 .nav-links > a, .nav-links > button { position: relative; padding: 6px 0; display: inline-flex; align-items: center; gap: 6px; }
@@ -220,7 +245,7 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 #menuBtn { display: none; }
 @media (max-width: 900px) { .nav-links, .search-btn { display: none; } #menuBtn { display: grid; } }
 @media (max-width: 520px) { .nav-right { gap: 8px; } .nav-book { padding: 0 14px; } }
-@media (max-width: 359px) { .nav-right { gap: 4px; } .nav-book { padding: 0 10px; font-size: .85rem; } .nav .logo-salon { font-size: 1.4rem; } }   /* the smallest phones: everything fits, menu button included */
+@media (max-width: 359px) { .nav-right { gap: 4px; } .nav-book { padding: 0 10px; font-size: .85rem; } }   /* the smallest phones: everything fits, menu button included */
 /* one gold button at a time: the header's appears once the hero's own button is behind you */
 .nav-book { transition: opacity 240ms var(--ease-out), visibility 240ms; }
 .nav:not(.cta-gone) .nav-book { opacity: 0; visibility: hidden; }
@@ -738,7 +763,8 @@ dialog.dragging::backdrop { transition: none; }
 .entry { display: none; position: fixed; inset: 0; z-index: 200; background: var(--tint); color: var(--ink); overflow: hidden; }
 .js:not(.no-entry) .entry { display: block; }
 .js:not(.no-entry) body { overflow: hidden; }
-.entry-logo { position: absolute; top: 24px; left: 0; right: 0; display: flex; justify-content: center; }
+.entry-logo { position: absolute; top: 24px; left: 0; right: 0; display: flex; justify-content: center; font-size: 1.2rem; }   /* the sign, larger, over the doorway */
+@media (max-width: 520px) { .entry-logo { font-size: .95rem; } }
 .entry-portal {
   position: absolute; left: 50%; top: 45%; width: min(300px, 58vw); aspect-ratio: 3 / 4;
   transform: translate(-50%, -50%); transform-origin: 50% 50%;
@@ -821,11 +847,10 @@ footer.site .wrap.foot { align-items: start; }
 
 .nowrap { white-space: nowrap; }
 .nav-book { white-space: nowrap; }
-@media (max-width: 520px) {   /* phones: the sign lockup and Book now share one row */
-  .logo-name { font-size: .82rem; }
-  .logo-salon { font-size: 1.62rem; }
-  .nav .logo { gap: 7px; }
-}
+/* phones: the sign, Book now and the menu share one row, so the sign steps down with the screen */
+@media (max-width: 520px) { .nav .logo, .doc-nav .logo { font-size: .74rem; } }
+@media (max-width: 374px) { .nav .logo, .doc-nav .logo { font-size: .64rem; } }
+@media (max-width: 340px) { .nav .logo, .doc-nav .logo { font-size: .57rem; } }
 
 /* Ria's portrait sits in the arch, framed on her */
 .about-arch img { object-position: 100% 40%; }
@@ -853,8 +878,10 @@ footer.site .wrap.foot { align-items: start; }
 .reveal-on [data-r="right"] { transform: translateX(var(--reveal-slide)); }
 .reveal-on [data-r].in { opacity: 1; transform: none; }
 .reveal-on [data-r].now { transition: none; }      /* a destination you jumped to is simply there */
-/* phones fly in from the sides too, a shorter way; the page clips sideways (html overflow-x: clip),
-   so a block waiting off to the side never opens a sideways scroll */
+/* phones fly in from the sides too, a shorter way. A block waiting off to the side must never widen
+   the page: phones zoom out to fit anything wider than the screen, even with html clipped, so the page
+   body clips sideways itself */
+main { overflow-x: clip; }
 @media (max-width: 760px) { :root { --reveal-slide: 28px; } }
 @media print { .reveal-on [data-r] { opacity: 1 !important; transform: none !important; } }
 

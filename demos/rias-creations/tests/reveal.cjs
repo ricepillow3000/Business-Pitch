@@ -49,7 +49,8 @@ let failed = 0;
             const m = new DOMMatrixReadOnly(getComputedStyle(e).transform); seen++;
             if (!(m.is2D && Math.abs(m.a - 1) < 1e-6 && Math.abs(m.d - 1) < 1e-6 && Math.abs(m.b) < 1e-6 && Math.abs(m.c) < 1e-6)) bad++;
           });
-          return { bad, seen, overflow: document.documentElement.scrollWidth - innerWidth };
+          // a phone zooms out to fit a page wider than the screen, so innerWidth grows too: compare with the screen itself
+          return { bad, seen, overflow: Math.max(document.documentElement.scrollWidth - innerWidth, innerWidth - document.documentElement.clientWidth, Math.round(innerWidth - screen.width)) };
         });
         midBad += r.bad; midSeen += r.seen; overflow = Math.max(overflow, r.overflow);
       }

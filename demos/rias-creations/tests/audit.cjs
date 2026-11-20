@@ -57,9 +57,11 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
       if (/gradient/.test(cs.backgroundImage)) grad.push(e.className);
       if (cs.backdropFilter && cs.backdropFilter !== 'none') glass.push(e.className);
       if (cs.fontStyle === 'italic' && e.textContent.trim()) italic.push(e.tagName);
-      const r = cs.borderTopLeftRadius; if (r !== '0px') radii.add(`${e.className || e.tagName}:${r}`);
+      // her sign's white panel has rounded corners: part of the logo, so the logo is left out of this check
+      const r = cs.borderTopLeftRadius; if (r !== '0px' && !e.closest('.logo')) radii.add(`${e.className || e.tagName}:${r}`);
       const own = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
-      if (!own || cs.visibility === 'hidden' || +cs.opacity === 0) continue;
+      // WCAG 1.4.3: text that is part of a logo has no contrast requirement (tests/logo.cjs checks the name on its panel)
+      if (!own || cs.visibility === 'hidden' || +cs.opacity === 0 || e.closest('.logo')) continue;
       const fg = parse(cs.color), bg = bgOf(e);
       const mix = { r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a) };
       const [x, y] = [lum(mix), lum(bg)].sort((a, b) => b - a), ratio = (x + 0.05) / (y + 0.05);
@@ -122,7 +124,7 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
     const low = [];
     for (const e of document.querySelectorAll('body *')) {
       if (e.closest('dialog:not([open]), .pop:not(.open), template, #tip, [hidden], .mbar') || !e.getClientRects().length) continue;
-      const cs = getComputedStyle(e); if (![...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) || cs.visibility === 'hidden') continue;
+      const cs = getComputedStyle(e); if (![...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim()) || cs.visibility === 'hidden' || e.closest('.logo')) continue;   // logos: WCAG 1.4.3 exception
       const fg = parse(cs.color), bg = bgOf(e), mix = { r: fg.r * fg.a + bg.r * (1 - fg.a), g: fg.g * fg.a + bg.g * (1 - fg.a), b: fg.b * fg.a + bg.b * (1 - fg.a) };
       const [x, y] = [lum(mix), lum(bg)].sort((a, b) => b - a), ratio = (x + 0.05) / (y + 0.05), size = parseFloat(cs.fontSize);
       if (ratio < (size >= 24 ? 3 : 4.5)) low.push(`${e.tagName}.${e.className} ${ratio.toFixed(2)}`);

@@ -171,6 +171,26 @@ A second fresh judge scored the final version: color match 8/10, glamour 7/10, e
 Both judges found the two-line "Ria's Creations" next to a big "SALON" the weakest part of the look:
 her real logo file (still to get from Ria) should replace it.
 
+## Her logo, from her storefront sign (2026-11-20)
+
+John: "make the logo bigger and more glamorous but still exactly her logo ... must look like her store front
+logo". Rebuilt from her own photo of the sign (shared earlier, recovered from that conversation):
+"Ria's / Creations" stacked tight and centered in a sturdy, wide bold serif, slate blue (#506895, measured)
+on a white panel of two overlapping rounded shapes, the apostrophe and both i-dots in pink; beside it a
+big, heavy, compact SALON. Fonts: Merriweather ExtraBold at 112% width (its sturdy small-size design) and
+Archivo Black at 66% width, the closest free match to the sign's letters. The old wordmark (a soft serif
+and a wide geometric SALON, one color, no dots, no panel) was further from the sign.
+
+`tests/logo.cjs` checks the sign's parts from the page, its proportions from the drawn letters
+(name / SALON width 0.80, sign 0.82; height 0.87, sign 0.87), that it is bigger (251 px wide on a laptop,
+was 204), that the name reads at 5.6:1 on its panel, and that the logo, Book now and the menu share one
+row on every phone from 320 to 430 px. The audit leaves the logo out of its contrast and corner checks
+(WCAG 1.4.3 exempts logos; the panel's rounded corners are her sign's).
+
+Found on the way: since phones began sliding blocks in from the sides, a block waiting off to the right
+made the page 8 px wider than a phone's screen. The page body now clips sideways, and `tests/reveal.cjs`
+compares with the screen itself (it compared with the browser's own width, which grew too).
+
 ## Buttons: flat, with a gold hairline (2026-11-19)
 
 John: "not really liking the gradient buttons ... professional, glamorous, simple, clean and an accent mark".

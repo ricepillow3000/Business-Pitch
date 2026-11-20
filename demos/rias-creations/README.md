@@ -28,6 +28,7 @@ used only once, so until that file exists the lounge card stays hidden.
 | `tests/sharp.cjs` | Holds the walk-in at its last frame and checks the photo is as sharp as the finished hero |
 | `tests/handoff.cjs` | Records the walk-in frame by frame: one shot, no jump, no slide, no readjust after it lands |
 | `tests/reveal.cjs` | Every scroll animation is a flat slide from the left, right or bottom: no turning, folding or book-opening |
+| `tests/logo.cjs` | The logo is her storefront sign: its parts, colors and proportions measured, bigger, fits every phone |
 | `tests/booking.cjs` | A first-time client books from the first screen: taps counted, every route in, thumb-sized buttons, clear mistakes |
 
 ## Things to try
@@ -63,7 +64,7 @@ used only once, so until that file exists the lounge card stays hidden.
 - The remaining prices (real so far: keratin from $150, eyebrow tint or wax $20, lashes from $40, Brazilian $35, full-body wax $65)
 - The privacy and terms drafts
 - Whether booking requests should text her phone
-- Her logo file, to replace the matched script wordmark
+- Her logo file, if she has one: the site rebuilds her storefront sign in type (see AUDIT.md)
 - A full-size original of the salon photo (the page uses her photo enlarged 4 times)
 
 Booking, the text code and the rating refresh are simulated in this demo. A real site

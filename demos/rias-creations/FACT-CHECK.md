@@ -32,6 +32,12 @@ Birdeye shows 4.6 from 26 reviews on an unclaimed snapshot; the site keeps Googl
 Measured from her salon photo on 2026-11-19 (see AUDIT.md): the gold is the lit brass of her arched
 mirrors, the dark brown her ceiling and chairs, the white her walls, and the pink a whisper of her roses.
 
+## Logo
+
+Rebuilt from her photo of the storefront sign: slate blue #506895 and the pink of the dots (#B6688A in the
+photo, a few pixels wide, so drawn a little richer as #C24F7C) are measured from it. Her original logo
+file, if one exists, would be better still.
+
 ## Photos
 
 - Hero and entry: her salon floor, enlarged 4x with a light JPEG clean-up, Lanczos resize and a
