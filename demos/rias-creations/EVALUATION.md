@@ -63,10 +63,10 @@ fixes make the site better.
 | 6 | The "code is coming" placeholder and the sending dot pulsed forever, breaking the "nothing loops" rule. | designer | **Fixed** (6 pulses) |
 | 7 | The labels "Special" and "Holiday" meant nothing on a phone, because their tooltip never shows on touch. | orchestrator, designer | **Fixed** ("Special price", "Holiday price") |
 | 8 | The phone page was 10.04 screens, over the 10-screen cap. | client, designer | **Fixed** (9.34) |
-| 9 | Dark mode: her logo's white panel looks like a sticker on the dark header. | orchestrator, designer | **For John** |
-| 10 | Prices sit 2.85 screens down on a phone because Meet Ria comes first. | client | **For John** |
-| 11 | "Come on in" on the loading screen is gone before it can be read. | motion | **For John** (a no-delay option) |
-| 12 | The loading screen plays again in every new tab, about 3.5 s. | client | **For John** |
+| 9 | Dark mode: her logo's white panel looks like a sticker on the dark header. | orchestrator, designer | **John: no white panel, recolor it** (BP-16): her slate lightened to #859fcf, 7.0:1 on the header |
+| 10 | Prices sit 2.85 screens down on a phone because Meet Ria comes first. | client | **John: keep the order** (prices are placeholders) |
+| 11 | "Come on in" on the loading screen is gone before it can be read. | motion | **John: no added wait** (BP-16): two lines, each readable (908 ms, 662 ms), walk starts when it did |
+| 12 | The loading screen plays again in every new tab, about 3.5 s. | client | **John: once per tab, not on a refresh**: already so, now proved (`tests/entry.cjs`) |
 | 13 | Rejected: Back to close dialogs (risky), tap a price to book (accidental taps), a taller headline line (no gain), a slower Services hover, a bigger portrait, the Bodoni W, the gallery order, the logo twice, price on the confirmation (sample prices), "Book now" vs "Book a visit", moving Dark mode up the menu (against John's "right under them"). | | |
 
 ## 4. Proof the fixes made it better
