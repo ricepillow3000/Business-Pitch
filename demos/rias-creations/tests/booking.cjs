@@ -1,9 +1,10 @@
 // Booking is easy: a first-time client books a visit from the moment the site opens, on an iPhone
 // and a laptop, by the shortest path, counting every tap and every box typed in. Also checks:
-//   - phone: a way to book is on the very first screen (the menu's "Book a visit"); laptop: no Book button
-//     anywhere (John 2026-11-21), so the shortest path is a tap on a service row
-//   - every route into booking works: the hero button, the header, tapping a service row,
-//     and search; a service picked on the way is already filled in
+//   - phone: a way to book is on the very first screen (the menu's "Book a visit"); laptop: no Book button in the
+//     header (John 2026-11-21), so the shortest path is a tap on a service row
+//   - every route into booking works: the menu, tapping a service row, the "Book a visit" glide button under the
+//     reviews (BP-18), and search (laptops: Ctrl K; the phone menu has no search box since BP-18); a service picked
+//     on the way is already filled in
 //   - everything tapped on the phone is at least 44 x 44 px (Apple's minimum)
 //   - mistakes are explained right where they happen; a phone call is one tap away (the footer's number; John
 //     2026-11-21 removed the "Rather talk?" link beside the form)
@@ -74,11 +75,15 @@ const nextWeekday = () => { const d = new Date(); d.setDate(d.getDate() + 2); if
       await fresh(); await p.$eval('#p0 li:nth-child(4)', (e) => e.scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(400);
       const pick = await p.$eval('#p0 li:nth-child(4) h3', (x) => x.textContent.trim()); await tap(p, '#p0 li:nth-child(4)'); await p.waitForTimeout(1200);
       routes.push([`service row "${pick}"`, (await atForm()) && (await service()) === pick]);
-      await fresh(); if (vp === 'phone') await tap(p, '#menuBtn'); else await p.keyboard.press('Control+k');   // laptop: Ctrl K (no Search button, John 2026-11-21)
-      await p.waitForTimeout(500);
-      if (vp === 'phone') await tap(p, '#cmdInput');   // the phone menu opens without the keyboard (BP-15): tap the box to type
-      await p.keyboard.type('keratin'); await p.waitForTimeout(200); await p.keyboard.press('Enter'); await p.waitForTimeout(1300);
-      routes.push([`search "keratin" -> "${await service()}"`, (await atForm()) && /keratin/i.test(await service())]);
+      // the "Book a visit" glide button under the reviews (BP-18)
+      await fresh(); await p.$eval('#reviews a.glide[href="#book"]', (e) => e.scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(400);
+      await tap(p, '#reviews a.glide[href="#book"]'); await p.waitForTimeout(2800);
+      routes.push(['the "Book a visit" button under the reviews', await atForm()]);
+      if (vp === 'laptop') {   // laptop: Ctrl K (no Search button, John 2026-11-21); the phone menu is a short list to tap, no search box (BP-18)
+        await fresh(); await p.keyboard.press('Control+k'); await p.waitForTimeout(500);
+        await p.keyboard.type('keratin'); await p.waitForTimeout(200); await p.keyboard.press('Enter'); await p.waitForTimeout(1300);
+        routes.push([`search "keratin" -> "${await service()}"`, (await atForm()) && /keratin/i.test(await service())]);
+      }
       const all = routes.every((r) => r[1]);
       rec(vp, 'every route into booking works', all, routes.map((r) => `${r[0]} ${r[1] ? 'ok' : 'FAILED'}`).join('; '));
       await c.close();

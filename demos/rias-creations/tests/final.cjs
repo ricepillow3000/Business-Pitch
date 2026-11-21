@@ -98,10 +98,10 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
   console.log('-- 3. words on the home page');
   {
     const { c, p } = await open(laptop);
-    await check('B1 hero line is short', async () => { const t = await text(p, '.hero .lede'); return [t === 'A full service salon. Walk-ins welcome.' && /<span class="nowrap">Walk-ins<\/span> welcome\./.test(html), `"${t}"`]; });
-    await check('B2 Meet Ria: one plain line, no photo caption', async () => {
+    await check('B1 hero line is short', async () => { const t = await text(p, '.hero .lede'); return [t === 'Hair, brows and lashes. Walk-ins welcome.' && /<span class="nowrap">Walk-ins<\/span> welcome\./.test(html), `"${t}"`]; });   // BP-18: the headline is her motto, the line says what she does
+    await check('B2 Meet Ria: one plain line, no photo caption', async () => {   // BP-18 cut it to "Owner and stylist." 
       const t = await text(p, '.about .lede'), cap = await p.$('.about figcaption');
-      return [t === "The owner and stylist behind Ria's Creations." && !cap, `"${t}"; caption ${cap ? 'STILL THERE' : 'gone'}`];
+      return [t === 'Owner and stylist.' && !cap, `"${t}"; caption ${cap ? 'STILL THERE' : 'gone'}`];
     });
     // B3 (John 2026-11-21: remove the Services line; "walk in" is said once, in the hero)
     await check('B3 Services: heading only; "walk" once on the page', async () => {
@@ -123,7 +123,7 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
       const out = [];
       for (const [dir, label] of [[site, 'site'], [preview, 'preview']]) {
         const h = read(dir, 'index.html'), v = h.slice(h.indexOf('<section class="visit"'), h.indexOf('</section>', h.indexOf('<section class="visit"')));
-        const row = /<dt>Parking<\/dt><dd>Free, right outside<\/dd>/.test(v);
+        const row = /<dt class="sr">Parking<\/dt><dd>Parking is free, right outside<\/dd>/.test(v);   // BP-18: the label is read aloud, the value says it
         out.push([`${label}: "free parking" ${/free parking/i.test(v) ? 'STILL THERE' : 'gone'}, Parking row ${row ? 'kept' : 'MISSING'}`, v.length > 0 && !/free parking/i.test(v) && row]);
       }
       return [out.every((x) => x[1]), out.map((x) => x[0]).join('; ')];
@@ -142,7 +142,7 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
       const r = await p.evaluate(() => { const n = document.querySelector('#panels + .svc-note'); if (!n) return null;
         const t = document.createElement('i'); t.style.color = 'var(--muted)'; document.body.append(t); const muted = getComputedStyle(t).color; t.remove();
         const a = getComputedStyle(n); return { t: n.textContent, same: a.fontSize === '14.72px' && a.color === muted && a.marginTop === '6px' }; });
-      return [!!r && r.t === 'Some prices are samples for Ria to set.' && r.same && /\.svc-note \{ margin-top: 6px; font-size: \.92rem; color: var\(--muted\); \}/.test(css), r ? `"${r.t}", ${r.same ? 'small muted note' : 'DIFFERENT look'}` : 'MISSING'];
+      return [!!r && r.t === 'Some prices are samples.' && r.same && /\.svc-note \{ margin-top: 6px; font-size: \.92rem; color: var\(--muted\); \}/.test(css), r ? `"${r.t}", ${r.same ? 'small muted note' : 'DIFFERENT look'}` : 'MISSING'];
     });
     await c.close();
   }
@@ -196,7 +196,7 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
       if (r.layout.length) bad.push(`${n}: ${r.layout.join('; ')}`);
       if (n === '390') {
         if (r.trims['Chemical treatments'] !== 'Priced at a consultation.') bad.push(`Chemical treatments says "${r.trims['Chemical treatments']}"`);
-        if (r.trims['Eyelash extensions'] !== 'Price depends on the set.') bad.push(`Eyelash extensions says "${r.trims['Eyelash extensions']}"`);
+        if (r.trims['Eyelash extensions'] !== undefined) bad.push(`Eyelash extensions says "${r.trims['Eyelash extensions']}"`);   // BP-18 cut every line but "Priced at a consultation." 
       }
       await c.close();
     }
@@ -254,7 +254,8 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
     const r = await p.evaluate(() => { const s = getComputedStyle(document.querySelector('.book .shell')), k = getComputedStyle(document.querySelector('.book .card'));
       return { bg: s.backgroundColor, pad: s.paddingTop, sh: s.boxShadow, card: k.boxShadow }; });
     await c.close();
-    return [r.bg === 'rgba(0, 0, 0, 0)' && r.pad === '0px' && r.sh === 'none' && /0px 0px 0px 1px/.test(r.card), `around the card: background ${r.bg}, padding ${r.pad}, shadow ${r.sh}; card: ${r.card}`];
+    // BP-18: the form sits on the page itself (no card outline); its fields keep their warm edge
+    return [r.bg === 'rgba(0, 0, 0, 0)' && r.pad === '0px' && r.sh === 'none' && r.card === 'none', `around the card: background ${r.bg}, padding ${r.pad}, shadow ${r.sh}; card: ${r.card}`];
   });
 
   console.log('-- 6. fewer choices');
@@ -289,11 +290,11 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
       && scrolled !== 0 && afterScroll === '' && tapped.v === "Men's haircut" && tapped.at && key === 'Curly haircut' && space === 'Beard trim' && hov;
     return [ok, `role ${a.role}, tabindex ${a.tab}, cursor ${a.cur}, touch ${a.touch}; a ${scrolled}px scroll booked "${afterScroll}"; tap -> "${tapped.v}", form in view ${tapped.at}; Enter -> "${key}"; Space -> "${space}"; name turns gold on hover ${hov}`];
   });
-  await check('C6 phone menu: 7 choices, Dark mode under Gallery', async () => {
+  await check('C6 phone menu: 6 choices, Dark mode under Gallery', async () => {   // BP-18: Meet Ria only when searched
     const { c, p } = await open(phone);
     await p.tap('#menuBtn'); await p.waitForTimeout(600);
     const items = await p.$$eval('#cmdList .cmd-item span', (e) => e.map((x) => x.textContent.trim())); await c.close();
-    const want = ['Book a visit', 'Call the salon', 'Services and prices', 'Gallery', 'Dark mode', 'Meet Ria', 'Hours and directions'];
+    const want = ['Book a visit', 'Call the salon', 'Services and prices', 'Gallery', 'Dark mode', 'Hours and directions'];
     return [items.join('|') === want.join('|'), items.join(' | ')];
   });
   await check('A11 search: weekdays find hours, "cancel" finds call', async () => {
@@ -383,14 +384,15 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
   });
 
   console.log('-- 7. the hero and header (John 2026-11-21: "remove the rating and the open today at 10:30 ... remove the book now")');
+  // BP-18: the hero has one button, "See services", that glides to Meet Ria (John: "1, 2, 3 buttons")
   await check('Hero: no rating, no open line, no Book button', async () => {
     const out = [];
     for (const [n, o] of [['390', phone], ['1280', laptop]]) {
       const { c, p } = await open(o);
       const r = await p.evaluate(() => { const h = document.querySelector('.hero'); document.querySelectorAll('.hero span[style*="clip"]').forEach((e) => (e.style.display = 'none'));
-        return { t: h.innerText.replace(/\s+/g, ' ').trim(), btn: [...h.querySelectorAll('a, button')].filter((e) => e.offsetParent).length, bar: !!document.querySelector('.hero-bar, .hero-note, .hero-cta, .hero [data-hours], .hero [data-swr]') }; });
+        return { t: h.innerText.replace(/\s+/g, ' ').trim(), btn: [...h.querySelectorAll('a, button')].filter((e) => e.offsetParent && !e.matches('a.glide[href="#stylist"]')).length, glide: !!h.querySelector('a.glide[href="#stylist"]'), bar: !!document.querySelector('.hero-bar, .hero-note, .hero-cta, .hero [data-hours], .hero [data-swr]') }; });
       await c.close();
-      out.push([`${n}: "${r.t}"${r.btn ? `, ${r.btn} buttons` : ''}${r.bar ? ', bar still there' : ''}`, !/4\.5|Rated|Open|Closed|Book/i.test(r.t) && !r.btn && !r.bar]);
+      out.push([`${n}: "${r.t}"${r.btn ? `, ${r.btn} buttons` : ''}${r.bar ? ', bar still there' : ''}`, !/4\.5|Rated|Open|Closed|Book/i.test(r.t) && !r.btn && r.glide && !r.bar]);
     }
     return [out.every((x) => x[1]), out.map((x) => x[0]).join('; ')];
   });
@@ -478,7 +480,7 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
       return { n: sl.length, five: sl.filter((s) => { const st = s.querySelector('.stars'); return st && st.dataset.stars === '5' && st.querySelectorAll('svg').length === 5 && [...st.querySelectorAll('clipPath rect')].every((x) => +x.getAttribute('width') === 24); }).length,
         labels: sl.every((s, i) => s.getAttribute('aria-label') === `${i + 1} of ${sl.length}`), count: document.getElementById('count').textContent,
         reply: sl.filter((s) => /response from|owner|Ria's Creations Salon \(|Hi |Thank you so much for/i.test(s.textContent.replace(/RIA THANK YOU SO MUCH/, ''))).length,
-        christyne: /Christyne/.test(document.body.innerHTML), rating: document.querySelector('.score').textContent.trim() + ' / ' + document.querySelector('.score-meta').textContent.trim() };
+        christyne: /Christyne/.test(document.body.innerHTML), rating: document.querySelector('.score-meta').textContent.trim() };   // BP-18: one quiet line, no big numeral
     });
     const hs = [];
     for (let i = 0; i < 16; i++) { hs.push(await p.evaluate(() => Math.round(document.getElementById('viewport').getBoundingClientRect().height))); await p.click('#next').catch(() => {}); await p.waitForTimeout(250); }
@@ -501,9 +503,10 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
     }
     return [out.every((x) => x[1]), out.map((x) => x[0]).join('; ')];
   });
+  // BP-18: from 1100 px Book sits beside Location, so no column stands empty and the arch line rests there too
   await check('Arch line in Book only, adds no height, hidden on phones', async () => {
     const out = [];
-    for (const [n, o] of [['1280', laptop], ['1920', { viewport: { width: 1920, height: 1080 } }], ['390', phone], ['320', small]]) {
+    for (const [n, o] of [['1000', { viewport: { width: 1000, height: 800 } }], ['1280', laptop], ['1920', { viewport: { width: 1920, height: 1080 } }], ['390', phone], ['320', small]]) {
       const { c, p } = await open(o);
       const r = await p.evaluate(() => { const a = [...document.querySelectorAll('.arch-line')], sec = a.map((e) => e.closest('section').id), shown = a.filter((e) => e.offsetParent).length;
         const before = Math.round(document.getElementById('book').getBoundingClientRect().height); a.forEach((e) => (e.style.display = 'none'));
@@ -511,8 +514,8 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
         const cs = a[0] && getComputedStyle(a[0]);
         return { sec: sec.join(), shown, grows: before - after, hidden: a.every((e) => e.getAttribute('aria-hidden') === 'true' && !e.textContent.trim()), anim: cs ? cs.animationName : '', rad: cs ? cs.borderTopLeftRadius : '' }; });
       await c.close();
-      const phoneSize = +n < 901;
-      out.push([`${n}: in ${r.sec}, ${r.shown ? 'shown' : 'hidden'}, adds ${r.grows}px`, r.sec === 'book' && r.hidden && r.anim === 'none' && /999px/.test(r.rad) && r.grows === 0 && (phoneSize ? r.shown === 0 : r.shown === 1)]);
+      const emptyColumn = +n >= 901 && +n < 1100;
+      out.push([`${n}: in ${r.sec}, ${r.shown ? 'shown' : 'hidden'}, adds ${r.grows}px`, r.sec === 'book' && r.hidden && r.anim === 'none' && /999px/.test(r.rad) && r.grows === 0 && (emptyColumn ? r.shown === 1 : r.shown === 0)]);
     }
     return [out.every((x) => x[1]), out.map((x) => x[0]).join('; ')];
   });

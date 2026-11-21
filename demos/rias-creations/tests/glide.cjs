@@ -11,7 +11,7 @@
 //   a. the three buttons are there: "See services" in the hero (to Meet Ria), "See her work" under the price list
 //      (to the Gallery), "Book a visit" under the reviews (to Book a visit); real links with a small down arrow
 //   b. laptop 1280 x 800: a click glides the page there, slowly (1.2 to 2.4 s), always forward, eased (fastest in the
-//      middle), and the section's heading lands just under the header
+//      middle), and the section lands just under the header, its heading near the top
 //   c. after each glide both sections of the pair are fully on screen (1280 x 800, 1440 x 900 and 1920 x 1080)
 //   d. a wheel turned during a glide stops it at once (within 100 ms)
 //   e. with reduced motion the jump is instant
@@ -58,8 +58,10 @@ const sel = (bt) => `${bt.from} a.glide[href="${bt.href}"]`;
     const D = tEnd - tStart, speed = (a, z) => Math.abs(at(tStart + z * D) - at(tStart + a * D)) / ((z - a) * D);
     return { moved: Math.round(y1 - y0), dur: Math.round(D), mono, mid: speed(1 / 3, 2 / 3), first: speed(0, 0.1), last: speed(0.9, 1), over: Math.max(...s.map((x) => (x[1] - y1) * dir)) };
   };
-  const landing = (p, id) => p.evaluate((id) => { const h = document.querySelector('#' + id + ' h2').getBoundingClientRect(), n = document.getElementById('nav').getBoundingClientRect();
-    return Math.round(h.top - n.bottom); }, id);
+  // where a glide landed: the section's top against the header's foot, and its heading's top under the header
+  const landing = (p, id) => p.evaluate((id) => { const s = document.getElementById(id).getBoundingClientRect(), h = document.querySelector('#' + id + ' h2').getBoundingClientRect(), n = document.getElementById('nav').getBoundingClientRect();
+    return { sec: Math.round(s.top - n.bottom), h: Math.round(h.top - n.bottom) }; }, id);
+  const landed = (l) => Math.abs(l.sec) <= 1 && l.h >= 0 && l.h <= 140;   // the section starts at the header; its heading is near the top
   const pairInView = (p, ids) => p.evaluate((ids) => { const n = document.getElementById('nav').getBoundingClientRect().bottom;
     return ids.map((id) => { const r = document.getElementById(id).getBoundingClientRect(); return { id, top: Math.round(r.top - n), bottom: Math.round(innerHeight - r.bottom), ok: r.top >= n - 1 && r.bottom <= innerHeight + 1 }; }); }, ids);
 
@@ -86,8 +88,8 @@ const sel = (bt) => `${bt.from} a.glide[href="${bt.href}"]`;
       await record(p, 3200); await p.click(sel(bt)); await p.waitForTimeout(3300);
       const s = shape(await samples(p)), land = await landing(p, bt.pair[0]);
       if (n === '1280') {
-        const ok = s.moved > 0 && s.dur >= 1200 && s.dur <= 2400 && s.mono && s.mid > s.first && s.mid > s.last && s.over <= 0.5 && land >= 0 && land <= 72;
-        rec(`b. ${n}: ${bt.label} glides to #${bt.pair[0]}`, ok, s.moved ? `${s.moved}px in ${s.dur} ms, forward only ${s.mono}, speed first/middle/last ${s.first.toFixed(2)}/${s.mid.toFixed(2)}/${s.last.toFixed(2)} px/ms, heading ${land}px under the header` : 'DID NOT MOVE');
+        const ok = s.moved > 0 && s.dur >= 1200 && s.dur <= 2400 && s.mono && s.mid > s.first && s.mid > s.last && s.over <= 0.5 && landed(land);
+        rec(`b. ${n}: ${bt.label} glides to #${bt.pair[0]}`, ok, s.moved ? `${s.moved}px in ${s.dur} ms, forward only ${s.mono}, speed first/middle/last ${s.first.toFixed(2)}/${s.mid.toFixed(2)}/${s.last.toFixed(2)} px/ms, section ${land.sec}px from the header, heading ${land.h}px under it` : 'DID NOT MOVE');
       }
       await p.waitForTimeout(900);   // the second section's blocks have landed
       const v = await pairInView(p, bt.pair);
@@ -99,24 +101,30 @@ const sel = (bt) => `${bt.from} a.glide[href="${bt.href}"]`;
   }
 
   // d. a wheel during a glide stops it at once
+  const missing = async (p, name) => { if (await p.$(sel(BUTTONS[0]))) return false; rec(name, false, 'button MISSING'); return true; };
   {
     const { c, p } = await open(laptop);
+    if (!(await missing(p, 'd. a wheel during a glide stops it within 100 ms'))) {
     await p.mouse.move(640, 400);
     await record(p, 3000); await p.click(sel(BUTTONS[0])); await p.waitForTimeout(700);
-    const y = await p.evaluate(() => scrollY); await p.mouse.wheel(0, -100); const tw = await p.evaluate(() => performance.now());
+    await p.evaluate(() => addEventListener('wheel', () => { window.__atWheel = scrollY; }, { once: true, capture: true }));
+    await p.mouse.wheel(0, -100); const y = await p.evaluate(() => window.__atWheel);   // where the page was when the wheel arrived
     await p.waitForTimeout(100); const y100 = await p.evaluate(() => scrollY);
     await p.waitForTimeout(1500); const yEnd = await p.evaluate(() => scrollY);
     const target = await p.evaluate(() => document.getElementById('stylist').getBoundingClientRect().top + scrollY - document.getElementById('nav').offsetHeight);
     rec('d. a wheel during a glide stops it within 100 ms', y > 20 && y100 <= y + 2 && yEnd <= y + 2 && yEnd < target - 50, `gliding at ${Math.round(y)}px, 100 ms after the wheel ${Math.round(y100)}px, later ${Math.round(yEnd)}px (the glide was going to ${Math.round(target)}px)`);
+    }
     await c.close();
   }
 
   // e. reduced motion: the jump is instant
   {
     const { c, p } = await open(laptop, { reducedMotion: 'reduce' });
+    if (!(await missing(p, 'e. reduced motion: the jump is instant'))) {
     await p.click(sel(BUTTONS[0]));
     const at = await landing(p, 'stylist'); await p.waitForTimeout(500); const later = await landing(p, 'stylist');
-    rec('e. reduced motion: the jump is instant', at >= 0 && at <= 72 && at === later, `heading ${at}px under the header at once, ${later}px half a second later`);
+    rec('e. reduced motion: the jump is instant', landed(at) && at.h === later.h, `section ${at.sec}px from the header, heading ${at.h}px under it at once; ${later.h}px half a second later`);
+    }
     await c.close();
   }
 
@@ -164,7 +172,7 @@ const sel = (bt) => `${bt.from} a.glide[href="${bt.href}"]`;
       if (!(await p.$(sel(bt)))) { lands.push(`${bt.label} MISSING`); continue; }
       await p.$eval(sel(bt), (a) => a.scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(300);
       await p.tap(sel(bt)); await p.waitForTimeout(2800);
-      const l = await landing(p, bt.pair[0]); lands.push(`${bt.label} -> #${bt.pair[0]} heading ${l}px under the header${l >= 0 && l <= 72 ? '' : ' WRONG'}`);
+      const l = await landing(p, bt.pair[0]); lands.push(`${bt.label} -> #${bt.pair[0]} section ${l.sec}px from the header, heading ${l.h}px under it${landed(l) ? '' : ' WRONG'}`);
     }
     const m = await p.evaluate(() => ({ side: document.documentElement.scrollWidth - innerWidth, screens: document.documentElement.scrollHeight / innerHeight }));
     const ok = sizes.every((s) => s && s[1] >= 44 && s[0] >= 44) && lands.every((x) => !/MISSING|WRONG/.test(x)) && m.side <= 0 && m.screens < 10 && !p._errs.length;

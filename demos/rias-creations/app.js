@@ -164,13 +164,13 @@
     let chars = [];
     try { chars = $$(".hero h1 .ln > span").flatMap((el) => A.splitText(el, { chars: true }).chars); }
     catch (e) { clean(); root.classList.add("intro-css"); return; }
-    const lede = $(".hero .lede"), nav = $("#nav");
+    const lede = $(".hero .lede"), cta = $(".hero .glide"), nav = $("#nav");
     const brand = $("#nav .logo");
     const navItems = $$("#nav .nav-links > a, #nav .nav-links > button, #nav .nav-tools > button").filter((el) => el.offsetParent);
 
     // starting poses, set before anything is revealed so nothing flashes
     A.set(chars, { y: "108%" });
-    A.set(lede, { opacity: 0, x: -40 });
+    A.set([lede, cta], { opacity: 0, x: -40 });
     if (!walkedIn) A.set(heroImg, { scale: 1.04 });             // after the walk-in the photo is already in place: no settle
     A.set(scrim, { opacity: 0 });
     A.set(brand, { opacity: 0, x: -40 });
@@ -184,7 +184,7 @@
       landed = true; clearTimeout(guard);
       try { tl.pause(); } catch (e) {}
       // hand the elements back to CSS so hover, press and theme styles work normally
-      [lede, heroImg, scrim, nav, brand, ...navItems, ...chars].forEach((el) => {
+      [lede, cta, heroImg, scrim, nav, brand, ...navItems, ...chars].forEach((el) => {
         ["transform", "opacity", "translate", "scale"].forEach((p) => el.style.removeProperty(p));
       });
       root.classList.add("intro-done");
@@ -199,6 +199,7 @@
       .add(brand, { opacity: 1, x: 0, duration: 1400 }, 120)
       .add(navItems, { opacity: 1, x: 0, duration: 1400, delay: A.stagger(75) }, 240)
       .add(lede, { opacity: 1, x: 0, duration: 1200 }, 560)
+      .add(cta, { opacity: 1, x: 0, duration: 1200 }, 680)
       .then(land);
     } catch (e) { land(); }
   }
@@ -263,6 +264,79 @@
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") settle(); });
     window.__story = { revealAll: () => blocks.forEach((el) => { io.unobserve(el); show(el, 0, true); }) };
     root.classList.add("reveal-ready");
+  })();
+
+  /* ── Glide buttons (BP-18) ───────────────────────────────────
+     John, 2026-11-21: "the clicking automatically traverses down slowly ... as if it's being pulled to the next
+     section". Three links (See services, See her work, Book a visit) glide the page to their section's top, just under
+     the header, on the page's ease-in-out curve, by the clock: 1.4 s for a screen's distance, at most 2.2 s. A wheel,
+     touch, key or press stops it where it is. Focus moves to the section's heading without a jump. Reduced motion:
+     it jumps at once. Without this script each link still lands (the CSS scroll padding keeps it under the header). */
+  const curve = (x1, y1, x2, y2) => (t) => {   // a CSS cubic-bezier: find where the curve's x is t, give its y
+    const at = (a, b, s) => 3 * a * s * (1 - s) * (1 - s) + 3 * b * s * s * (1 - s) + s * s * s;
+    let lo = 0, hi = 1, s = t;
+    for (let i = 0; i < 24; i++) { s = (lo + hi) / 2; if (at(x1, x2, s) < t) lo = s; else hi = s; }
+    return at(y1, y2, s);
+  };
+  const glideEase = curve(...(getComputedStyle(root).getPropertyValue("--ease-in-out") || INOUT).match(/[\d.]+/g).map(Number));
+  let glideStop = null, wheelStop = null;
+  function glide(sec) {
+    glideStop?.(); wheelStop?.();
+    const heading = $("h2", sec);
+    const to = Math.round(Math.max(0, Math.min(root.scrollHeight - innerHeight, sec.getBoundingClientRect().top + scrollY - $("#nav").offsetHeight)));
+    const from = scrollY, d = to - from;
+    const land = () => { heading.tabIndex = -1; heading.focus({ preventScroll: true }); };
+    if (reduced || Math.abs(d) < 2) { scrollTo({ top: to, behavior: "instant" }); return land(); }
+    const dur = Math.min(2200, Math.max(1400, 1400 + (Math.abs(d) - 700) * 0.6)), t0 = performance.now();
+    const cuts = ["wheel", "touchstart", "keydown", "pointerdown"];
+    let raf = 0;
+    const stop = () => { cancelAnimationFrame(raf); cuts.forEach((t) => removeEventListener(t, stop, true)); glideStop = null; };
+    const step = (now) => {
+      const k = Math.min(1, Math.max(0, now - t0) / dur);
+      scrollTo({ top: from + d * glideEase(k), behavior: "instant" });
+      if (k < 1) raf = requestAnimationFrame(step); else { stop(); land(); }
+    };
+    cuts.forEach((t) => addEventListener(t, stop, { capture: true, passive: true }));
+    glideStop = stop;
+    raf = requestAnimationFrame(step);
+  }
+  $$("a.glide").forEach((a) => a.addEventListener("click", (e) => {
+    const sec = $(a.getAttribute("href"));
+    if (!sec || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault(); glide(sec);
+  }));
+
+  /* ── Heavy wheel (BP-18) ─────────────────────────────────────
+     John: "the scrolling feels heavier than the static original one, where it looks like you're pulling the site
+     down. Obviously not too slow, but not too fast." Each wheel turn moves a target; the page follows it by the clock,
+     closing the gap with a 150 ms time constant, so it eases in and never passes it. Only for a mouse or trackpad
+     (a fine pointer that hovers), never under reduced motion, never where something else should take the wheel: a
+     field, an open dialog, a row that scrolls sideways, the reviews. Ctrl (zoom), keys, the scrollbar, touch and the
+     glide buttons keep their own behaviour, and anything else that scrolls the page makes it let go. Idle: nothing runs. */
+  (function heavyWheel() {
+    if (reduced || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const TAU = 150;
+    let target = 0, pos = 0, last = 0, raf = 0, set = 0;
+    const stop = () => { cancelAnimationFrame(raf); raf = 0; removeEventListener("scroll", onScroll); wheelStop = null; };
+    const onScroll = () => { if (Math.abs(scrollY - set) > 2) stop(); };
+    const step = (now) => {
+      pos = target - (target - pos) * Math.exp(-Math.max(0, now - last) / TAU); last = now;
+      if (Math.abs(target - pos) < 1.5) pos = target;
+      scrollTo({ top: pos, behavior: "instant" }); set = scrollY;
+      if (pos === target) return stop();
+      raf = requestAnimationFrame(step);
+    };
+    addEventListener("wheel", (e) => {
+      if (e.ctrlKey || e.defaultPrevented || Math.abs(e.deltaX) > Math.abs(e.deltaY) || document.querySelector("dialog[open]")) return;
+      const t = e.target.closest ? e.target : e.target.parentElement, row = t.closest(".scroller");
+      if (t.closest("input, select, textarea, [contenteditable], dialog, .rail, #viewport") || (row && row.scrollWidth > row.clientWidth + 1)) return;
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1);
+      if (!raf) { pos = target = scrollY; }
+      const next = Math.max(0, Math.min(root.scrollHeight - innerHeight, target + dy));
+      if (next === target) return;
+      e.preventDefault(); target = next;
+      if (!raf) { last = performance.now(); set = scrollY; wheelStop = stop; addEventListener("scroll", onScroll, { passive: true }); raf = requestAnimationFrame(step); }
+    }, { passive: false });
   })();
 
   /* ── BlurHash placeholders ──────────────────────────────────── */
@@ -459,11 +533,11 @@
   /* ── Services data, read from the pre-rendered menu ─────────── */
   const tabs = $$(".tab"), panels = $$(".menu");
   const CATS = panels.map((p, i) => ({
-    name: tabs[i].textContent.trim(),
+    name: tabs[i].textContent.trim() + (tabs[i].dataset.keys ? " " + tabs[i].dataset.keys : ""),   // search also knows a tab's longer name
     items: $$("li", p).map((li) => ({
       name: [...$("h3", li).childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim(),
       price: $(".price", li).textContent.trim(),
-      desc: $("p", li)?.textContent.trim() || "",
+      desc: [$("p", li)?.textContent.trim(), li.dataset.keys].filter(Boolean).join(" "),   // words search can find: the line under it, or the one BP-18 cut from sight
     })),
   }));
   const SERVICES = CATS.flatMap((c) => c.items.map((s) => ({ ...s, cat: c.name })));
@@ -472,7 +546,7 @@
   const cmd = $("#cmd"), cmdInput = $("#cmdInput"), cmdList = $("#cmdList");
   const MOD = isMac ? "⌘K" : "Ctrl K";
   let results = [], active = 0, cmdReturn = null, closing = null;
-  // quiet: shown only when searched, so the menu opens with seven choices (BP-17)
+  // quiet: shown only when searched, so the menu opens with six choices (BP-17; BP-18 made Meet Ria quiet)
   const commands = () => [
     { g: "Suggested", label: "Book a visit", kbd: "B", keys: "appointment booking schedule", run: goBook },
     { g: "Suggested", label: "Call the salon", hint: "(770) 557-0354", keys: "phone number text cancel change reschedule", run: () => (location.href = "tel:+17705570354") },
@@ -480,7 +554,7 @@
     { g: "Go to", label: "Services and prices", keys: "menu cost how much", run: () => go("#services") },
     { g: "Go to", label: "Gallery", keys: "photos recent work color hair results", run: () => go("#work") },
     { g: "Go to", label: themeLabel(), keys: "theme dark light mode evening day", run: toggleTheme },
-    { g: "Go to", label: "Meet Ria", keys: "stylist owner about team", run: () => go("#stylist") },
+    { g: "Go to", label: "Meet Ria", keys: "stylist owner about team", quiet: 1, run: () => go("#stylist") },
     { g: "Go to", label: "Reviews", keys: "rating google yelp", quiet: 1, run: () => go("#reviews") },
     { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card credit cash sunday walk in monday saturday weekend", run: () => go("#visit") },
     { g: "Contact", label: "Copy address", keys: "where location", quiet: 1, run: () => copy("375 Rockbridge Rd NW, Suite 156, Lilburn, GA 30047", "Address") },
@@ -807,7 +881,7 @@
   function predict() {
     const s = form.elements.service.value;
     const dayOk = dateIn.value && dateIn.value >= dateIn.min && !isSunday(dateIn.value) && slots.some((el) => !el.disabled);
-    submitLabel.textContent = s && dayOk && slotTime() ? `Request ${s.toLowerCase()}, ${`${dayName(dateIn.value)} at ${slotTime()}`.replace(/ /g, "\u00a0")}` : "Send request";   // day and time stay together
+    submitLabel.textContent = s && dayOk && slotTime() ? `Book ${s.toLowerCase()}, ${`${dayName(dateIn.value)} at ${slotTime()}`.replace(/ /g, "\u00a0")}` : "Book";   // day and time stay together
   }
   slots.forEach((s, i) => {
     s.addEventListener("click", () => { pick(s); predict(); });

@@ -74,10 +74,10 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
     return { radii: [...radii], grad, glass, italic, low, texts, anims: anims.length, minFont,
       photos: [...document.querySelectorAll('main img')].filter((i) => !i.closest('[hidden]')).map((i) => i.getAttribute('src')),
       h1em: [...document.querySelectorAll('h1 em, h2 em, h3 em')].filter((e) => !e.closest('span[style*="clip"]')).length,   // ignore the screen-reader copy
-      heroButtons: document.querySelectorAll('.hero .btn').length,
-      // BP-17: the booking form is one flat hairline card, no tinted mat or shadow around it
+      heroButtons: document.querySelectorAll('.hero .btn:not(.glide)').length, heroGlide: document.querySelectorAll('.hero a.glide[href="#stylist"]').length,
+      // BP-17: no tinted mat or shadow around the booking form; BP-18: the form sits on the page, no outline of its own
       oneCard: (() => { const s = getComputedStyle(document.querySelector('.book .shell')), k = getComputedStyle(document.querySelector('.book .card'));
-        return s.paddingTop === '0px' && s.boxShadow === 'none' && parseFloat(s.backgroundColor.split(',')[3] ?? 1) === 0 && /0px 0px 0px 1px/.test(k.boxShadow) && k.borderTopLeftRadius === '0px'; })(),
+        return s.paddingTop === '0px' && s.boxShadow === 'none' && parseFloat(s.backgroundColor.split(',')[3] ?? 1) === 0 && k.boxShadow === 'none' && parseFloat(k.backgroundColor.split(',')[3] ?? 1) === 0 && k.paddingTop === '0px'; })(),
       sections: [...document.querySelectorAll('main > section')].map((s) => getComputedStyle(s).backgroundColor) };
   });
   ok('Every text passes WCAG AA contrast', m.low.length === 0, `${m.texts} text elements checked${m.low.length ? '; low: ' + m.low.join(' | ') : ''}`);
@@ -85,10 +85,10 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
   ok('No glass (computed)', m.glass.length === 0);
   ok('No italic text (computed)', m.italic.length === 0);
   ok('Sharp rectangles only (just the arched mirrors and dots are round)', m.radii.every((r) => /999px|50%/.test(r)), [...new Set(m.radii.map((r) => r.split(':').pop()))].join(', '));
-  ok('Booking form is one flat hairline card (no mat around it)', m.oneCard);
+  ok('Booking form sits flat on the page (no mat, no card)', m.oneCard);
   ok('Readable labels (smallest text ≥ 12px)', m.minFont >= 12, m.minFont + 'px');
   ok('One highlighted word', m.h1em === 1);
-  ok('No button on the hero (John 2026-11-21: tap a service to book)', m.heroButtons === 0, m.heroButtons + ' button(s)');
+  ok('Hero: only the See services glide (John 2026-11-21: tap a service to book; BP-18: 1, 2, 3 buttons)', m.heroButtons === 0 && m.heroGlide === 1, m.heroButtons + ' other button(s), ' + m.heroGlide + ' glide');
   ok('Every photo used once', new Set(m.photos).size === m.photos.length, m.photos.length + ' photos');
   ok('No fade-in on every section (nothing animating after the intro)', m.anims === 0, m.anims + ' running');
   ok('No JS errors', errs.length === 0, errs.join(' | '));
@@ -96,7 +96,7 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
     reviews: document.querySelectorAll('.slide').length,
     shown: [...document.querySelectorAll('.slide')].filter((s) => { const r = s.getBoundingClientRect(), v = document.getElementById('viewport').getBoundingClientRect(); return r.left >= v.left - 1 && r.right <= v.right + 1; }).length,
     sourced: [...document.querySelectorAll('.slide footer')].every((f) => f.querySelector('a[href*="yelp"], a[href*="google"]')),
-    pads: [...new Set([...document.querySelectorAll('main > section:not(.hero)')].map((s) => getComputedStyle(s).paddingTop))],
+    pads: [...new Set([...document.querySelectorAll('main section:not(.hero)')].map((s) => getComputedStyle(s).paddingTop))],
     dashes: (document.body.innerText.match(/\u2014/g) || []).length,
     legal: !!document.querySelector('a[href="privacy.html"]') && !!document.querySelector('a[href="terms.html"]'),
   }));

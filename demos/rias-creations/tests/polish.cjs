@@ -9,7 +9,7 @@
 //   f. laptop, first visit: while the header slides in, "Location" never runs into "Dark mode",
 //      and "Dark mode" slides in with the other links
 //   g. the grey "something is coming" pulses stop on their own (no endless animation)
-//   h. no made-up tags on the menu; one plain line under it says some prices are samples (BP-17)
+//   h. no made-up tags on the menu; one plain line under it says some prices are samples (BP-17; shorter since BP-18)
 // Run: node tests/polish.cjs <site folder> [<preview folder>]
 const { chromium, devices } = require('playwright');
 const site = process.argv[2], preview = process.argv[3];
@@ -118,7 +118,7 @@ const phone = { ...devices['iPhone 13'] }, laptop = { viewport: { width: 1280, h
   {
     const { c, p } = await open(laptop); await p.waitForTimeout(2600);
     const h = await p.evaluate(() => ({ tags: document.querySelectorAll('.menu .tag').length, note: (document.querySelector('#panels + .svc-note') || {}).textContent }));
-    rec('h. no made-up tags; the sample line says it', h.tags === 0 && h.note === 'Some prices are samples for Ria to set.', `${h.tags} tags; "${h.note}"`);
+    rec('h. no made-up tags; the sample line says it', h.tags === 0 && h.note === 'Some prices are samples.', `${h.tags} tags; "${h.note}"`);
 
     const d = new Date(); d.setDate(d.getDate() + 2); if (d.getDay() === 0) d.setDate(d.getDate() + 1);
     await p.evaluate(() => document.getElementById('book').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(900);   // no hero button (John 2026-11-21)
