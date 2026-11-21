@@ -29,7 +29,7 @@ const site = process.argv[2], out = process.argv[3] || '/tmp';
   await p.screenshot({ path: out + '/sharp-walk.png', clip });
   await p.evaluate(() => (window.__rafOff = false));
   await p.waitForFunction(() => document.documentElement.classList.contains('intro-done'), null, { timeout: 15000 });
-  await p.addStyleTag({ content: '.hero-main, .hero-bar, .hero-scrim, #nav { visibility: hidden !important; }' });
+  await p.addStyleTag({ content: '.hero-main, .hero-scrim, #nav { visibility: hidden !important; }' });
   await p.waitForTimeout(200);
   await p.screenshot({ path: out + '/sharp-hero.png', clip });
   await b.close();

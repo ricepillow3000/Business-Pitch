@@ -1,14 +1,15 @@
 // Small polish fixes (BP-15, John 2026-11-21). Each check is one thing a visitor would notice:
-//   a. phone: the map box is wide and short (4 by 3), not tall
-//   b. phone, preview copy: the blocked map's empty frame is hidden and the page never scrolls sideways
+//   a. phone: the map picture fills the width and keeps its shape (BP-17: a picture of Google's map, not a frame)
+//   b. phone, preview copy: the map picture shows (nothing to block now), the address still names Lilburn Corner,
+//      and the page never scrolls sideways
 //   c. phone: the five service tabs sit on at most 2 rows with no gap between the rows
-//   d. phone: the menu opens without popping up the keyboard; on a laptop, Search still puts the cursor in the
+//   d. phone: the menu opens without popping up the keyboard; on a laptop, Ctrl K puts the cursor in the
 //      box; Escape gives the focus back to the menu button
 //   e. search finds what people type: "appointment", "phone", "how much", "sunday", "cash", "lashes", ...
 //   f. laptop, first visit: while the header slides in, "Location" never runs into "Dark mode",
 //      and "Dark mode" slides in with the other links
 //   g. the grey "something is coming" pulses stop on their own (no endless animation)
-//   h. Waxing: the tags say "Special price" and "Holiday price"
+//   h. no made-up tags on the menu; one plain line under it says some prices are samples (BP-17)
 // Run: node tests/polish.cjs <site folder> [<preview folder>]
 const { chromium, devices } = require('playwright');
 const site = process.argv[2], preview = process.argv[3];
@@ -29,8 +30,8 @@ const phone = { ...devices['iPhone 13'] }, laptop = { viewport: { width: 1280, h
   // a + c + d (phone)
   {
     const { c, p } = await open(phone); await p.waitForTimeout(2600);
-    const ratio = await p.evaluate(() => { const r = document.querySelector('.map-box').getBoundingClientRect(); return r.height / r.width; });
-    rec('a. phone: map box is 4 by 3', Math.abs(ratio - 0.75) <= 0.02, `height/width ${ratio.toFixed(3)}`);
+    const m = await p.evaluate(() => { const r = document.querySelector('.map-link img').getBoundingClientRect(); return { ratio: r.height / r.width, w: r.width, vw: innerWidth }; });
+    rec('a. phone: map picture full width, its own shape', Math.abs(m.ratio - 505 / 566) <= 0.01 && m.w >= m.vw - 41, `height/width ${m.ratio.toFixed(3)}, ${Math.round(m.w)}px wide in ${m.vw}px`);
 
     const tabs = await p.evaluate(() => {
       const t = document.querySelector('.tabs'), rows = [];
@@ -53,26 +54,27 @@ const phone = { ...devices['iPhone 13'] }, laptop = { viewport: { width: 1280, h
     const back = await p.evaluate(() => ({ open: document.getElementById('cmd').open, on: document.activeElement.id || document.activeElement.tagName }));
     await c.close();
     const lc = await open(laptop); await lc.p.waitForTimeout(2600);
-    await lc.p.click('#searchBtn'); await lc.p.waitForTimeout(500);
+    await lc.p.keyboard.press('Control+k'); await lc.p.waitForTimeout(500);   // no Search button (John 2026-11-21): Ctrl K
     const lap = await lc.p.evaluate(() => document.activeElement.id);
     await lc.c.close();
     rec('d. phone menu: no keyboard pops up', ph.open && !ph.typed && !ph.ring, `menu ${ph.open ? 'open' : 'NOT OPEN'}, focus on ${ph.on}, search box focused: ${ph.typed}, focus ring shown: ${ph.ring}`);
-    rec('d. laptop Search: cursor in the box', lap === 'cmdInput', `focus on ${lap}`);
+    rec('d. laptop Ctrl K: cursor in the box', lap === 'cmdInput', `focus on ${lap}`);
     rec('d. Escape returns focus to the menu button', !back.open && back.on === 'menuBtn', `menu ${back.open ? 'STILL OPEN' : 'closed'}, focus on ${back.on}`);
   }
 
   // b (phone, preview copy)
   if (preview) {
     const { c, p } = await open(phone, preview); await p.waitForTimeout(2600);
-    const r = await p.evaluate(() => { const f = document.querySelector('.map-box'), pl = document.querySelector('.map-plate'); return { drawn: !!f.offsetParent, plate: !!pl.offsetParent && /Lilburn Corner/.test(pl.textContent), sw: document.documentElement.scrollWidth, w: document.documentElement.clientWidth }; });
-    rec('b. preview phone: no empty map box, landmark kept', !r.drawn && r.plate && r.sw <= r.w, `map box ${r.drawn ? 'DRAWN' : 'hidden'}, "Lilburn Corner" line ${r.plate ? 'shown' : 'MISSING'}, page ${r.sw}px wide in a ${r.w}px screen`);
+    await p.evaluate(() => document.querySelector('.map-link').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(800);
+    const r = await p.evaluate(() => { const f = document.querySelector('.map-link img'), ad = document.querySelector('.info dd'); return { drawn: !!f.offsetParent && f.naturalWidth > 0, plate: !!ad.offsetParent && /Lilburn Corner/.test(ad.textContent), sw: document.documentElement.scrollWidth, w: document.documentElement.clientWidth }; });
+    rec('b. preview phone: map shows, landmark kept', r.drawn && r.plate && r.sw <= r.w, `map picture ${r.drawn ? 'shown' : 'MISSING'}, "Lilburn Corner" in the address ${r.plate ? 'shown' : 'MISSING'}, page ${r.sw}px wide in a ${r.w}px screen`);
     await c.close();
   }
 
   // e (laptop search)
   {
     const { c, p } = await open(laptop); await p.waitForTimeout(2600);
-    await p.click('#searchBtn'); await p.waitForTimeout(500);
+    await p.keyboard.press('Control+k'); await p.waitForTimeout(500);
     const want = [['appointment', 'Book a visit'], ['booking', 'Book a visit'], ['phone', 'Call the salon'], ['how much', 'Services and prices'],
       ['sunday', 'Hours and directions'], ['walk in', 'Hours and directions'], ['cash', 'Hours and directions'], ['lashes', 'Eyelash extensions'],
       ['eyebrows', /^Eyebrow/], ['balayage', 'Balayage'], ['haircut', "Women's haircut"], ['hours', 'Hours and directions'],
@@ -115,11 +117,11 @@ const phone = { ...devices['iPhone 13'] }, laptop = { viewport: { width: 1280, h
   // g + h
   {
     const { c, p } = await open(laptop); await p.waitForTimeout(2600);
-    const tags = await p.evaluate(() => [...document.querySelectorAll('#p4 .tag')].map((t) => t.textContent.trim()));
-    rec('h. Waxing tags say what they mean', tags.join('|') === 'Special price|Holiday price', tags.map((t) => `"${t}"`).join(', '));
+    const h = await p.evaluate(() => ({ tags: document.querySelectorAll('.menu .tag').length, note: (document.querySelector('#panels + .svc-note') || {}).textContent }));
+    rec('h. no made-up tags; the sample line says it', h.tags === 0 && h.note === 'Some prices are samples for Ria to set.', `${h.tags} tags; "${h.note}"`);
 
     const d = new Date(); d.setDate(d.getDate() + 2); if (d.getDay() === 0) d.setDate(d.getDate() + 1);
-    await p.click('.hero-cta .btn'); await p.waitForTimeout(900);
+    await p.evaluate(() => document.getElementById('book').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(900);   // no hero button (John 2026-11-21)
     await p.selectOption('select[name=service]', { index: 3 });
     await p.evaluate((v) => { const i = document.querySelector('[name=date]'); i.value = v; i.dispatchEvent(new Event('change', { bubbles: true })); }, d.toISOString().slice(0, 10));
     await p.click('.slot:not([disabled]) >> nth=1');

@@ -5,7 +5,7 @@
 //   - the apostrophe and both i-dots in pink; "SALON" in heavy capitals beside it
 //   - name width / SALON width 0.82 and name height / SALON height 0.87 on the sign (within 8%)
 //   - on a laptop the logo is at least 240 px wide (the old wordmark was 204 px)
-//   - from 320 to 430 px wide phones, the logo, Book now and the menu share one row inside the screen
+//   - from 320 to 430 px wide phones, the logo and the menu share one row inside the screen (no Book now, John 2026-11-21)
 //   - Dark mode (BP-16, John 2026-11-21: "When it turns dark mode ... don't show the white background, just make it
 //     change color so where it matches the dark mode"): no white panel in the header, footer or loading screen, the
 //     name in a light slate blue that reads at 4.5:1 or more on its dark ground, the pink still showing, same size
@@ -87,6 +87,10 @@ print(json.dumps([int(xs.max()-xs.min()+1), int(ys.max()-ys.min()+1), int(xs2.ma
     const dp = await dc.newPage(); await dp.goto('file://' + process.argv[2] + '/index.html'); await dp.waitForTimeout(1500);
     const r = await dp.evaluate(() => ({ theme: document.documentElement.dataset.theme, page: getComputedStyle(document.body).backgroundColor, nav: getComputedStyle(document.getElementById('nav')).backgroundColor }));
     rec('bright even on a phone in Dark Mode', r.theme === 'light' && r.page === 'rgb(250, 250, 251)' && r.nav === 'rgb(250, 250, 251)', `theme ${r.theme}, page ${r.page}, header ${r.nav}`);
+    // the Privacy page too: it reads the site's own key, never the phone's setting or the old keys (BP-17 A3)
+    await dp.goto('file://' + process.argv[2] + '/privacy.html'); await dp.waitForTimeout(400);
+    const lt = await dp.evaluate(() => document.documentElement.dataset.theme);
+    rec('Privacy page bright too', lt === 'light', `theme ${lt}`);
     await dc.close();
   }
   // 4. every phone header fits
@@ -96,11 +100,11 @@ print(json.dumps([int(xs.max()-xs.min()+1), int(ys.max()-ys.min()+1), int(xs2.ma
     await pc.addInitScript(() => { try { sessionStorage.setItem('ria-entered', '1'); } catch (e) {} });
     const pp = await pc.newPage(); await pp.goto('file://' + process.argv[2] + '/index.html'); await pp.waitForTimeout(2200);
     await pp.evaluate(() => scrollTo(0, document.querySelector('.hero').offsetHeight + 20)); await pp.waitForTimeout(400);
-    const r = await pp.evaluate(() => { const l = document.querySelector('#nav .logo').getBoundingClientRect(), bk = document.querySelector('#nav .nav-book').getBoundingClientRect(), mb = document.getElementById('menuBtn').getBoundingClientRect();
-      return { ok: innerWidth === screen.width && mb.right <= innerWidth && bk.left - l.right >= 8, gap: Math.round(bk.left - l.right) }; });
+    const r = await pp.evaluate(() => { const l = document.querySelector('#nav .logo').getBoundingClientRect(), mb = document.getElementById('menuBtn').getBoundingClientRect();
+      return { ok: innerWidth === screen.width && mb.right <= innerWidth && mb.left - l.right >= 8 && Math.abs((mb.top + mb.bottom) - (l.top + l.bottom)) < 8, gap: Math.round(mb.left - l.right) }; });
     if (!r.ok) bad.push(vw + ' px'); await pc.close();
   }
-  rec('fits every phone header', !bad.length, bad.length ? 'too wide at ' + bad.join(', ') : 'logo, Book now and menu on one row from 320 to 430 px');
+  rec('fits every phone header', !bad.length, bad.length ? 'too wide at ' + bad.join(', ') : 'logo and menu on one row from 320 to 430 px');
 
   // 6. Dark mode: no white panel, letters recoloured (BP-16). Read in the header, the footer and the loading screen,
   //    on a laptop and an iPhone 13; the ground is the first box behind the logo that has a colour of its own.

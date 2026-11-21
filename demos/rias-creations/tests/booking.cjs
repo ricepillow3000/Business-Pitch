@@ -1,10 +1,12 @@
 // Booking is easy: a first-time client books a visit from the moment the site opens, on an iPhone
 // and a laptop, by the shortest path, counting every tap and every box typed in. Also checks:
-//   - a way to book is on the very first screen, and the header's "Book now" is there once you scroll
-//   - every route into booking works: the hero button, the header, a service in the menu or the
-//     services list, and search; a service picked on the way is already filled in
+//   - phone: a way to book is on the very first screen (the menu's "Book a visit"); laptop: no Book button
+//     anywhere (John 2026-11-21), so the shortest path is a tap on a service row
+//   - every route into booking works: the hero button, the header, tapping a service row,
+//     and search; a service picked on the way is already filled in
 //   - everything tapped on the phone is at least 44 x 44 px (Apple's minimum)
-//   - mistakes are explained right where they happen; a phone call is one tap away
+//   - mistakes are explained right where they happen; a phone call is one tap away (the footer's number; John
+//     2026-11-21 removed the "Rather talk?" link beside the form)
 // Run: node tests/booking.cjs <site folder>
 const { chromium, devices } = require('playwright');
 let failed = 0;
@@ -25,11 +27,22 @@ const nextWeekday = () => { const d = new Date(); d.setDate(d.getDate() + 2); if
     {
       const c = await ctx(); const p = await c.newPage(); const errs = []; p.on('pageerror', (e) => errs.push(e.message));
       await p.goto('file://' + process.argv[2] + '/index.html'); await p.waitForTimeout(2600);
-      const firstScreen = await p.evaluate(() => { const r = document.querySelector('.hero-cta .btn').getBoundingClientRect(); return r.bottom <= innerHeight && r.top >= 0; });
-      rec(vp, 'a Book button on the very first screen', firstScreen, firstScreen ? '"Book a visit" is visible without scrolling' : 'not visible');
-      let taps = 0, typed = 0; const t0 = Date.now();
-      await tap(p, '.hero-cta .btn'); taps++; await p.waitForTimeout(900);
-      await p.selectOption('select[name=service]', { index: 3 }); taps++;
+      let taps = 0, typed = 0, t0 = Date.now();
+      if (vp === 'phone') {
+        // the menu button is on the very first screen, and "Book a visit" is the first thing in it
+        const firstScreen = await p.evaluate(() => { const r = document.getElementById('menuBtn').getBoundingClientRect(); return r.bottom <= innerHeight && r.top >= 0 && r.width > 0; });
+        t0 = Date.now();
+        await tap(p, '#menuBtn'); taps++; await p.waitForTimeout(600);
+        const first = await p.$eval('#cmdList .cmd-item span', (e) => e.textContent.trim());
+        rec(vp, 'a way to book on the very first screen', firstScreen && first === 'Book a visit', `menu button on screen: ${firstScreen}; its first item: "${first}"`);
+        await tap(p, '#cmdList .cmd-item >> nth=0'); taps++; await p.waitForTimeout(900);
+        await p.selectOption('select[name=service]', { index: 3 }); taps++;
+      } else {
+        // laptop: no Book button (John 2026-11-21): scroll to the menu, click a service (that also picks it)
+        await p.evaluate(() => document.querySelector('#p0 li:nth-child(3)').scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(300);
+        t0 = Date.now();
+        await p.click('#p0 li:nth-child(3)'); taps++; await p.waitForTimeout(900);
+      }
       await p.evaluate((d) => { const i = document.querySelector('[name=date]'); i.value = d; i.dispatchEvent(new Event('change', { bubbles: true })); }, nextWeekday()); taps++;
       await tap(p, '.slot:not([disabled]) >> nth=1'); taps++;
       await p.fill('[name=name]', 'Maya'); typed++;
@@ -53,15 +66,16 @@ const nextWeekday = () => { const d = new Date(); d.setDate(d.getDate() + 2); if
       const fresh = async () => { await p.goto('file://' + process.argv[2] + '/index.html'); await p.waitForTimeout(2400); };
       const atForm = () => p.evaluate(() => { const r = document.getElementById('bookForm').getBoundingClientRect(); return r.top < innerHeight && r.bottom > 0; });
       const service = () => p.$eval('select[name=service]', (s) => s.value);
-      await fresh(); await tap(p, '.hero-cta .btn'); await p.waitForTimeout(1200); routes.push(['hero "Book a visit"', await atForm()]);
-      await fresh(); await p.evaluate(() => scrollTo(0, document.querySelector('.hero').offsetHeight + 40)); await p.waitForTimeout(500);
-      await tap(p, '#nav .nav-book'); await p.waitForTimeout(1200); routes.push(['header "Book now" (after scrolling)', await atForm()]);
-      if (vp === 'laptop') {
-        await fresh(); await p.hover('#svcTrigger'); await p.waitForTimeout(500);
-        const pick = await p.$eval('#megaItems button', (x) => x.dataset.name); await p.click('#megaItems button'); await p.waitForTimeout(1200);
-        routes.push([`Services menu -> "${pick}"`, (await atForm()) && (await service()) === pick]);
-      }
-      await fresh(); await tap(p, vp === 'phone' ? '#menuBtn' : '#searchBtn'); await p.waitForTimeout(500);
+      // the menu's "Book a visit" (phone: the menu button; laptop: Ctrl K), replacing the hero and header Book buttons
+      await fresh(); if (vp === 'phone') await tap(p, '#menuBtn'); else await p.keyboard.press('Control+k');
+      await p.waitForTimeout(500); await tap(p, '#cmdList .cmd-item >> nth=0'); await p.waitForTimeout(1200);
+      routes.push([`${vp === 'phone' ? 'menu' : 'Ctrl K'} "Book a visit"`, await atForm()]);
+      // tap a service row (BP-17: replaces the Services menu)
+      await fresh(); await p.$eval('#p0 li:nth-child(4)', (e) => e.scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(400);
+      const pick = await p.$eval('#p0 li:nth-child(4) h3', (x) => x.textContent.trim()); await tap(p, '#p0 li:nth-child(4)'); await p.waitForTimeout(1200);
+      routes.push([`service row "${pick}"`, (await atForm()) && (await service()) === pick]);
+      await fresh(); if (vp === 'phone') await tap(p, '#menuBtn'); else await p.keyboard.press('Control+k');   // laptop: Ctrl K (no Search button, John 2026-11-21)
+      await p.waitForTimeout(500);
       if (vp === 'phone') await tap(p, '#cmdInput');   // the phone menu opens without the keyboard (BP-15): tap the box to type
       await p.keyboard.type('keratin'); await p.waitForTimeout(200); await p.keyboard.press('Enter'); await p.waitForTimeout(1300);
       routes.push([`search "keratin" -> "${await service()}"`, (await atForm()) && /keratin/i.test(await service())]);
@@ -75,7 +89,7 @@ const nextWeekday = () => { const d = new Date(); d.setDate(d.getDate() + 2); if
       const c = await ctx(); const p = await c.newPage();
       await p.goto('file://' + process.argv[2] + '/index.html#book'); await p.waitForTimeout(900);
       if (vp === 'phone') {
-        const small = await p.evaluate(() => [...document.querySelectorAll('#bookForm button, #bookForm input, #bookForm select, .hero-cta .btn, #nav .nav-book, #menuBtn')]
+        const small = await p.evaluate(() => [...document.querySelectorAll('#bookForm button, #bookForm input, #bookForm select, #menuBtn')]
           .filter((e) => e.offsetParent).map((e) => { const r = e.getBoundingClientRect(); return [e.name || e.textContent.trim().slice(0, 14) || e.id, Math.round(r.width), Math.round(r.height)]; })
           .filter(([, w, h]) => w < 44 || h < 44));
         rec(vp, 'every booking control is thumb-sized', !small.length, small.length ? 'too small: ' + JSON.stringify(small) : 'all at least 44 x 44 px');
@@ -84,8 +98,8 @@ const nextWeekday = () => { const d = new Date(); d.setDate(d.getDate() + 2); if
       const errs = await p.evaluate(() => [...document.querySelectorAll('#bookForm .err')].map((e) => e.textContent).filter(Boolean));
       const sunday = await p.evaluate(() => { const d = new Date(); d.setDate(d.getDate() + ((7 - d.getDay()) % 7 || 7)); const i = document.querySelector('[name=date]'); i.value = d.toISOString().slice(0, 10); i.dispatchEvent(new Event('change', { bubbles: true })); return document.getElementById('e-date').textContent; });
       rec(vp, 'mistakes explained where they happen', errs.length >= 3 && /Sunday/i.test(sunday), `empty form: ${errs.join(' / ')}; a Sunday: "${sunday}"`);
-      const call = await p.$eval('.book-call a', (a) => a.getAttribute('href'));
-      rec(vp, 'a phone call is one tap away', call === 'tel:+17705570354', `"Rather talk? Call (770) 557-0354" beside the form`);
+      const call = await p.$eval('footer.site a[href^="tel:"]', (a) => a.getAttribute('href') + ' ' + a.textContent.trim());
+      rec(vp, 'a phone call is one tap away', call === 'tel:+17705570354 (770) 557-0354', `the footer's "(770) 557-0354" calls`);
       await c.close();
     }
   }

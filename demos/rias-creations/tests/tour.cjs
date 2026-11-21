@@ -1,6 +1,6 @@
 // The full visit: what a person does on Ria's site, top to bottom, on a laptop and an iPhone, in Light and Dark mode.
 // It watches the loading screen and walk-in, scrolls through every section, searches, opens every menu, tab and photo,
-// turns the reviews, books a visit end to end (code included), checks the call, map and copy buttons and the legal
+// turns the reviews, books a visit end to end (code included), checks the map and the legal
 // pages, and records every script error and every control that did nothing. Pictures of each step go to <out>.
 // Run: node tests/tour.cjs <site folder> <out folder> [laptop|phone]
 // (BP-15, John 2026-11-21: "go through the entire site, press all the buttons, search up using the search up bar,
@@ -51,7 +51,7 @@ const QUERIES = ['balayage', 'haircut', 'hours', 'call', 'eyebrow', 'price', 'pa
       if (theme === 'light') await shot('full', true);
 
       // 3. search: open it, try ten searches, press Enter on one
-      const openSearch = async () => { await p.click(vp === 'laptop' ? '#searchBtn' : '#menuBtn'); await p.waitForTimeout(500); };
+      const openSearch = async () => { if (vp === 'laptop') await p.keyboard.press('Control+k'); else await p.click('#menuBtn'); await p.waitForTimeout(500); };   // laptop: Ctrl K (no Search button)
       await openSearch();
       if (!(await p.evaluate(() => document.getElementById('cmd').open))) fault(`${tag}: the search did not open`);
       await shot('search-empty');
@@ -69,13 +69,12 @@ const QUERIES = ['balayage', 'haircut', 'hours', 'call', 'eyebrow', 'price', 'pa
       if (afterEnter.open || afterEnter.svc !== 'Balayage' || !afterEnter.inBook) fault(`${tag}: Enter on a search result did not book it`);
       await shot('search-enter');
 
-      // 4. the Services menu (laptop) and the five service tabs
+      // 4. the header row (laptop: no Services link, John 2026-11-21) and the five service tabs
       await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(500);
       if (vp === 'laptop') {
-        await p.click('#svcTrigger'); await p.waitForTimeout(500);
-        const open = await p.evaluate(() => document.getElementById('svcMenu').classList.contains('open') || document.getElementById('svcTrigger').getAttribute('aria-expanded') === 'true');
-        if (!open) fault(`${tag}: the Services menu did not open`); else await shot('services-menu');
-        await p.keyboard.press('Escape'); await p.waitForTimeout(300);
+        const row = await p.evaluate(() => [...document.querySelectorAll('#nav .nav-links > *')].map((e) => e.textContent.trim()));
+        fact(`${tag}: header links: ${row.join(', ')}`);
+        if (row.includes('Services')) fault(`${tag}: the header still has a Services link`);
       }
       await p.evaluate(() => document.getElementById('services').scrollIntoView()); await p.waitForTimeout(1500);
       for (let i = 0; i < 5; i++) {
@@ -121,14 +120,14 @@ const QUERIES = ['balayage', 'haircut', 'hours', 'call', 'eyebrow', 'price', 'pa
       await shot('book-sent');
       await p.waitForSelector('#otpBox:not([hidden])', { timeout: 8000 }).catch(() => fault(`${tag}: the code box never came`));
       await p.fill('#otp', '123456'); await p.waitForTimeout(1500);
-      const c = await p.evaluate(() => ({ shown: !document.getElementById('confirmed').hidden, text: document.getElementById('confirmedText').textContent, ref: document.getElementById('confirmedRef').textContent }));
-      fact(`${tag}: confirmed ${c.shown}: "${c.text}" ${c.ref}`);
+      const c = await p.evaluate(() => ({ shown: !document.getElementById('confirmed').hidden, text: document.getElementById('confirmedText').textContent }));
+      fact(`${tag}: confirmed ${c.shown}: "${c.text}"`);
       if (!c.shown) fault(`${tag}: the booking never confirmed`);
       await shot('book-confirmed');
       await p.click('#again'); await p.waitForTimeout(600);
       if (await p.evaluate(() => document.getElementById('bookForm').hidden)) fault(`${tag}: Book another visit did not bring the form back`);
 
-      // 8. the location: call, directions, copy
+      // 8. the location: call, directions
       await p.evaluate(() => document.getElementById('visit').scrollIntoView()); await p.waitForTimeout(1600);
       const links = await p.evaluate(() => [...document.querySelectorAll('#visit a, #visit button')].map((a) => (a.textContent.trim().replace(/\s+/g, ' ') || a.getAttribute('aria-label')) + ' -> ' + (a.getAttribute('href') || 'button')));
       fact(`${tag}: location controls: ${links.join(' | ')}`);

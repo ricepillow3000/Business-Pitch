@@ -75,12 +75,9 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
       photos: [...document.querySelectorAll('main img')].filter((i) => !i.closest('[hidden]')).map((i) => i.getAttribute('src')),
       h1em: [...document.querySelectorAll('h1 em, h2 em, h3 em')].filter((e) => !e.closest('span[style*="clip"]')).length,   // ignore the screen-reader copy
       heroButtons: document.querySelectorAll('.hero .btn').length,
-      concentric: [['.book .shell', '.book .card'], ['.mega', '.mega button']].map(([o, i]) => {
-        const O = document.querySelector(o), I = document.querySelector(i); if (!O || !I) return true;
-        const co = getComputedStyle(O), pad = parseFloat(co.paddingTop);
-        const ro = parseFloat(co.borderTopLeftRadius), ri = parseFloat(getComputedStyle(I).borderTopLeftRadius);
-        return (ro === 0 && ri === 0) || Math.abs(ro - (ri + pad)) < 0.5;   // both square, or concentric
-      }),
+      // BP-17: the booking form is one flat hairline card, no tinted mat or shadow around it
+      oneCard: (() => { const s = getComputedStyle(document.querySelector('.book .shell')), k = getComputedStyle(document.querySelector('.book .card'));
+        return s.paddingTop === '0px' && s.boxShadow === 'none' && parseFloat(s.backgroundColor.split(',')[3] ?? 1) === 0 && /0px 0px 0px 1px/.test(k.boxShadow) && k.borderTopLeftRadius === '0px'; })(),
       sections: [...document.querySelectorAll('main > section')].map((s) => getComputedStyle(s).backgroundColor) };
   });
   ok('Every text passes WCAG AA contrast', m.low.length === 0, `${m.texts} text elements checked${m.low.length ? '; low: ' + m.low.join(' | ') : ''}`);
@@ -88,10 +85,10 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
   ok('No glass (computed)', m.glass.length === 0);
   ok('No italic text (computed)', m.italic.length === 0);
   ok('Sharp rectangles only (just the arched mirrors and dots are round)', m.radii.every((r) => /999px|50%/.test(r)), [...new Set(m.radii.map((r) => r.split(':').pop()))].join(', '));
-  ok('Outer and inner corners match', m.concentric.every(Boolean), m.concentric.join(', '));
+  ok('Booking form is one flat hairline card (no mat around it)', m.oneCard);
   ok('Readable labels (smallest text ≥ 12px)', m.minFont >= 12, m.minFont + 'px');
   ok('One highlighted word', m.h1em === 1);
-  ok('Single-button hero', m.heroButtons === 1, m.heroButtons + ' button(s)');
+  ok('No button on the hero (John 2026-11-21: tap a service to book)', m.heroButtons === 0, m.heroButtons + ' button(s)');
   ok('Every photo used once', new Set(m.photos).size === m.photos.length, m.photos.length + ' photos');
   ok('No fade-in on every section (nothing animating after the intro)', m.anims === 0, m.anims + ' running');
   ok('No JS errors', errs.length === 0, errs.join(' | '));
@@ -111,7 +108,7 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
   await p.screenshot({ path: `${out}/audit-desktop-full.png`, fullPage: true });
   await p.screenshot({ path: `${out}/audit-desktop-hero.png` });
   // dark theme contrast: the same check again after switching to evening
-  await p.evaluate(() => document.getElementById('modeBtn').click()); await p.waitForTimeout(300);   // "Dark mode", beside Services and Gallery
+  await p.evaluate(() => document.getElementById('modeBtn').click()); await p.waitForTimeout(300);   // "Dark mode", beside Stylist and Gallery
   const dark = await p.evaluate(() => {
     const parse = (c) => { const v = c.match(/[\d.]+/g).map(Number); return { r: v[0], g: v[1], b: v[2], a: v[3] ?? 1 }; };
     const lum = ({ r, g, b }) => [r, g, b].map((x) => { x /= 255; return x <= 0.04045 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4; }).reduce((s, x, i) => s + x * [0.2126, 0.7152, 0.0722][i], 0);
