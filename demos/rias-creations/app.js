@@ -57,8 +57,10 @@
     const syncDoor = () => { if (heroImg.currentSrc) dimg.src = heroImg.currentSrc; };
     syncDoor();
     if (!dimg.getAttribute("src")) heroImg.addEventListener("load", syncDoor, { once: true });
-    // a little story while the page loads, then the door opens
-    const LINES = [[0, "Warming up the dryers"], [25, "Laying out fresh towels"], [50, "Polishing the mirrors"], [75, "Saving you the best chair"], [100, "Come on in"]];
+    // a little story while the page loads, then the door opens. Two lines: the loader lasts about 1.85 s and each
+    // change fades for 200 ms, so two lines are the most that can each be read with no wait added
+    // (BP-16, John 2026-11-21: "something that doesn't bring wait time")
+    const LINES = [[0, "Warming up the dryers"], [61, "Come on in"]];
     let lineIdx = 0;
     const setLine = (pct) => {
       let i = 0; LINES.forEach(([at], k) => { if (pct >= at) i = k; });
