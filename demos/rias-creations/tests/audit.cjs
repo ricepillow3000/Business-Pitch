@@ -94,12 +94,14 @@ const src = files.join('\n').replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.
   ok('No JS errors', errs.length === 0, errs.join(' | '));
   const extra = await p.evaluate(() => ({
     reviews: document.querySelectorAll('.slide').length,
+    shown: [...document.querySelectorAll('.slide')].filter((s) => { const r = s.getBoundingClientRect(), v = document.getElementById('viewport').getBoundingClientRect(); return r.left >= v.left - 1 && r.right <= v.right + 1; }).length,
     sourced: [...document.querySelectorAll('.slide footer')].every((f) => f.querySelector('a[href*="yelp"], a[href*="google"]')),
     pads: [...new Set([...document.querySelectorAll('main > section:not(.hero)')].map((s) => getComputedStyle(s).paddingTop))],
     dashes: (document.body.innerText.match(/\u2014/g) || []).length,
     legal: !!document.querySelector('a[href="privacy.html"]') && !!document.querySelector('a[href="terms.html"]'),
   }));
-  ok('A few strong reviews, not a wall of testimonials', extra.reviews <= 5, extra.reviews + ' reviews');
+  // John 2026-11-21 asked for all her five-star reviews: they stay one at a time in the carousel, never a wall
+  ok('Reviews one at a time, not a wall of testimonials', extra.shown === 1, extra.reviews + ' reviews, ' + extra.shown + ' in view at once');
   ok('Every review links to its source (Google or Yelp)', extra.sourced);
   ok('Consistent section spacing', extra.pads.length === 1, extra.pads.join(', '));
   ok('No em dashes in the copy', extra.dashes === 0, extra.dashes + ' found');

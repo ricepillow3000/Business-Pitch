@@ -463,12 +463,12 @@ form .btn { width: 100%; margin-top: 8px; }
   .visit .wrap { grid-template-columns: 1fr; }   /* phones: the map under the details */
 }
 @media (min-width: 821px) {
-  .visit .wrap { align-items: stretch; }
+  .visit .wrap { align-items: stretch; row-gap: 0; }
   .visit .wrap > div:first-child { display: contents; }          /* heading, details and map share one grid */
   .visit h2 { grid-column: 1 / -1; }
-  .map-frame { grid-column: 2; grid-row: 2; position: relative; margin-top: 28px; }   /* level with the details */
+  .visit .map-frame { grid-column: 2; grid-row: 2; position: relative; margin-top: 28px; }   /* level with the details */
   .map-link { position: absolute; inset: 0; }
-  .map-link img { height: 100%; object-fit: cover; object-position: 50% 100%; }
+  .visit .map-link img { height: 100%; object-fit: cover; object-position: 50% 100%; }
 }
 
 footer.site { padding: 28px 0 32px; font-size: .85rem; }

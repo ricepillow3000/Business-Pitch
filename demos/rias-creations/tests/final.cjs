@@ -106,6 +106,7 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
     // B3 (John 2026-11-21: remove the Services line; "walk in" is said once, in the hero)
     await check('B3 Services: heading only; "walk" once on the page', async () => {
       const r = await p.evaluate(() => { document.querySelectorAll('span[style*="clip"]').forEach((e) => (e.style.display = 'none'));
+        document.querySelectorAll('.slide blockquote').forEach((e) => (e.style.display = 'none'));   // clients' own words are not the site's
         return { lede: document.querySelectorAll('#services .lede, .svc-head p').length, walk: (document.querySelector('main').innerText.match(/walk/gi) || []).length,
           gap: Math.round(document.querySelector('.tabs').getBoundingClientRect().top - document.querySelector('.svc-head h2').getBoundingClientRect().bottom) }; });
       return [r.lede === 0 && r.walk === 1 && r.gap >= 24 && r.gap <= 64, `${r.lede} lines under the heading; "walk" ${r.walk} time(s); heading to tabs ${r.gap}px`];
@@ -467,6 +468,64 @@ const nextMonday = () => { const d = new Date(); d.setDate(d.getDate() + 2); whi
       out.push([`${n}: ${r.count} photos, size ${r.sizes.join('/')}, ${r.rows} row, ${r.hashes} placeholders${+n >= 1024 ? `, arrows ${r.arrows ? 'shown' : 'HIDDEN'}, Next slid ${slide}px` : ''}${n === '1280' ? (opened.length ? ', did NOT open: ' + opened.join(', ') : ', all 11 open large with their titles') : ''}`, ok]);
     }
     return [out.every((x) => x[1]), out.map((x) => x[0]).join(' | ')];
+  });
+
+  // John 2026-11-21: "add all of these reviews. Don't add her response ... Only add 5-star reviews."
+  await check('Reviews: 16, all five stars, no owner replies, steady height', async () => {
+    const { c, p } = await open(laptop);
+    await p.evaluate(() => document.getElementById('reviews').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(600);
+    const r = await p.evaluate(() => { const sl = [...document.querySelectorAll('.slide')];
+      return { n: sl.length, five: sl.filter((s) => { const st = s.querySelector('.stars'); return st && st.dataset.stars === '5' && st.querySelectorAll('svg').length === 5 && [...st.querySelectorAll('clipPath rect')].every((x) => +x.getAttribute('width') === 24); }).length,
+        labels: sl.every((s, i) => s.getAttribute('aria-label') === `${i + 1} of ${sl.length}`), count: document.getElementById('count').textContent,
+        reply: sl.filter((s) => /response from|owner|Ria's Creations Salon \(|Hi |Thank you so much for/i.test(s.textContent.replace(/RIA THANK YOU SO MUCH/, ''))).length,
+        christyne: /Christyne/.test(document.body.innerHTML), rating: document.querySelector('.score').textContent.trim() + ' / ' + document.querySelector('.score-meta').textContent.trim() };
+    });
+    const hs = [];
+    for (let i = 0; i < 16; i++) { hs.push(await p.evaluate(() => Math.round(document.getElementById('viewport').getBoundingClientRect().height))); await p.click('#next').catch(() => {}); await p.waitForTimeout(250); }
+    await c.close();
+    const steady = new Set(hs).size === 1;
+    return [r.n === 16 && r.five === 16 && r.labels && r.count === '1 / 16' && !r.reply && !r.christyne && steady && /^4\.5/.test(r.rating),
+      `${r.n} reviews, ${r.five} with five full stars, labels "N of 16" ${r.labels}, counter "${r.count}", owner replies ${r.reply}, Christyne ${r.christyne ? 'STILL THERE' : 'gone'}; height ${steady ? 'steady at ' + hs[0] + 'px' : 'JUMPS ' + [...new Set(hs)].join('/')}; rating block "${r.rating}"`];
+  });
+  // John 2026-11-21: "fill it up ... a subtle, nice, professional, glamorous ... design ... for the rest of the sections as well"
+  await check('Gallery row inside the page edges (1280, 1920)', async () => {
+    const out = [];
+    for (const [n, o] of [['1280', laptop], ['1920', { viewport: { width: 1920, height: 1080 } }]]) for (const look of ['light', 'dark']) {
+      const { c, p } = await open(o, { look: ['ria-look', look] });
+      await p.evaluate(() => document.getElementById('work').scrollIntoView({ behavior: 'instant' })); await p.waitForTimeout(500);
+      const r = await p.evaluate(() => { const h = document.querySelector('#work h2').getBoundingClientRect(), wr = document.querySelector('#work .work-head').getBoundingClientRect(), rail = document.getElementById('rail'), R = rail.getBoundingClientRect(), pad = parseFloat(getComputedStyle(rail).paddingLeft);
+        const vis = [...rail.querySelectorAll('li')].map((l) => l.getBoundingClientRect()).filter((x) => x.right > R.left + pad && x.left < R.right - pad);
+        return { first: Math.round(vis[0].left - h.left), lastR: Math.round(vis[vis.length - 1].right - wr.right), clipL: Math.round(R.left + pad - wr.left), clipR: Math.round(R.right - pad - wr.right), pad, full: vis.filter((x) => x.left >= wr.left - 1 && x.right <= wr.right + 1).length }; });
+      await c.close();
+      out.push([`${n} ${look}: first photo ${r.first}px from the heading's edge, last ${r.lastR}px from the right edge, ${r.full} in view (hover room ${r.pad}px)`, Math.abs(r.first) <= 1 && Math.abs(r.lastR) <= 1 && Math.abs(r.clipL) <= 1 && Math.abs(r.clipR) <= 1 && r.pad <= 8 && r.full === 5]);
+    }
+    return [out.every((x) => x[1]), out.map((x) => x[0]).join('; ')];
+  });
+  await check('Arch line in Book only, adds no height, hidden on phones', async () => {
+    const out = [];
+    for (const [n, o] of [['1280', laptop], ['1920', { viewport: { width: 1920, height: 1080 } }], ['390', phone], ['320', small]]) {
+      const { c, p } = await open(o);
+      const r = await p.evaluate(() => { const a = [...document.querySelectorAll('.arch-line')], sec = a.map((e) => e.closest('section').id), shown = a.filter((e) => e.offsetParent).length;
+        const before = Math.round(document.getElementById('book').getBoundingClientRect().height); a.forEach((e) => (e.style.display = 'none'));
+        const after = Math.round(document.getElementById('book').getBoundingClientRect().height); a.forEach((e) => (e.style.display = ''));
+        const cs = a[0] && getComputedStyle(a[0]);
+        return { sec: sec.join(), shown, grows: before - after, hidden: a.every((e) => e.getAttribute('aria-hidden') === 'true' && !e.textContent.trim()), anim: cs ? cs.animationName : '', rad: cs ? cs.borderTopLeftRadius : '' }; });
+      await c.close();
+      const phoneSize = +n < 901;
+      out.push([`${n}: in ${r.sec}, ${r.shown ? 'shown' : 'hidden'}, adds ${r.grows}px`, r.sec === 'book' && r.hidden && r.anim === 'none' && /999px/.test(r.rad) && r.grows === 0 && (phoneSize ? r.shown === 0 : r.shown === 1)]);
+    }
+    return [out.every((x) => x[1]), out.map((x) => x[0]).join('; ')];
+  });
+  await check('Meet Ria centred; Location map as tall as the details', async () => {
+    const out = [];
+    for (const [n, o] of [['1280', laptop], ['1440', { viewport: { width: 1440, height: 900 } }], ['1920', { viewport: { width: 1920, height: 1080 } }]]) {
+      const { c, p } = await open(o);
+      const r = await p.evaluate(() => { const g = (s) => document.querySelector(s).getBoundingClientRect(); const t = g('.about .wrap > div'), f = g('.about-fig'), i = g('.visit .info'), m = g('.map-link img'), mi = document.querySelector('.map-link img');
+        return { ria: Math.round(Math.abs((t.top + t.bottom) / 2 - (f.top + f.bottom) / 2)), top: Math.round(m.top - i.top), bottom: Math.round(m.bottom - i.bottom), pos: getComputedStyle(mi).objectPosition, fit: getComputedStyle(mi).objectFit }; });
+      await c.close();
+      out.push([`${n}: Meet Ria off centre by ${r.ria}px; map vs details top ${r.top}px, bottom ${r.bottom}px, ${r.fit} ${r.pos}`, r.ria <= 4 && Math.abs(r.top) <= 1 && Math.abs(r.bottom) <= 1 && r.fit === 'cover' && /100%$/.test(r.pos)]);
+    }
+    return [out.every((x) => x[1]), out.map((x) => x[0]).join('; ')];
   });
 
   console.log('-- house rules');
