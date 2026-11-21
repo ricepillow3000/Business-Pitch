@@ -16,7 +16,7 @@ and photos supplied for the pitch.
 | Instagram @riascreationssalon, "Full service salon" | Matches | [Instagram](https://www.instagram.com/riascreationssalon/) |
 | Services | Matches her listings: cuts, kids' cuts, curly hair, color, highlights, balayage, blow-dry, keratin, perms and straightening, extensions, bridal, beard trims, threading, tint, waxing, lashes, facials, massage. Curly haircut and hair extensions were added after this check | Google, Fresha, Instagram |
 | Real prices: keratin from $150, eyebrow tint or wax $20, lashes from $40, Brazilian $35, full-body wax $65 | From her flyer and posters | Salon flyer and posters |
-| Other prices and all service times | **Placeholders**, marked on the page | Ria to set |
+| Other prices | **Placeholders**: the page says "Some prices are samples for Ria to set." under the menu. Service times were removed (2026-11-21, John) | Ria to set |
 | Free parking; cards, checks and tap to pay | From her Yelp details as supplied; not re-read | Yelp |
 
 Not used: "Creations Salon Studio" (a different Lilburn salon) and a Booksy listing named
@@ -26,6 +26,29 @@ Other ratings seen: Birdeye 4.6 from 26, Chamber of Commerce 4.8 from 17. The si
 Google and Yelp only, and links to both so visitors can read every review.
 
 Birdeye shows 4.6 from 26 reviews on an unclaimed snapshot; the site keeps Google's own 4.5 from 29.
+
+## Supplied by John for the pitch (2026-11-18 to 2026-11-21)
+
+| On the site | Source |
+|---|---|
+| Her Instagram bio "Enhancing beauty. Full service salon" (the motto) | Supplied by John |
+| "Walk-ins and appointments, call ahead for Ria" | Supplied by John |
+| Free parking; cards, checks and tap to pay | Supplied by John (her Yelp details) |
+| Flyer prices incl. "painless Brazilians" | Supplied by John (her flyer and posters) |
+| The 16 five-star reviews: Roberto B., P. D. and Jim R. (Yelp, the three reviews behind its 5.0) and 13 Google reviews (Jay A., Glynda F., Aditya P., Theo, Sanjeena S., Murad J., Tracey P., Will T., Alvaro S., David T., Kristine P., Tia G., Priyanka G.), word for word, owner replies left out, cut at the last whole sentence where Google shows "More" | John's screenshots of her Google and Yelp listings, 2026-11-21. Only five-star reviews are used (John) |
+| Gallery: 11 results photos | Supplied by John (5 on 2026-11-18; 6 more on 2026-11-21, two of those were duplicates and were not added) |
+| The map | A picture of Google's own map embed for 375 Rockbridge Rd NW Ste 156, captured 2026-11-21, Google's logo and "Map data ©2026 Google" kept; tapping it opens Google Maps directions |
+
+## Removed as not backed (2026-11-21, BP-15 to BP-17)
+
+"Special price" and "Holiday price" tags, "ages 12 and under", the "marble relaxation suite" alt text, the
+reminder-text promise, "Delivered", the booking reference number, Christyne S.'s review (its star rating could not
+be confirmed), all service times.
+
+## Ria to confirm
+
+Saturday closing time (Fresha shows 7:00 PM), which prices are samples, the six 90-minute booking times, and whether
+texted codes and confirmations will be used.
 
 ## Colors
 

@@ -57,8 +57,10 @@
     const syncDoor = () => { if (heroImg.currentSrc) dimg.src = heroImg.currentSrc; };
     syncDoor();
     if (!dimg.getAttribute("src")) heroImg.addEventListener("load", syncDoor, { once: true });
-    // a little story while the page loads, then the door opens
-    const LINES = [[0, "Warming up the dryers"], [25, "Laying out fresh towels"], [50, "Polishing the mirrors"], [75, "Saving you the best chair"], [100, "Come on in"]];
+    // a little story while the page loads, then the door opens. Two lines: the loader lasts about 1.85 s and each
+    // change fades for 200 ms, so two lines are the most that can each be read with no wait added
+    // (BP-16, John 2026-11-21: "something that doesn't bring wait time")
+    const LINES = [[0, "Warming up the dryers"], [61, "Come on in"]];
     let lineIdx = 0;
     const setLine = (pct) => {
       let i = 0; LINES.forEach(([at], k) => { if (pct >= at) i = k; });
@@ -162,22 +164,17 @@
     let chars = [];
     try { chars = $$(".hero h1 .ln > span").flatMap((el) => A.splitText(el, { chars: true }).chars); }
     catch (e) { clean(); root.classList.add("intro-css"); return; }
-    const lede = $(".hero .lede"), nav = $("#nav");
+    const lede = $(".hero .lede"), cta = $(".hero .glide"), nav = $("#nav");
     const brand = $("#nav .logo");
-    const navItems = $$("#nav .nav-links > a, #nav .search-btn, #nav .nav-book, #nav .nav-tools > button").filter((el) => el.offsetParent);
-    const facts = $$(".hero-bar .hero-note"), stars = $$(".hero-bar .stars svg"), ctas = $$(".hero-cta .btn");
-    const rating = $('.hero-bar [data-swr="rating"]'), target = parseFloat(rating.textContent) || 4.5;
+    const navItems = $$("#nav .nav-links > a, #nav .nav-links > button, #nav .nav-tools > button").filter((el) => el.offsetParent);
 
     // starting poses, set before anything is revealed so nothing flashes
     A.set(chars, { y: "108%" });
-    A.set(lede, { opacity: 0, x: -40 });
+    A.set([lede, cta], { opacity: 0, x: -40 });
     if (!walkedIn) A.set(heroImg, { scale: 1.04 });             // after the walk-in the photo is already in place: no settle
     A.set(scrim, { opacity: 0 });
     A.set(brand, { opacity: 0, x: -40 });
     A.set(navItems, { opacity: 0, x: 40 });
-    A.set(facts, { opacity: 0, x: -40 });
-    A.set(ctas, { opacity: 0, x: 40 });
-    A.set(stars, { opacity: 0, scale: 0.6 });
     root.classList.add("intro-run");
 
     // the intro lasts about 2.6 s; whatever happens (frames stop, the phone pauses the page), it lands by 4.5 s
@@ -186,11 +183,8 @@
       if (landed) return;
       landed = true; clearTimeout(guard);
       try { tl.pause(); } catch (e) {}
-      let shown = target;
-      try { shown = store.get(PLACE_KEY)?.data?.rating ?? target; } catch (e) {}   // may run before the rating cache is set up
-      rating.textContent = String(shown);
       // hand the elements back to CSS so hover, press and theme styles work normally
-      [lede, heroImg, scrim, nav, brand, ...navItems, ...facts, ...stars, ...ctas, ...chars].forEach((el) => {
+      [lede, cta, heroImg, scrim, nav, brand, ...navItems, ...chars].forEach((el) => {
         ["transform", "opacity", "translate", "scale"].forEach((p) => el.style.removeProperty(p));
       });
       root.classList.add("intro-done");
@@ -205,9 +199,7 @@
       .add(brand, { opacity: 1, x: 0, duration: 1400 }, 120)
       .add(navItems, { opacity: 1, x: 0, duration: 1400, delay: A.stagger(75) }, 240)
       .add(lede, { opacity: 1, x: 0, duration: 1200 }, 560)
-      .add(facts, { opacity: 1, x: 0, duration: 1100, delay: A.stagger(90) }, 820)
-      .add(stars, { opacity: 1, scale: 1, duration: 600, delay: A.stagger(60), ease: "out(3)" }, 980)
-      .add(ctas, { opacity: 1, x: 0, duration: 1100, delay: A.stagger(80) }, 1150)
+      .add(cta, { opacity: 1, x: 0, duration: 1200 }, 680)
       .then(land);
     } catch (e) { land(); }
   }
@@ -272,6 +264,79 @@
     document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") settle(); });
     window.__story = { revealAll: () => blocks.forEach((el) => { io.unobserve(el); show(el, 0, true); }) };
     root.classList.add("reveal-ready");
+  })();
+
+  /* ── Glide buttons (BP-18) ───────────────────────────────────
+     John, 2026-11-21: "the clicking automatically traverses down slowly ... as if it's being pulled to the next
+     section". Three links (See services, See her work, Book a visit) glide the page to their section's top, just under
+     the header, on the page's ease-in-out curve, by the clock: 1.4 s for a screen's distance, at most 2.2 s. A wheel,
+     touch, key or press stops it where it is. Focus moves to the section's heading without a jump. Reduced motion:
+     it jumps at once. Without this script each link still lands (the CSS scroll padding keeps it under the header). */
+  const curve = (x1, y1, x2, y2) => (t) => {   // a CSS cubic-bezier: find where the curve's x is t, give its y
+    const at = (a, b, s) => 3 * a * s * (1 - s) * (1 - s) + 3 * b * s * s * (1 - s) + s * s * s;
+    let lo = 0, hi = 1, s = t;
+    for (let i = 0; i < 24; i++) { s = (lo + hi) / 2; if (at(x1, x2, s) < t) lo = s; else hi = s; }
+    return at(y1, y2, s);
+  };
+  const glideEase = curve(...(getComputedStyle(root).getPropertyValue("--ease-in-out") || INOUT).match(/[\d.]+/g).map(Number));
+  let glideStop = null, wheelStop = null;
+  function glide(sec) {
+    glideStop?.(); wheelStop?.();
+    const heading = $("h2", sec);
+    const to = Math.round(Math.max(0, Math.min(root.scrollHeight - innerHeight, sec.getBoundingClientRect().top + scrollY - $("#nav").offsetHeight)));
+    const from = scrollY, d = to - from;
+    const land = () => { heading.tabIndex = -1; heading.focus({ preventScroll: true }); };
+    if (reduced || Math.abs(d) < 2) { scrollTo({ top: to, behavior: "instant" }); return land(); }
+    const dur = Math.min(2200, Math.max(1400, 1400 + (Math.abs(d) - 700) * 0.6)), t0 = performance.now();
+    const cuts = ["wheel", "touchstart", "keydown", "pointerdown"];
+    let raf = 0;
+    const stop = () => { cancelAnimationFrame(raf); cuts.forEach((t) => removeEventListener(t, stop, true)); glideStop = null; };
+    const step = (now) => {
+      const k = Math.min(1, Math.max(0, now - t0) / dur);
+      scrollTo({ top: from + d * glideEase(k), behavior: "instant" });
+      if (k < 1) raf = requestAnimationFrame(step); else { stop(); land(); }
+    };
+    cuts.forEach((t) => addEventListener(t, stop, { capture: true, passive: true }));
+    glideStop = stop;
+    raf = requestAnimationFrame(step);
+  }
+  $$("a.glide").forEach((a) => a.addEventListener("click", (e) => {
+    const sec = $(a.getAttribute("href"));
+    if (!sec || e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+    e.preventDefault(); glide(sec);
+  }));
+
+  /* ── Heavy wheel (BP-18) ─────────────────────────────────────
+     John: "the scrolling feels heavier than the static original one, where it looks like you're pulling the site
+     down. Obviously not too slow, but not too fast." Each wheel turn moves a target; the page follows it by the clock,
+     closing the gap with a 150 ms time constant, so it eases in and never passes it. Only for a mouse or trackpad
+     (a fine pointer that hovers), never under reduced motion, never where something else should take the wheel: a
+     field, an open dialog, a row that scrolls sideways, the reviews. Ctrl (zoom), keys, the scrollbar, touch and the
+     glide buttons keep their own behaviour, and anything else that scrolls the page makes it let go. Idle: nothing runs. */
+  (function heavyWheel() {
+    if (reduced || !matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    const TAU = 150;
+    let target = 0, pos = 0, last = 0, raf = 0, set = 0;
+    const stop = () => { cancelAnimationFrame(raf); raf = 0; removeEventListener("scroll", onScroll); wheelStop = null; };
+    const onScroll = () => { if (Math.abs(scrollY - set) > 2) stop(); };
+    const step = (now) => {
+      pos = target - (target - pos) * Math.exp(-Math.max(0, now - last) / TAU); last = now;
+      if (Math.abs(target - pos) < 1.5) pos = target;
+      scrollTo({ top: pos, behavior: "instant" }); set = scrollY;
+      if (pos === target) return stop();
+      raf = requestAnimationFrame(step);
+    };
+    addEventListener("wheel", (e) => {
+      if (e.ctrlKey || e.defaultPrevented || Math.abs(e.deltaX) > Math.abs(e.deltaY) || document.querySelector("dialog[open]")) return;
+      const t = e.target.closest ? e.target : e.target.parentElement, row = t.closest(".scroller");
+      if (t.closest("input, select, textarea, [contenteditable], dialog, .rail, #viewport") || (row && row.scrollWidth > row.clientWidth + 1)) return;
+      const dy = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1);
+      if (!raf) { pos = target = scrollY; }
+      const next = Math.max(0, Math.min(root.scrollHeight - innerHeight, target + dy));
+      if (next === target) return;
+      e.preventDefault(); target = next;
+      if (!raf) { last = performance.now(); set = scrollY; wheelStop = stop; addEventListener("scroll", onScroll, { passive: true }); raf = requestAnimationFrame(step); }
+    }, { passive: false });
   })();
 
   /* ── BlurHash placeholders ──────────────────────────────────── */
@@ -448,7 +513,6 @@
   modeBtn.addEventListener("click", toggleTheme);
 
   /* ── Nav turns solid past the hero; mobile bar shows between hero and booking ── */
-  const heroCta = $(".hero-cta");
   const nav = $("#nav"), mbar = $("#mbar"), hero = $(".hero"), book = $("#book"), visit = $("#visit");   // mbar: optional mobile bar
   const seen = new Map();
   new IntersectionObserver((es) => {
@@ -460,142 +524,45 @@
     mbar?.classList.toggle("show", seen.size === 3 && !seen.get(hero) && !seen.get(book) && !seen.get(visit));
   });
   io2.observe(book); io2.observe(visit);
-  const onScroll = () => {
-    // the header is always solid white (her logo sits on white); only Book now waits for the hero's own button to leave
-    nav.classList.toggle("cta-gone", heroCta.getBoundingClientRect().bottom < nav.offsetHeight);
-  };
-  addEventListener("scroll", onScroll, { passive: true }); onScroll();
-
-  /* ── Popovers: origin-aware, scale from .97 ─────────────────── */
-  let openPop = null, openTrigger = null;
-  function closePop(focusBack) {
-    if (!openPop) return;
-    openPop.classList.remove("open");
-    openTrigger.setAttribute("aria-expanded", "false");
-    if (focusBack) openTrigger.focus();
-    openPop = openTrigger = null;
-  }
-  function openPopFor(trigger, { focus = true } = {}) {
-    const pop = document.getElementById(trigger.dataset.pop);
-    if (openPop === pop && openTrigger === trigger) return;
-    closePop(false); hideTip();
-    const r = trigger.getBoundingClientRect(), pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 8;
-    const below = innerHeight - r.bottom >= ph + gap + 8 || r.top < ph + gap + 8;
-    const top = below ? r.bottom + gap : r.top - gap - ph;
-    let left = r.left + r.width / 2 > innerWidth / 2 ? r.right - pw : r.left;
-    left = Math.max(12, Math.min(innerWidth - pw - 12, left));
-    const ox = Math.max(0, Math.min(pw, r.left + r.width / 2 - left));
-    pop.style.left = left + "px"; pop.style.top = top + "px";
-    pop.style.transformOrigin = `${ox}px ${below ? 0 : ph}px`;   // grow out of the button that opened it
-    pop.classList.add("open");
-    trigger.setAttribute("aria-expanded", "true");
-    openPop = pop; openTrigger = trigger;
-    if (focus) pop.querySelector("a, button")?.focus({ preventScroll: true });
-  }
-  const phoneCall = matchMedia("(pointer: coarse)");
-  $$("[data-pop]").forEach((t) => t.addEventListener("click", (e) => {
-    e.preventDefault(); e.stopPropagation();
-    if (t.dataset.pop === "callPop" && phoneCall.matches) { location.href = "tel:+17705570354"; return; }
-    if (openTrigger !== t) return openPopFor(t);
-    closePop(false);
-    if (t.id === "svcTrigger") go("#services");               // menu already open (hover): the label itself goes to the section
-  }));
-  document.addEventListener("click", (e) => {
-    if (openPop && (!openPop.contains(e.target) || e.target.closest("a"))) closePop(false);
-  });
-  addEventListener("scroll", () => closePop(false), { passive: true });
-  addEventListener("resize", () => closePop(false));
 
   async function copy(text, label) {
     try { await navigator.clipboard.writeText(text); toast(`${label} copied`, { tone: "ok" }); }
     catch (e) { toast(`Copy didn't work. ${label}: ${text}`, { tone: "error" }); }
   }
-  $("#copyBtn").addEventListener("click", () => { closePop(false); copy("(770) 557-0354", "Phone number"); });
 
   /* ── Services data, read from the pre-rendered menu ─────────── */
   const tabs = $$(".tab"), panels = $$(".menu");
   const CATS = panels.map((p, i) => ({
-    name: tabs[i].textContent.trim(),
+    name: tabs[i].textContent.trim() + (tabs[i].dataset.keys ? " " + tabs[i].dataset.keys : ""),   // search also knows a tab's longer name
     items: $$("li", p).map((li) => ({
       name: [...$("h3", li).childNodes].filter((n) => n.nodeType === 3).map((n) => n.textContent).join("").trim(),
       price: $(".price", li).textContent.trim(),
-      desc: $("p", li).textContent.trim(),
-      dur: $(".dur", li)?.textContent.trim() || "",
+      desc: [$("p", li)?.textContent.trim(), li.dataset.keys].filter(Boolean).join(" "),   // words search can find: the line under it, or the one BP-18 cut from sight
     })),
   }));
   const SERVICES = CATS.flatMap((c) => c.items.map((s) => ({ ...s, cat: c.name })));
-
-  /* ── Services mega menu with a safe triangle ─────────────────
-     Moving diagonally from a category toward its list crosses other categories.
-     If the pointer is inside the triangle between where it was and the list's
-     near edge, it is heading for the list, so the category does not switch. */
-  const svcTrigger = $("#svcTrigger"), mega = $("#svcMenu"), megaCats = $("#megaCats"), megaItems = $("#megaItems");
-  let activeCat = 0, aimTimer = 0, pts = [], hoverTimer = 0, leaveTimer = 0;
-  megaCats.innerHTML = CATS.map((c, i) => `<button type="button" role="menuitem" data-i="${i}" aria-current="${i === 0}">${c.name}<svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3.8 2l3 3-3 3"/></svg></button>`).join("");
-  function showCat(i) {
-    activeCat = i;
-    $$("button", megaCats).forEach((b, k) => b.setAttribute("aria-current", k === i));
-    megaItems.innerHTML = CATS[i].items.map((s) => `<button type="button" role="menuitem" data-name="${s.name.replace(/"/g, "&quot;")}"><span class="mi-name">${s.name}</span><span class="mi-meta"><span class="price">${s.price}</span><small>${s.dur}</small></span></button>`).join("");
-  }
-  showCat(0);
-  const inTriangle = (p, a, b, c) => {
-    const s = (p1, p2, p3) => (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y);
-    const d1 = s(p, a, b), d2 = s(p, b, c), d3 = s(p, c, a);
-    return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0));
-  };
-  function aiming() {
-    if (pts.length < 2) return false;
-    const r = megaItems.getBoundingClientRect(), from = pts[0], now = pts[pts.length - 1];
-    if (from.x >= now.x) return false;                                          // not moving toward the list
-    return inTriangle(now, from, { x: r.left, y: r.top - 12 }, { x: r.left, y: r.bottom + 12 });
-  }
-  mega.addEventListener("pointermove", (e) => {
-    pts.push({ x: e.clientX, y: e.clientY }); if (pts.length > 4) pts.shift();
-    const over = e.target.closest("#megaCats button");
-    if (over && +over.dataset.i !== activeCat) {
-      clearTimeout(aimTimer);
-      if (!aiming()) showCat(+over.dataset.i);
-      else aimTimer = setTimeout(() => { const still = document.elementFromPoint(pts.at(-1).x, pts.at(-1).y)?.closest("#megaCats button"); if (still) showCat(+still.dataset.i); }, 260);
-    }
-  });
-  megaCats.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { showCat(+b.dataset.i); $("button", megaItems).focus(); } });
-  megaItems.addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { closePop(false); bookService(b.dataset.name); } });
-  mega.addEventListener("keydown", (e) => {
-    const inCats = e.target.closest("#megaCats"), list = $$("button", inCats ? megaCats : megaItems), i = list.indexOf(e.target);
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault(); const n = list[(i + (e.key === "ArrowDown" ? 1 : -1) + list.length) % list.length];
-      n.focus(); if (inCats) showCat(+n.dataset.i);
-    } else if (e.key === "ArrowRight" && inCats) { e.preventDefault(); $("button", megaItems).focus(); }
-    else if (e.key === "ArrowLeft" && !inCats) { e.preventDefault(); $(`button[data-i="${activeCat}"]`, megaCats).focus(); }
-  });
-  /* hover intent: open after a short pause, close only after leaving both trigger and menu */
-  const hoverIn = () => { clearTimeout(leaveTimer); if (openPop !== mega) { clearTimeout(hoverTimer); hoverTimer = setTimeout(() => openPopFor(svcTrigger, { focus: false }), 120); } };
-  const hoverOut = () => { clearTimeout(hoverTimer); leaveTimer = setTimeout(() => { if (openPop === mega) closePop(false); }, 260); };
-  [svcTrigger, mega].forEach((el) => {
-    el.addEventListener("pointerenter", (e) => e.pointerType === "mouse" && hoverIn());
-    el.addEventListener("pointerleave", (e) => e.pointerType === "mouse" && hoverOut());
-  });
 
   /* ── Command menu (⌘K / Ctrl K / "/") ───────────────────────── */
   const cmd = $("#cmd"), cmdInput = $("#cmdInput"), cmdList = $("#cmdList");
   const MOD = isMac ? "⌘K" : "Ctrl K";
   let results = [], active = 0, cmdReturn = null, closing = null;
+  // quiet: shown only when searched, so the menu opens with six choices (BP-17; BP-18 made Meet Ria quiet)
   const commands = () => [
-    { g: "Suggested", label: "Book a visit", kbd: "B", run: goBook },
-    { g: "Suggested", label: "Call the salon", hint: "(770) 557-0354", run: () => (location.href = "tel:+17705570354") },
+    { g: "Suggested", label: "Book a visit", kbd: "B", keys: "appointment booking schedule", run: goBook },
+    { g: "Suggested", label: "Call the salon", hint: "(770) 557-0354", keys: "phone number text cancel change reschedule", run: () => (location.href = "tel:+17705570354") },
     ...SERVICES.map((s) => ({ g: "Book a service", label: s.name, hint: s.price, keys: `${s.cat} ${s.desc}`, run: () => bookService(s.name) })),
-    { g: "Go to", label: "Services and prices", keys: "menu cost", run: () => go("#services") },
+    { g: "Go to", label: "Services and prices", keys: "menu cost how much", run: () => go("#services") },
     { g: "Go to", label: "Gallery", keys: "photos recent work color hair results", run: () => go("#work") },
-    { g: "Go to", label: "Meet Ria", keys: "stylist owner about team", run: () => go("#stylist") },
-    { g: "Go to", label: "Reviews", keys: "rating google yelp", run: () => go("#reviews") },
-    { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card", run: () => go("#visit") },
     { g: "Go to", label: themeLabel(), keys: "theme dark light mode evening day", run: toggleTheme },
-    { g: "Contact", label: "Copy address", keys: "where location", run: () => copy("375 Rockbridge Rd NW, Suite 156, Lilburn, GA 30047", "Address") },
-    { g: "Contact", label: "Get directions", keys: "map drive", run: () => open($("[data-prefetch-map]").href, "_blank", "noopener") },
+    { g: "Go to", label: "Meet Ria", keys: "stylist owner about team", quiet: 1, run: () => go("#stylist") },
+    { g: "Go to", label: "Reviews", keys: "rating google yelp", quiet: 1, run: () => go("#reviews") },
+    { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card credit cash sunday walk in monday saturday weekend", run: () => go("#visit") },
+    { g: "Contact", label: "Copy address", keys: "where location", quiet: 1, run: () => copy("375 Rockbridge Rd NW, Suite 156, Lilburn, GA 30047", "Address") },
+    { g: "Contact", label: "Get directions", keys: "map drive", quiet: 1, run: () => open($(".map-link").href, "_blank", "noopener") },
   ];
   function renderCmd() {
-    const words = cmdInput.value.toLowerCase().split(/\s+/).filter(Boolean);
-    results = commands().filter((c) => (words.length ? words.every((w) => `${c.label} ${c.keys || ""} ${c.g}`.toLowerCase().includes(w)) : c.g !== "Book a service"));
+    const words = cmdInput.value.toLowerCase().split(/\s+/).filter(Boolean).map((w) => (w.length > 4 ? w.replace(/e?s$/, "") : w));
+    results = commands().filter((c) => (words.length ? words.every((w) => `${c.label} ${c.keys || ""} ${c.g}`.toLowerCase().includes(w)) : c.g !== "Book a service" && !c.quiet));
     // a name that starts with what you typed comes first, then a name that contains it
     const rank = (c) => { const l = c.label.toLowerCase(); return words.every((w) => l.startsWith(w) || l.includes(" " + w)) ? 0 : words.every((w) => l.includes(w)) ? 1 : 2; };
     if (words.length) results = results.map((c, i) => [rank(c), i, c]).sort((a, b) => a[0] - b[0] || a[1] - b[1]).map((x) => x[2]);
@@ -621,7 +588,7 @@
   }
   function openCmd(trigger) {
     if (cmd.open) return;
-    closePop(false); hideTip();
+    hideTip();
     cmdReturn = document.activeElement;
     cmdInput.value = ""; active = 0; renderCmd();
     cmd.showModal();
@@ -631,7 +598,7 @@
       cmd.style.transformOrigin = `${Math.max(0, Math.min(c.width, r.left + r.width / 2 - c.left))}px ${r.top < c.top ? 0 : c.height}px`;
     } else cmd.style.transformOrigin = "50% 0";
     requestAnimationFrame(() => cmd.classList.add("open"));
-    cmdInput.focus();
+    if (trigger?.id !== "menuBtn") cmdInput.focus();
   }
   function closeCmd(then) {
     if (!cmd.open || closing) return closing;
@@ -656,7 +623,6 @@
   cmdList.addEventListener("click", (e) => { const it = e.target.closest(".cmd-item"); if (it) { const c = results[+it.dataset.i]; closeCmd(c.run); } });
   cmd.addEventListener("cancel", (e) => { e.preventDefault(); closeCmd(); });
   cmd.addEventListener("click", (e) => { if (e.target === cmd) closeCmd(); });          // click on the backdrop
-  $("#searchBtn").addEventListener("click", (e) => openCmd(e.currentTarget));
   $("#menuBtn").addEventListener("click", (e) => openCmd(e.currentTarget));
   /* phones: the command menu is a sheet; swipe it down to dismiss */
   dragDismiss({
@@ -915,7 +881,7 @@
   function predict() {
     const s = form.elements.service.value;
     const dayOk = dateIn.value && dateIn.value >= dateIn.min && !isSunday(dateIn.value) && slots.some((el) => !el.disabled);
-    submitLabel.textContent = s && dayOk && slotTime() ? `Request ${s.toLowerCase()}, ${`${dayName(dateIn.value)} at ${slotTime()}`.replace(/ /g, "\u00a0")}` : "Send request";   // day and time stay together
+    submitLabel.textContent = s && dayOk && slotTime() ? `Book ${s.toLowerCase()}, ${`${dayName(dateIn.value)} at ${slotTime()}`.replace(/ /g, "\u00a0")}` : "Book";   // day and time stay together
   }
   slots.forEach((s, i) => {
     s.addEventListener("click", () => { pick(s); predict(); });
@@ -971,7 +937,7 @@
     const b = booking;
     api.request(key, b.payload).then(() => {
       if (booking !== b) return;                                // canceled or replaced meanwhile
-      setStatus("ok", `Delivered. We texted a 6-digit code to ${fmtPhone(b.payload.phone)}.`);
+      setStatus("ok", `We texted a 6-digit code to ${fmtPhone(b.payload.phone)}.`);
       progress(1);
       morphHeight(box, () => { otpBox.hidden = false; otpSkel.hidden = true; });
       enter(otpBox);
@@ -990,8 +956,8 @@
     const d = digits(el.value).slice(0, 10);
     el.value = d.length > 6 ? `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}` : d.length > 3 ? `(${d.slice(0, 3)}) ${d.slice(3)}` : d;
   });
-  // the phone keyboard says "Next" on these two: it moves on instead of sending early
-  [["name", "phone"], ["phone", "notes"]].forEach(([from, to]) => form.elements[from].addEventListener("keydown", (e) => {
+  // the phone keyboard says "Next" on the name: it moves on instead of sending early
+  [["name", "phone"]].forEach(([from, to]) => form.elements[from].addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); form.elements[to].focus(); }
   }));
   form.addEventListener("submit", (e) => {
@@ -1008,7 +974,7 @@
       return;
     }
     const f = form.elements;
-    const payload = { service: f.service.value, date: f.date.value, time: slotTime(), name: f.name.value.trim(), phone: digits(f.phone.value), notes: f.notes.value.trim() };
+    const payload = { service: f.service.value, date: f.date.value, time: slotTime(), name: f.name.value.trim(), phone: digits(f.phone.value) };
     booking = { key: idemKey, payload };
     $("#sentText").textContent = `${payload.service} on ${dayName(payload.date, true)} at ${payload.time}, ${payload.name}. Type the code below to lock it in.`;
     setStatus("sending", "Sending to Ria…");
@@ -1035,8 +1001,7 @@
       if (booking !== b) return;
       otpAbort?.abort();
       const p = b.payload;
-      $("#confirmedText").textContent = `${p.service} on ${dayName(p.date, true)} at ${p.time}. See you then, ${p.name}! We'll text you a reminder the day before.`;
-      $("#confirmedRef").textContent = `Reference ${refFor(b.key)}`;
+      $("#confirmedText").textContent = `${p.service} on ${dayName(p.date, true)} at ${p.time}. See you then, ${p.name}!`;
       progress(2);
       showState("confirmed");
     }, () => {
@@ -1076,13 +1041,19 @@
   });
 
   const bookTarget = () => (matchMedia("(max-width: 900px)").matches ? "#book .shell" : "#book");   // one column: straight to the form
-  $$('a[href="#book"]').forEach((a) => a.addEventListener("click", (e) => { e.preventDefault(); goBook(); }));
   function goBook() { go(bookTarget()); setTimeout(() => (form.hidden ? null : form.elements.service.focus({ preventScroll: true })), reduced ? 0 : 500); }
   function bookService(name) {
     form.elements.service.value = name;
     if (document.getElementById("e-service").textContent) check("service");
     predict(); goBook();
   }
+  /* tap a service row to book it. A click, so a scroll that starts on a row never books */
+  $$(".menu li").forEach((li) => {
+    const name = $("h3", li).textContent.trim();
+    li.tabIndex = 0; li.setAttribute("role", "button");
+    li.addEventListener("click", () => bookService(name));
+    li.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); bookService(name); } });
+  });
 
   /* ── Opening hours: a live "open now" line, in Lilburn's time zone ── */
   const HOURS = [null, [630, 1170], [630, 1170], [630, 1170], [630, 1170], [630, 1170], [630, 1170]];   // Sun closed, Mon–Sat 10:30–7:30 (minutes)
@@ -1118,8 +1089,7 @@
       el.textContent = v;
       if (fresh && !reduced) { el.classList.remove("swr-fresh"); void el.offsetWidth; el.classList.add("swr-fresh"); }
     });
-    $$("[data-stars]").forEach((el) => { if (+el.dataset.stars !== d.rating || !el.firstChild) drawStars(el, d.rating); });
-    $$('[data-swr="rating"][data-tip]').forEach((el) => (el.dataset.tip = `Average of ${d.reviews} Google reviews`));
+    $$(".score-meta [data-stars]").forEach((el) => { if (+el.dataset.stars !== d.rating || !el.firstChild) drawStars(el, d.rating); });   // the place rating; each review keeps its own five
   }
   const cached = store.get(PLACE_KEY);
   const revalidate = () => fetchPlace().then((d) => { store.set(PLACE_KEY, { data: d, at: Date.now() }); renderPlace(d, true); }).catch(() => {});
@@ -1140,27 +1110,18 @@
     if (document.visibilityState === "visible" && (!c || Date.now() - c.at > 5 * 60e3)) revalidate();
   });
 
-  /* ── Pre-rendering: decode images and warm the map before they are needed ── */
+  /* ── Pre-rendering: decode images before they are needed ── */
   const predecode = (img) => { if (!img || img.dataset.warm) return; img.dataset.warm = "1"; const p = new Image(); p.src = img.currentSrc || img.src; p.decode?.().catch(() => {}); };
   idle(() => $$('img[loading="lazy"]').forEach(predecode));
-  const mapFrame = $("#mapFrame");
-  const mapArch = mapFrame.closest(".map-box");
-  mapFrame.addEventListener("load", () => { mapArch.classList.remove("map-loading"); mapArch.classList.add("map-ready"); }, { once: true });
-  new IntersectionObserver((es, o) => {                       // skeleton pulses only once the map is in view, and gives up after 10s
-    if (!es[0].isIntersecting) return;
-    o.disconnect();
-    if (!mapArch.classList.contains("map-ready")) { mapArch.classList.add("map-loading"); setTimeout(() => mapArch.classList.remove("map-loading"), 10000); }
-  }).observe(mapArch);
-  $$("[data-prefetch-map], a[href='#visit']").forEach((a) => ["pointerenter", "focus"].forEach((ev) => a.addEventListener(ev, () => ($("#mapFrame").loading = "eager"), { once: true })));
 
   /* ── Keyboard shortcuts ────────────────────────────────────── */
   document.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === "k") { e.preventDefault(); cmd.open ? closeCmd() : openCmd($("#searchBtn")); return; }
-    if (e.key === "Escape") { if (openPop) closePop(true); hideTip(); return; }
+    if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === "k") { e.preventDefault(); cmd.open ? closeCmd() : openCmd(); return; }
+    if (e.key === "Escape") { hideTip(); return; }
     if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return;
     if (e.target.closest?.("input, textarea, select, [contenteditable]") || document.querySelector("dialog[open]")) return;
     const k = e.key.toLowerCase();
-    if (k === "/") { e.preventDefault(); openCmd($("#searchBtn")); }
+    if (k === "/") { e.preventDefault(); openCmd(); }
     else if (k === "b") goBook();
   });
 

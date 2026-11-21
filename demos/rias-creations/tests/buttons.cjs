@@ -1,7 +1,7 @@
 // Presses every control on the page, one at a time, on a laptop and a phone, and
 // records what each one did. A control passes when it does something you can see
 // (scrolls, opens, selects, switches, focuses or opens a link) and no script error
-// happens. Then it opens every menu, popover and dialog and presses what is inside.
+// happens. Then it presses a service row in every tab, opens every menu and dialog and presses what is inside.
 // Run: node tests/buttons.cjs <site folder> [laptop|phone]
 const { chromium, devices } = require('playwright');
 const dir = process.argv[2];
@@ -55,10 +55,6 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
       let note = '';
       const partner = { workPrev: '#workNext', prev: '#next' }[await p.$eval(sel, (e) => (e.disabled ? e.id : ''))];
       if (partner) { await p.click(partner); await p.waitForTimeout(900); note = '(off on the first item; after Next) '; }
-      // the header's Book now waits at the very top (the hero's own button is there): scroll a little first
-      if (await p.$eval(sel, (e) => getComputedStyle(e).visibility === 'hidden' && !!e.closest('#nav'))) {
-        await p.evaluate(() => scrollTo(0, document.querySelector('.hero').offsetHeight)); await p.waitForTimeout(400); note = '(appears once the hero button is passed) ';
-      }
       const before = await snap(p);
       let effect = note, ok = true;
       const passed = await p.$eval(sel, (e) => e.disabled && e.classList.contains('slot'));
@@ -83,41 +79,31 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
 
     // 2. what lives inside menus, popovers and dialogs
     const p = await fresh();
-    if (vp === 'laptop') {
-      await p.$eval('[data-pop="callPop"]', (e) => e.scrollIntoView({ block: 'center' })); await p.waitForTimeout(700);
-      await p.click('[data-pop="callPop"]'); await p.waitForTimeout(400);
-      rec(vp, 'Call the salon -> popover', await p.$eval('#callPop', (e) => e.classList.contains('open') ? 'opens' : 'CLOSED'), await p.$eval('#callPop', (e) => e.classList.contains('open')));
-      rec(vp, 'Call now', 'calls ' + (await p.getAttribute('#callPop a', 'href')), (await p.getAttribute('#callPop a', 'href')) === 'tel:+17705570354');
-      await p.click('#copyBtn'); await p.waitForTimeout(500);
-      const clip = await p.evaluate(() => navigator.clipboard.readText().catch(() => ''));
-      rec(vp, 'Copy number', `clipboard: ${clip} | toast: ${await p.$$eval('.toast p', (e) => e.map((x) => x.textContent).join(' '))}`, /557/.test(clip));
-      await p.keyboard.press('Escape'); await p.waitForTimeout(300);
-      // services menu
-      await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(300);
-      await p.hover('#svcTrigger'); await p.waitForTimeout(500);
-      const cats = await p.$$eval('#megaCats button', (e) => e.map((x) => x.textContent.trim()));
-      for (let i = 0; i < cats.length; i++) {
-        await p.click(`#megaCats button >> nth=${i}`); await p.waitForTimeout(200);
-        const cur = await p.$eval('#megaCats button[aria-current="true"]', (e) => e.textContent.trim());
-        const items = await p.$$eval('#megaItems button', (e) => e.length);
-        rec(vp, `Services menu: ${cats[i]}`, `shows ${items} services`, cur === cats[i] && items > 0);
-      }
-      await p.click('#megaItems button >> nth=0'); await p.waitForTimeout(1200);
-      rec(vp, 'Services menu: pick a service', `booking set to "${await p.$eval('select[name=service]', (e) => e.value)}"`, !!(await p.$eval('select[name=service]', (e) => e.value)));
-      await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(300);
-      await p.hover('#svcTrigger'); await p.waitForTimeout(500);
-      await p.click('.mega-foot a'); await p.waitForTimeout(1200);
-      rec(vp, 'Services menu: See the full menu', 'goes to ' + (await p.evaluate(() => location.hash)), (await p.evaluate(() => location.hash)) === '#services');
+    // the map picture: one tap opens directions in Google Maps (John 2026-11-21: no Location buttons, a map instead)
+    await p.$eval('.map-link', (e) => e.scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(500);
+    const [mtab] = await Promise.all([ctx.waitForEvent('page', { timeout: 4000 }).catch(() => null), p.click('.map-link')]);
+    const mhref = await p.getAttribute('.map-link', 'href');
+    rec(vp, 'Map picture', mtab ? 'opens a new tab to ' + mhref.slice(0, 50) : 'NO NEW TAB', !!mtab && /google\.com\/maps\/dir/.test(mhref));
+    if (mtab) await mtab.close();
+    // tap a service row to book it (BP-17: replaces the Services mega menu), one row in every tab
+    for (let i = 0; i < 5; i++) {
+      await p.$eval('#t' + i, (e) => e.scrollIntoView({ block: 'center', behavior: 'instant' })); await p.waitForTimeout(200);
+      await p.click('#t' + i); await p.waitForTimeout(600);
+      const name = await p.$eval(`#p${i} li h3`, (e) => e.textContent.trim());
+      await p.click(`#p${i} li >> nth=0`); await p.waitForTimeout(1200);
+      const got = await p.$eval('select[name=service]', (e) => e.value);
+      rec(vp, `Service row: ${name}`, `booking set to "${got}"`, got === name);
     }
     // search menu: every item
-    const opener = vp === 'laptop' ? '#searchBtn' : '#menuBtn';
+    // laptop: Ctrl K opens the search (no Search button, John 2026-11-21); phone: the menu button
+    const openSearch = (pg) => (vp === 'laptop' ? pg.keyboard.press('Control+k') : pg.click('#menuBtn'));
     await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(300);
-    await p.click(opener); await p.waitForTimeout(500);
+    await openSearch(p); await p.waitForTimeout(500);
     const items = await p.$$eval('.cmd-item', (e) => e.map((x) => x.textContent.trim().replace(/\s+/g, ' ').slice(0, 40)));
     await p.keyboard.press('Escape'); await p.waitForTimeout(400);
     for (let i = 0; i < items.length; i++) {
       const q = await fresh();
-      await q.click(opener); await q.waitForTimeout(500);
+      await openSearch(q); await q.waitForTimeout(500);
       const before = await snap(q);
       const [pop] = await Promise.all([ctx.waitForEvent('page', { timeout: 1500 }).catch(() => null), q.click(`.cmd-item >> nth=${i}`)]);
       await q.waitForTimeout(1000);
@@ -126,6 +112,16 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
       if (pop) await pop.close();
       if (!effect && /call/i.test(items[i])) effect = 'calls the salon (tel: link)';
       rec(vp, `Search: ${items[i]}`, (effect || 'NO VISIBLE EFFECT') + (q._errs.length ? ' | ERROR ' + q._errs.join(' / ') : ''), !!effect && !q._errs.length);
+      await q.close();
+    }
+    // the quiet search items (shown only when searched): Copy address still copies. Laptops only: since BP-18 the
+    // phone menu is a short list to tap, with no search box
+    if (vp === 'laptop') {
+      const q = await fresh();
+      await openSearch(q); await q.waitForTimeout(500);
+      await q.fill('#cmdInput', 'copy address'); await q.waitForTimeout(200); await q.keyboard.press('Enter'); await q.waitForTimeout(700);
+      const clip = await q.evaluate(() => navigator.clipboard.readText().catch(() => ''));
+      rec(vp, 'Search: Copy address (when searched)', `clipboard: ${clip}`, /Rockbridge/.test(clip) && !q._errs.length);
       await q.close();
     }
     // photo viewer: open, then close with its button

@@ -31,7 +31,7 @@ const offenders = (p) => p.evaluate(() => {
   });
   if (document.getElementById('entry')) bad.push('walk-in still on screen');
   if (!document.documentElement.classList.contains('intro-done')) bad.push('hero intro not finished');
-  document.querySelectorAll('.hero h1 .ln span span, .hero .lede, .hero-bar .hero-note, .hero-cta .btn, #nav, #nav .logo, #nav .nav-links > a, #nav .search-btn, #nav .nav-book, #heroImg').forEach((e) => {
+  document.querySelectorAll('.hero h1 .ln span span, .hero .lede, #nav, #nav .logo, #nav .nav-links > a, #heroImg').forEach((e) => {
     const t = e.style.transform, o = e.style.opacity;
     if ((t && t !== 'none' && !/translateY\(0(%|px)?\)|translate\(0px, 0px\)|^$/.test(t)) || (o && o !== '1')) bad.push(name(e) + ' left at ' + (t || '') + ' ' + (o || ''));
   });

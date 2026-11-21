@@ -1,4 +1,4 @@
-// Light mode / Dark mode (John 2026-11-20): plain words beside Services and Gallery, not a pill and not on
+// Light mode / Dark mode (John 2026-11-20): plain words beside Stylist and Gallery, not a pill and not on
 // the hero; Light mode is the default.
 //   - the site opens in Light mode, even after an old saved evening choice
 //   - laptop: "Dark mode" sits in the header's link row, right after Location, styled like the other links
@@ -25,7 +25,7 @@ const seed = () => { try { sessionStorage.setItem('ria-entered', '1'); if (!sess
                look: ms.fontSize === ls.fontSize && ms.fontFamily === ls.fontFamily && ms.color === ls.color, onHero: !!document.querySelector('.hero button:not(.photo-btn)') };
     });
     rec('laptop: opens in Light mode', s.theme === 'light' && s.text === 'Dark mode', `${s.theme}; the link reads "${s.text}" (an old saved evening is ignored)`);
-    rec('laptop: beside Services and Gallery', s.inRow && s.sameLine, 'in the header row, right after Location');
+    rec('laptop: beside Stylist and Gallery', s.inRow && s.sameLine, 'in the header row, right after Location');
     rec('laptop: plain words, not a pill', s.plain && s.look, 'no fill, no border, no rounding; same type and color as the other links');
     rec('laptop: nothing on the hero', !s.onHero, 'the hero has no switch');
     await p.click('#modeBtn'); await p.waitForTimeout(200);
@@ -48,6 +48,10 @@ const seed = () => { try { sessionStorage.setItem('ria-entered', '1'); if (!sess
     rec('iPhone: in the menu by Gallery', i > 0 && /Gallery/.test(near) && /Services/.test(near), `menu: ... ${near} | ${items[i] || 'missing'}`);
     await p.evaluate(() => [...document.querySelectorAll('#cmdList [role="option"]')].find((o) => o.textContent.trim().startsWith('Dark mode')).click()); await p.waitForTimeout(400);
     rec('iPhone: Dark mode works', (await p.evaluate(() => document.documentElement.dataset.theme)) === 'dark', 'choosing it turns the site dark');
+    // the Privacy page follows the choice (BP-17 A3: it reads "ria-look", the key the site saves)
+    await p.waitForFunction(() => localStorage.getItem('ria-look') === 'dark', null, { timeout: 3000 }).catch(() => {});   // the choice is saved
+    await p.goto('file://' + process.argv[2] + '/privacy.html'); await p.waitForTimeout(400);
+    rec('iPhone: Privacy page follows it', (await p.evaluate(() => document.documentElement.dataset.theme)) === 'dark', 'Dark there too');
     await c.close();
   }
   await b.close();
