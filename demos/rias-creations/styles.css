@@ -195,14 +195,19 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 /* Her logo, exactly as on her storefront sign (John, 2026-11-20: "keep the exact design of her current logo"):
    "Ria's / Creations" stacked tight and centered in a sturdy, wide bold serif, slate blue (#506895, measured
    from her sign) on a white panel, the apostrophe and both i-dots in pink, beside a big, heavy, compact SALON.
-   It always sits on white (the header is a solid white bar), so the panel blends in like a letterhead instead
-   of looking like a sticker; SALON is dark there, as white letters cannot show on white. Measured against
+   In Light mode it always sits on white (the header is a solid white bar), so the panel blends in like a letterhead
+   instead of looking like a sticker; SALON is dark there, as white letters cannot show on white. Measured against
    the sign: name / SALON width 0.80 (sign 0.82), height 0.87 to 0.89 (sign 0.87). Fonts: Merriweather ExtraBold
    at 112% width (its sturdy small-size design) and Archivo Black at 66% width, the closest free match to the
    sign's letters, until her original logo file replaces them. */
 .logo { --logo-ink: #506895; --logo-pink: #c24f7c; --logo-panel: var(--bg); display: inline-flex; align-items: center; gap: .28em; line-height: 1; font-size: 1rem; }
 .entry-logo, .visit .logo { --logo-panel: var(--tint); }       /* on blush (the loading screen, the footer) it blends the same way */
-:root[data-theme="dark"] .logo { --logo-panel: #ffffff; }     /* evening mode: the white panel shows, exactly as on her sign */
+/* Dark mode (John, 2026-11-21: "don't show the white background, just make it change color so where it matches the dark
+   mode"): no panel anywhere, the name in her slate made light (#506895 raised to OKLCH L 0.70, same blue hue and chroma:
+   7.0:1 on the header, 6.1:1 on the blush footer and loading screen), the pink kept (4.2:1 and 3.6:1), SALON in the
+   light text colour it already inherits. Same letters and sizes: only colours change. */
+:root[data-theme="dark"] .logo { --logo-ink: #859fcf; }
+:root[data-theme="dark"] .logo-panel { display: none; }
 .logo-name {
   font: 800 1.32em/.8 "Merriweather", Georgia, serif; font-stretch: 112%; font-variation-settings: "opsz" 18;
   letter-spacing: .02em; text-align: center; color: var(--logo-ink); position: relative; z-index: 0;
