@@ -57,6 +57,9 @@ const QUERIES = ['balayage', 'haircut', 'hours', 'call', 'eyebrow', 'price', 'pa
       await shot('search-empty');
       const empty = await p.evaluate(() => [...document.querySelectorAll('#cmdList [role=option]')].map((o) => o.textContent.trim().replace(/\s+/g, ' ')));
       fact(`${tag}: search opens with ${empty.length} items: ${empty.slice(0, 12).join(' | ')}`);
+      // since BP-18 the phone menu is a short list to tap (no search box): searching is tried on the laptop
+      if (vp === 'phone') { await p.keyboard.press('Escape'); await p.waitForTimeout(600); }
+      else {
       for (const q of QUERIES) {
         await p.fill('#cmdInput', q); await p.waitForTimeout(250);
         const r = await p.evaluate(() => ({ items: [...document.querySelectorAll('#cmdList [role=option]')].map((o) => o.textContent.trim().replace(/\s+/g, ' ')), empty: (document.querySelector('.cmd-empty') || {}).textContent }));
@@ -68,6 +71,7 @@ const QUERIES = ['balayage', 'haircut', 'hours', 'call', 'eyebrow', 'price', 'pa
       fact(`${tag}: Enter on "balayage": search closed ${!afterEnter.open}, service "${afterEnter.svc}", booking in view ${afterEnter.inBook}`);
       if (afterEnter.open || afterEnter.svc !== 'Balayage' || !afterEnter.inBook) fault(`${tag}: Enter on a search result did not book it`);
       await shot('search-enter');
+      }
 
       // 4. the header row (laptop: no Services link, John 2026-11-21) and the five service tabs
       await p.evaluate(() => scrollTo(0, 0)); await p.waitForTimeout(500);

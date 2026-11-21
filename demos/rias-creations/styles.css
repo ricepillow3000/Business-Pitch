@@ -876,10 +876,3 @@ footer.site .logo { --logo-panel: var(--tint); }
   .visit .map-frame { margin-top: 20px; }
   .map-link { position: absolute; inset: 0; }   /* the map fills its column, as tall as the details */
 }
-
-/* Reviews, laptops: one of her photos in an arch fills the column under the rating (decoration, hidden from readers) */
-.review-arch { display: none; }
-@media (min-width: 1100px) {   /* it takes the height left beside the carousel, so the section never grows */
-  .reviews .wrap > div:first-child { display: flex; flex-direction: column; }
-  .review-arch { display: block; flex: 1 1 0; min-height: 0; max-height: 220px; margin-top: 18px; align-self: flex-start; }
-}

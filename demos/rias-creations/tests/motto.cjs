@@ -11,6 +11,7 @@
 //     the confirmation tick in a small arch
 //   - the phone menu: no search box, no group names, six choices; a laptop's Ctrl K still searches
 //   - the simplicity cut: the shorter words John's critic chose, and fewer words on the page than before
+//   - every photo file is used once on the page (a photo shown twice on one screen reads as filler)
 // Run: node tests/motto.cjs <site folder>
 const { chromium, devices } = require('playwright');
 const fs = require('fs');
@@ -61,8 +62,9 @@ const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
       const groundOf = (e) => { for (; e; e = e.parentElement) { const c = getComputedStyle(e).backgroundColor; if (!/rgba\(.*, 0\)$/.test(c)) return c; } return getComputedStyle(document.body).backgroundColor; };
       const fieldEdge = getComputedStyle(field).boxShadow.match(/rgba?\([^)]*\)/)[0], ground = groundOf(field.parentElement);
       const arrow = getComputedStyle(g('#next'), '::after');
-      const rv = g('#reviews'), arch = g('.review-arch'), hBefore = rv.getBoundingClientRect().height;
-      if (arch) arch.style.display = 'none'; const hWithout = rv.getBoundingClientRect().height; if (arch) arch.style.display = '';
+      // every photo file once on the page: a picture's name without its size (work-spirals-480.webp is work-spirals)
+      const files = [...document.querySelectorAll('main img')].map((i) => (i.getAttribute('src') || '').split('/').pop().replace(/-\d+\.webp$|\.webp$/, ''));
+      const twice = [...new Set(files.filter((f, k) => files.indexOf(f) !== k))];
       const count = g('#count').getBoundingClientRect();
       // the visible words: no closed list of options, nothing read only by screen readers, only the review in view
       document.querySelectorAll('select, .sr, #count, span[style*="clip"], .slide[aria-hidden="true"]').forEach((e) => (e.dataset.wc = e.style.display, e.style.display = 'none'));
@@ -75,7 +77,7 @@ const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
         arrow: arrow.content !== 'none' && arrow.top === '4px' && arrow.borderTopWidth === '1px' && getComputedStyle(g('#next')).boxShadow === 'none',
         ink: getComputedStyle(g('.tab-ink')).backgroundColor, mark: getComputedStyle(g('.state-mark')).borderTopLeftRadius,
         snips: getComputedStyle(g('.entry-snips .blade-a') || document.body).animationIterationCount,
-        reviewArch: arch ? { shown: getComputedStyle(arch).display !== 'none', grows: Math.round(hBefore - hWithout), hidden: arch.getAttribute('aria-hidden') === 'true', src: arch.querySelector('img')?.getAttribute('src') } : null,
+        photos: files.length, twice,
         countHidden: count.width <= 1 && count.height <= 1 && g('#count').textContent === '1 / 16', words };
     });
     rec('Hero headline is her motto', r.h1 === 'Enhancing beauty.' && r.em === 'beauty' && r.motto === 1 && /<span class="ln"><span>Enhancing<\/span><\/span><span class="ln"><span><em>beauty<\/em>\.<\/span><\/span>/.test(html),
@@ -90,8 +92,7 @@ const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
     rec('Arrows wear the buttons\' gold hairline', r.arrow, r.arrow ? 'hairline 4 px inside, no grey box' : 'NOT the button language');
     rec('Tab mark in her gold; tick in a small arch', r.ink === r.accent && r.mark === '999px', `tab mark ${r.ink}; tick corner ${r.mark}`);
     rec('Review counter read aloud, not shown', r.countHidden);
-    rec('Reviews: her work in an arch, adds no height', !!r.reviewArch && r.reviewArch.shown && r.reviewArch.grows === 0 && r.reviewArch.hidden && /work-spirals-480\.webp$/.test(r.reviewArch.src),
-      r.reviewArch ? `shown ${r.reviewArch.shown}, adds ${r.reviewArch.grows}px, hidden from readers ${r.reviewArch.hidden}` : 'MISSING');
+    rec('Every photo file once on the page', !r.twice.length && r.photos > 0, r.twice.length ? 'TWICE: ' + r.twice.join(', ') : `${r.photos} photos, no file repeated`);
     rec('Fewer words on the page', r.words < WORDS_BEFORE, `${WORDS_BEFORE} words before, ${r.words} now`);
     // Ctrl K on a laptop still searches, with its box; no key hints
     await p.keyboard.press('Control+k'); await p.waitForTimeout(500);
@@ -113,7 +114,7 @@ const ratio = (a, b) => { const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
     rec('Phone menu: no search box, no group names, six choices', !m.box && !m.groups && m.items.length === 6 && !m.items.includes('Meet Ria') && m.items[dm - 1] === 'Gallery' && /Bodoni/.test(m.font),
       `box ${m.box ? 'SHOWN' : 'hidden'}, ${m.groups} group names, ${m.items.length} choices: ${m.items.join(', ')}`);
     const side = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
-    rec('Phone: review arch hidden, no sideways scroll', side <= 0 && !(await p.evaluate(() => { const a = document.querySelector('.review-arch'); return a && getComputedStyle(a).display !== 'none'; })), `${side}px sideways`);
+    rec('Phone: no sideways scroll', side <= 0, `${side}px sideways`);
     await c.close();
   }
 

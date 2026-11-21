@@ -114,8 +114,9 @@ const diff = (a, b) => Object.keys(a).filter((k) => a[k] !== b[k]).map((k) => k 
       rec(vp, `Search: ${items[i]}`, (effect || 'NO VISIBLE EFFECT') + (q._errs.length ? ' | ERROR ' + q._errs.join(' / ') : ''), !!effect && !q._errs.length);
       await q.close();
     }
-    // the quiet search items (shown only when searched): Copy address still copies
-    {
+    // the quiet search items (shown only when searched): Copy address still copies. Laptops only: since BP-18 the
+    // phone menu is a short list to tap, with no search box
+    if (vp === 'laptop') {
       const q = await fresh();
       await openSearch(q); await q.waitForTimeout(500);
       await q.fill('#cmdInput', 'copy address'); await q.waitForTimeout(200); await q.keyboard.press('Enter'); await q.waitForTimeout(700);
