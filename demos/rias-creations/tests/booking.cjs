@@ -62,6 +62,7 @@ const nextWeekday = () => { const d = new Date(); d.setDate(d.getDate() + 2); if
         routes.push([`Services menu -> "${pick}"`, (await atForm()) && (await service()) === pick]);
       }
       await fresh(); await tap(p, vp === 'phone' ? '#menuBtn' : '#searchBtn'); await p.waitForTimeout(500);
+      if (vp === 'phone') await tap(p, '#cmdInput');   // the phone menu opens without the keyboard (BP-15): tap the box to type
       await p.keyboard.type('keratin'); await p.waitForTimeout(200); await p.keyboard.press('Enter'); await p.waitForTimeout(1300);
       routes.push([`search "keratin" -> "${await service()}"`, (await atForm()) && /keratin/i.test(await service())]);
       const all = routes.every((r) => r[1]);

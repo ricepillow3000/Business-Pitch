@@ -164,7 +164,7 @@
     catch (e) { clean(); root.classList.add("intro-css"); return; }
     const lede = $(".hero .lede"), nav = $("#nav");
     const brand = $("#nav .logo");
-    const navItems = $$("#nav .nav-links > a, #nav .search-btn, #nav .nav-book, #nav .nav-tools > button").filter((el) => el.offsetParent);
+    const navItems = $$("#nav .nav-links > a, #nav .nav-links > button, #nav .search-btn, #nav .nav-book, #nav .nav-tools > button").filter((el) => el.offsetParent);
     const facts = $$(".hero-bar .hero-note"), stars = $$(".hero-bar .stars svg"), ctas = $$(".hero-cta .btn");
     const rating = $('.hero-bar [data-swr="rating"]'), target = parseFloat(rating.textContent) || 4.5;
 
@@ -581,20 +581,20 @@
   const MOD = isMac ? "⌘K" : "Ctrl K";
   let results = [], active = 0, cmdReturn = null, closing = null;
   const commands = () => [
-    { g: "Suggested", label: "Book a visit", kbd: "B", run: goBook },
-    { g: "Suggested", label: "Call the salon", hint: "(770) 557-0354", run: () => (location.href = "tel:+17705570354") },
+    { g: "Suggested", label: "Book a visit", kbd: "B", keys: "appointment booking schedule", run: goBook },
+    { g: "Suggested", label: "Call the salon", hint: "(770) 557-0354", keys: "phone number text", run: () => (location.href = "tel:+17705570354") },
     ...SERVICES.map((s) => ({ g: "Book a service", label: s.name, hint: s.price, keys: `${s.cat} ${s.desc}`, run: () => bookService(s.name) })),
-    { g: "Go to", label: "Services and prices", keys: "menu cost", run: () => go("#services") },
+    { g: "Go to", label: "Services and prices", keys: "menu cost how much", run: () => go("#services") },
     { g: "Go to", label: "Gallery", keys: "photos recent work color hair results", run: () => go("#work") },
     { g: "Go to", label: "Meet Ria", keys: "stylist owner about team", run: () => go("#stylist") },
     { g: "Go to", label: "Reviews", keys: "rating google yelp", run: () => go("#reviews") },
-    { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card", run: () => go("#visit") },
+    { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card credit cash sunday walk in", run: () => go("#visit") },
     { g: "Go to", label: themeLabel(), keys: "theme dark light mode evening day", run: toggleTheme },
     { g: "Contact", label: "Copy address", keys: "where location", run: () => copy("375 Rockbridge Rd NW, Suite 156, Lilburn, GA 30047", "Address") },
     { g: "Contact", label: "Get directions", keys: "map drive", run: () => open($("[data-prefetch-map]").href, "_blank", "noopener") },
   ];
   function renderCmd() {
-    const words = cmdInput.value.toLowerCase().split(/\s+/).filter(Boolean);
+    const words = cmdInput.value.toLowerCase().split(/\s+/).filter(Boolean).map((w) => (w.length > 4 ? w.replace(/e?s$/, "") : w));
     results = commands().filter((c) => (words.length ? words.every((w) => `${c.label} ${c.keys || ""} ${c.g}`.toLowerCase().includes(w)) : c.g !== "Book a service"));
     // a name that starts with what you typed comes first, then a name that contains it
     const rank = (c) => { const l = c.label.toLowerCase(); return words.every((w) => l.startsWith(w) || l.includes(" " + w)) ? 0 : words.every((w) => l.includes(w)) ? 1 : 2; };
@@ -631,7 +631,7 @@
       cmd.style.transformOrigin = `${Math.max(0, Math.min(c.width, r.left + r.width / 2 - c.left))}px ${r.top < c.top ? 0 : c.height}px`;
     } else cmd.style.transformOrigin = "50% 0";
     requestAnimationFrame(() => cmd.classList.add("open"));
-    cmdInput.focus();
+    if (trigger?.id !== "menuBtn") cmdInput.focus();
   }
   function closeCmd(then) {
     if (!cmd.open || closing) return closing;
