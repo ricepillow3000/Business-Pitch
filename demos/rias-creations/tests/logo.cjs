@@ -80,7 +80,7 @@ print(json.dumps([int(xs.max()-xs.min()+1), int(ys.max()-ys.min()+1), int(xs2.ma
   // 5. always the bright design: an iPhone in Dark Mode (and an app that marks the page dark) still gets it
   {
     const dc = await b.newContext({ ...require('playwright').devices['iPhone 13'], colorScheme: 'dark' });
-    await dc.addInitScript(() => { try { sessionStorage.setItem('ria-entered', '1'); localStorage.setItem('ria-theme', 'dark'); } catch (e) {} document.documentElement.dataset.theme = 'dark'; });
+    await dc.addInitScript(() => { try { sessionStorage.setItem('ria-entered', '1'); localStorage.setItem('ria-theme', 'dark'); localStorage.setItem('ria-theme-choice', 'dark'); } catch (e) {} document.documentElement.dataset.theme = 'dark'; });
     const dp = await dc.newPage(); await dp.goto('file://' + process.argv[2] + '/index.html'); await dp.waitForTimeout(1500);
     const r = await dp.evaluate(() => ({ theme: document.documentElement.dataset.theme, page: getComputedStyle(document.body).backgroundColor, nav: getComputedStyle(document.getElementById('nav')).backgroundColor }));
     rec('bright even on a phone in Dark Mode', r.theme === 'light' && r.page === 'rgb(250, 250, 251)' && r.nav === 'rgb(250, 250, 251)', `theme ${r.theme}, page ${r.page}, header ${r.nav}`);

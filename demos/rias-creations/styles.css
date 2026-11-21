@@ -79,7 +79,7 @@
   --shadow: 0 0 0;
   --scrim: rgb(0 0 0 / .6);
 }
-/* Dark bands (hero, visit) stay espresso in both themes. */
+/* The one dark band: the hero, over her salon photo (the rest of the page is bright, like her salon). */
 .on-dark {
   --ink: #f4ede6;
   --muted: rgb(244 237 230 / .66);
@@ -201,7 +201,7 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
    at 112% width (its sturdy small-size design) and Archivo Black at 66% width, the closest free match to the
    sign's letters, until her original logo file replaces them. */
 .logo { --logo-ink: #506895; --logo-pink: #c24f7c; --logo-panel: var(--bg); display: inline-flex; align-items: center; gap: .28em; line-height: 1; font-size: 1rem; }
-.entry-logo { --logo-panel: var(--tint); }                     /* on the blush loading screen it blends the same way */
+.entry-logo, .visit .logo { --logo-panel: var(--tint); }       /* on blush (the loading screen, the footer) it blends the same way */
 :root[data-theme="dark"] .logo { --logo-panel: #ffffff; }     /* evening mode: the white panel shows, exactly as on her sign */
 .logo-name {
   font: 800 1.32em/.8 "Merriweather", Georgia, serif; font-stretch: 112%; font-variation-settings: "opsz" 18;
@@ -241,7 +241,8 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .search-btn kbd { color: inherit; opacity: .75; box-shadow: inset 0 0 0 1px rgb(127 127 127 / .45); }
 .nav-tools { display: flex; gap: 4px; margin-right: -10px; }
 #menuBtn { display: none; }
-@media (max-width: 900px) { .nav-links, .search-btn { display: none; } #menuBtn { display: grid; } }
+#modeBtn { white-space: nowrap; }   /* "Dark mode" / "Light mode", one line beside Location */
+@media (max-width: 960px) { .nav-links, .search-btn { display: none; } #menuBtn { display: grid; } }   /* below 960 px the row no longer fits: the menu takes over */
 @media (max-width: 520px) { .nav-right { gap: 8px; } .nav-book { padding: 0 14px; } }
 @media (max-width: 359px) { .nav-right { gap: 4px; } .nav-book { padding: 0 10px; font-size: .85rem; } }   /* the smallest phones: everything fits, menu button included */
 /* one gold button at a time: the header's appears once the hero's own button is behind you */
@@ -253,7 +254,7 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 /* Full-bleed salon interior: the first thing you see is the room, chairs, mirrors and light. */
 .hero-bg { position: absolute; inset: 0; overflow: hidden; background: var(--espresso); }
 .hero-bg img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; }
-.hero-scrim { position: absolute; inset: 0; background: rgb(18 13 11 / .6); }   /* one flat tone, no gradient */
+.hero-scrim { position: absolute; inset: 0; background: rgb(18 13 11 / .53); }   /* one flat tone, no gradient; the lightest that keeps every hero line readable over the photo's brightest spots (was .6) */
 .hero-main, .hero-bar { position: relative; z-index: 1; }
 .hero-main {
   flex: 1; display: grid; grid-template-columns: minmax(0, 860px);
@@ -480,7 +481,7 @@ form .btn { width: 100%; margin-top: 8px; }
 @media (max-width: 359px) { .slots { grid-template-columns: repeat(2, 1fr); } }   /* the smallest phones: two times to a row, each with room around it */
 
 /* ── Visit ─────────────────────────────────────────────────────── */
-.visit { overflow-x: clip; }
+.visit { overflow-x: clip; background: var(--tint); }   /* the last section: a soft blush, like her roses */
 .visit .wrap { display: grid; grid-template-columns: 1fr minmax(260px, 360px); gap: clamp(40px, 8vw, 120px); align-items: center; }
 .info { margin-top: 28px; border-top: 1px solid var(--line); }
 .info div { display: grid; grid-template-columns: 110px 1fr; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--line); }
@@ -488,8 +489,8 @@ form .btn { width: 100%; margin-top: 8px; }
 .info dd { font-size: 1.05rem; text-wrap: pretty; }
 .hours-now { color: inherit; }
 .visit .cta { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
-.map-fallback { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; font-family: var(--serif); font-size: 1.3rem; color: var(--gold); z-index: -1; }
-.map-fallback small { display: block; font: .85rem var(--sans); color: rgb(244 237 230 / .6); margin-top: 6px; }
+.map-fallback { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; font-family: var(--serif); font-size: 1.3rem; color: var(--accent); z-index: -1; }
+.map-fallback small { display: block; font: .85rem var(--sans); color: var(--muted); margin-top: 6px; }
 .map-box iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; filter: grayscale(.25) sepia(.15); }
 
 @media (max-width: 820px) {
@@ -667,33 +668,35 @@ dialog.dragging::backdrop { transition: none; }
   gap: clamp(20px, 2.6vw, 32px); margin-top: 40px; padding-bottom: 6px;
   --edge: max(20px, calc((100% - 1160px) / 2));
   padding-inline: var(--edge); scroll-padding-inline: var(--edge);
+  padding-block: 14px; margin-top: 26px;   /* room for a photo to grow on hover without being cut off */
   scroll-snap-type: x mandatory; scroll-behavior: smooth;
 }
 .rail li { scroll-snap-align: start; }
-.rail li:first-child { grid-column: span 1; width: clamp(250px, 23vw, 300px); }
-.rail li:first-child .ph { aspect-ratio: 4 / 5; }
-.rail li:first-child figcaption b { font-size: 1.6rem; }
 .rail { grid-auto-columns: auto; align-items: end; }
-.rail li:not(:first-child) { width: clamp(210px, 17vw, 236px); }
+.rail li { width: clamp(210px, 17vw, 236px); }   /* all five the same size */
 .rail .ph { aspect-ratio: 3 / 4; border-radius: var(--r-sm); }
 .rail img {
   width: 100%; height: 100%; object-fit: cover;
   outline: 1px solid rgb(255 255 255 / .08); outline-offset: -1px;
   transition: opacity 600ms var(--ease-out), transform 700ms var(--ease-out);
 }
-@media (hover: hover) { .rail .photo-btn:hover img.loaded { transform: scale(1.03); } }
+.rail .ph { transition: transform 550ms var(--ease-out); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .rail .photo-btn:hover .ph { transform: scale(1.06); }   /* the whole photo grows, frame and all, then settles back */
+}
 .rail figcaption { margin-top: 16px; display: grid; gap: 2px; }
 .rail figcaption b { font-family: var(--serif); font-weight: 400; font-size: 1.25rem; line-height: 1.2; }
 .rail figcaption span { font-size: .88rem; color: var(--muted); }
 /* laptops: all five photos in one row, nothing to scroll, no arrows */
 @media (min-width: 1024px) {
-  .rail { grid-auto-flow: row; grid-template-columns: 1.25fr repeat(4, 1fr); overflow: visible; }
-  .rail li, .rail li:not(:first-child), .rail li:first-child { width: auto; }
-  .rail li:not(:first-child) figcaption b { font-size: clamp(1.05rem, 1.25vw, 1.25rem); white-space: nowrap; }   /* one line each: the row stays even */
+  .rail { grid-auto-flow: row; grid-template-columns: repeat(5, 1fr); overflow: visible; }
+  .rail li { width: auto; }
+  .rail figcaption b { font-size: clamp(1.05rem, 1.25vw, 1.25rem); white-space: nowrap; }   /* one line each: the row stays even */
   .rail-ctrl { display: none; }
 }
 @media (max-width: 640px) {
-  .rail { grid-auto-columns: 72vw; margin-top: 40px; }
+  .rail { grid-auto-columns: 72vw; margin-top: 26px; }
+  .rail li { width: auto; }   /* each photo fills its swipe slot, all the same size */
   .rail-ctrl { display: none; }   /* phones swipe */
 }
 
@@ -829,7 +832,6 @@ main > section:not(.on-dark):not(.reviews) + section:not(.on-dark) { border-top:
 
 /* ── Footer: address, hours, phone ── */
 footer.site { padding: 40px 0 calc(24px + var(--safe-b)); }
-.visit + footer.site .wrap.foot { border-top: 0; padding-top: 0; }   /* right under the dark band: its edge is the divider */
 footer.site .wrap.foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 18px 40px; border-top: 1px solid var(--line); padding-top: 28px; color: var(--muted); }
 .foot-contact { display: flex; gap: 8px 28px; flex-wrap: wrap; font-size: .95rem; }
 footer.site .legal { gap: 8px 22px; flex-wrap: wrap; font-size: .85rem; align-items: baseline; }
@@ -894,15 +896,15 @@ footer.site .logo { color: var(--ink); }
 .map-frame { margin: 0; }
 .map-box {
   position: relative; aspect-ratio: 4 / 5; overflow: hidden; isolation: isolate;
-  background: var(--espresso-2); box-shadow: 0 0 0 1px rgb(223 182 119 / .35);
+  background: var(--surface); box-shadow: 0 0 0 1px rgb(127 97 53 / .35);
 }
 .map-box::after {
   content: ""; position: absolute; inset: 10px; pointer-events: none; z-index: 2;
-  box-shadow: inset 0 0 0 1px rgb(223 182 119 / .55);
+  box-shadow: inset 0 0 0 1px rgb(223 182 119 / .7);
 }
 .map-plate {
   display: flex; justify-content: space-between; align-items: baseline; gap: 6px 16px; flex-wrap: wrap;
-  margin-top: 14px; padding-top: 12px; border-top: 1px solid rgb(223 182 119 / .45);
+  margin-top: 14px; padding-top: 12px; border-top: 1px solid rgb(127 97 53 / .4);
 }
-.map-plate span:first-child { font: 400 1.15rem/1.2 var(--serif); color: var(--gold); }
-.map-plate span + span { font-size: .85rem; color: rgb(244 237 230 / .72); }
+.map-plate span:first-child { font: 400 1.15rem/1.2 var(--serif); color: var(--accent); }
+.map-plate span + span { font-size: .85rem; color: var(--muted); }

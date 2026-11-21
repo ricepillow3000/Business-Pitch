@@ -21,9 +21,9 @@
   (function () {
     var d = document.documentElement, t = null;
     d.classList.add("js");
-    /* always the bright design (John, 2026-11-20): a phone in Dark Mode no longer turns the site dark;
-       evening mode only if the visitor chooses it in the menu (saved under a new key, so older saved choices reset) */
-    try { t = localStorage.getItem("ria-theme-choice"); } catch (e) {}
+    /* always opens in Light mode (John, 2026-11-20): a phone in Dark Mode no longer turns the site dark;
+       Dark mode only if the visitor picks it beside Services and Gallery (a new key, so older saved choices reset) */
+    try { t = localStorage.getItem("ria-look"); } catch (e) {}
     if (t !== "light" && t !== "dark") t = "light";
     d.dataset.theme = t;
     /* the entry plays once per visit; skipped for deep links and for reduced motion */
@@ -76,6 +76,7 @@
         <a href="#stylist" class="slop">Stylist</a>
         <a href="#work" class="slop">Gallery</a>
         <a href="#visit" class="slop">Location</a>
+        <button type="button" class="slop" id="modeBtn">Dark mode</button>
       </nav>
       <button class="search-btn" type="button" id="searchBtn" aria-label="Search the site" aria-keyshortcuts="Control+K Meta+K /">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
@@ -197,7 +198,7 @@
   </section>
 
   <!-- ═══ RECENT WORK ═══ -->
-  <section class="work on-dark" id="work">
+  <section class="work" id="work">
     <div class="wrap work-head">
       <div>
         <h2 data-r="left">Gallery</h2>
@@ -216,7 +217,7 @@
         <li data-r="up">
           <figure>
             <button class="photo-btn" type="button" data-view aria-label="View larger: Burgundy color">
-              <span class="ph" data-blurhash="dbJ*6dx]~qn%^%tQRjni-:kWM{Rjs8WWRjs:xtozjFof"><img src="images/work-burgundy.webp" srcset="images/work-burgundy-480.webp 480w, images/work-burgundy.webp 765w" sizes="(max-width: 760px) 72vw, 300px" alt="Long hair from behind: burgundy color with glossy, soft-curled ends" loading="lazy" decoding="async"></span>
+              <span class="ph" data-blurhash="dbJ*6dx]~qn%^%tQRjni-:kWM{Rjs8WWRjs:xtozjFof"><img src="images/work-burgundy.webp" srcset="images/work-burgundy-480.webp 480w, images/work-burgundy.webp 765w" sizes="(max-width: 760px) 72vw, 236px" alt="Long hair from behind: burgundy color with glossy, soft-curled ends" loading="lazy" decoding="async"></span>
             </button>
             <figcaption><b>Burgundy color</b><span>Color, soft curls</span></figcaption>
           </figure>
@@ -389,7 +390,7 @@
   </section>
 
   <!-- ═══ VISIT ═══ -->
-  <section class="visit on-dark" id="visit">
+  <section class="visit" id="visit">
     <div class="wrap">
       <div>
         <h2 data-r="left">Location and hours</h2>
@@ -414,16 +415,14 @@
         <figcaption class="map-plate"><span>Lilburn Corner</span><span class="num">Suite 156, free parking</span></figcaption>
       </figure>
     </div>
+    <footer class="site">
+      <div class="wrap foot">
+        <a href="#top" class="logo" aria-label="Ria's Creations Salon, back to top"><span class="logo-name"><span class="logo-panel" aria-hidden="true"><span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span></span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span><span class="logo-salon">Salon</span></a>
+        <p class="foot-contact"><a class="num slop" href="tel:+17705570354">(770) 557-0354</a><a class="slop" href="https://www.instagram.com/riascreationssalon/" target="_blank" rel="noopener">@riascreationssalon</a></p>
+        <nav class="legal" aria-label="Legal"><a class="slop" href="privacy.html">Privacy</a><a class="slop" href="terms.html">Terms</a><span class="num">© 2026 Ria's Creations</span></nav>
+      </div>
+    </footer>
   </section>
-
-  <!-- the footer sits on white below the dark Location band, so her logo's white panel blends in -->
-  <footer class="site">
-    <div class="wrap foot">
-      <a href="#top" class="logo" aria-label="Ria's Creations Salon, back to top"><span class="logo-name"><span class="logo-panel" aria-hidden="true"><span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span></span>R<span class="logo-i">ı</span>a<span class="logo-ap">’</span>s<br>Creat<span class="logo-i">ı</span>ons</span><span class="logo-salon">Salon</span></a>
-      <p class="foot-contact"><a class="num slop" href="tel:+17705570354">(770) 557-0354</a><a class="slop" href="https://www.instagram.com/riascreationssalon/" target="_blank" rel="noopener">@riascreationssalon</a></p>
-      <nav class="legal" aria-label="Legal"><a class="slop" href="privacy.html">Privacy</a><a class="slop" href="terms.html">Terms</a><span class="num">© 2026 Ria's Creations</span></nav>
-    </div>
-  </footer>
 </main>
 
 <div class="toasts" id="toasts" aria-live="polite"></div>

@@ -432,16 +432,20 @@
   }
   bindTips();
 
-  /* ── Theme: instant switch ─────────────────────────────────── */
-  const themeLabel = () => (root.dataset.theme === "dark" ? "Switch to day" : "Switch to evening");
+  /* ── Light mode / Dark mode: beside Services and Gallery (John, 2026-11-20); Light is the default ── */
+  const themeLabel = () => (root.dataset.theme === "dark" ? "Light mode" : "Dark mode");
+  const modeBtn = $("#modeBtn");
   function toggleTheme() {
     const next = root.dataset.theme === "dark" ? "light" : "dark";
     root.classList.add("theme-switching");
     root.dataset.theme = next;
     void root.offsetWidth;                                     // flush styles while transitions are off
     requestAnimationFrame(() => root.classList.remove("theme-switching"));
-    try { localStorage.setItem("ria-theme-choice", next); } catch (e) {}
+    modeBtn.textContent = themeLabel();
+    try { localStorage.setItem("ria-look", next); } catch (e) {}
   }
+  modeBtn.textContent = themeLabel();
+  modeBtn.addEventListener("click", toggleTheme);
 
   /* ── Nav turns solid past the hero; mobile bar shows between hero and booking ── */
   const heroCta = $(".hero-cta");
@@ -585,9 +589,9 @@
     { g: "Go to", label: "Meet Ria", keys: "stylist owner about team", run: () => go("#stylist") },
     { g: "Go to", label: "Reviews", keys: "rating google yelp", run: () => go("#reviews") },
     { g: "Go to", label: "Hours and directions", keys: "open close address map visit parking payment card", run: () => go("#visit") },
+    { g: "Go to", label: themeLabel(), keys: "theme dark light mode evening day", run: toggleTheme },
     { g: "Contact", label: "Copy address", keys: "where location", run: () => copy("375 Rockbridge Rd NW, Suite 156, Lilburn, GA 30047", "Address") },
     { g: "Contact", label: "Get directions", keys: "map drive", run: () => open($("[data-prefetch-map]").href, "_blank", "noopener") },
-    { g: "Contact", label: themeLabel(), keys: "theme dark light evening day mode", run: toggleTheme },
   ];
   function renderCmd() {
     const words = cmdInput.value.toLowerCase().split(/\s+/).filter(Boolean);
@@ -1157,7 +1161,6 @@
     if (e.target.closest?.("input, textarea, select, [contenteditable]") || document.querySelector("dialog[open]")) return;
     const k = e.key.toLowerCase();
     if (k === "/") { e.preventDefault(); openCmd($("#searchBtn")); }
-    else if (k === "t") toggleTheme();
     else if (k === "b") goBook();
   });
 
