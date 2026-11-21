@@ -49,6 +49,7 @@ const seed = () => { try { sessionStorage.setItem('ria-entered', '1'); if (!sess
     await p.evaluate(() => [...document.querySelectorAll('#cmdList [role="option"]')].find((o) => o.textContent.trim().startsWith('Dark mode')).click()); await p.waitForTimeout(400);
     rec('iPhone: Dark mode works', (await p.evaluate(() => document.documentElement.dataset.theme)) === 'dark', 'choosing it turns the site dark');
     // the Privacy page follows the choice (BP-17 A3: it reads "ria-look", the key the site saves)
+    await p.waitForFunction(() => localStorage.getItem('ria-look') === 'dark', null, { timeout: 3000 }).catch(() => {});   // the choice is saved
     await p.goto('file://' + process.argv[2] + '/privacy.html'); await p.waitForTimeout(400);
     rec('iPhone: Privacy page follows it', (await p.evaluate(() => document.documentElement.dataset.theme)) === 'dark', 'Dark there too');
     await c.close();
