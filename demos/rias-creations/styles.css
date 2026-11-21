@@ -359,9 +359,11 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
 .track { display: flex; will-change: transform; }
 .slide { flex: 0 0 100%; padding-right: 8%; }
 .slide blockquote { font-size: clamp(1.6rem, 2.9vw, 2.35rem); line-height: 1.22; letter-spacing: -.01em; text-indent: -.36em; }
+.slide .stars { margin-bottom: 18px; }   /* every review shown is five stars */
+.slide.long blockquote { font-size: clamp(1.3rem, 2vw, 1.65rem); line-height: 1.3; }   /* a long quote steps down a size */
 .slide footer { margin-top: 28px; font-size: .95rem; color: var(--muted); }
 .slide footer b { font-weight: 500; color: var(--ink); }
-@media (max-width: 760px) { .slide blockquote { font-size: 1.35rem; line-height: 1.3; } }
+@media (max-width: 760px) { .slide blockquote { font-size: 1.35rem; line-height: 1.3; } .slide.long blockquote { font-size: 1.12rem; line-height: 1.4; } }
 .car-ctrl { display: flex; align-items: center; gap: 6px; margin-top: 40px; }
 .car-ctrl .count { margin-left: 12px; font-size: .92rem; color: var(--muted); }
 .car-ctrl .icon-btn { box-shadow: inset 0 0 0 1px var(--line-strong); }

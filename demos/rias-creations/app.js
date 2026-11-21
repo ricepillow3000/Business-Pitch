@@ -1015,7 +1015,7 @@
       el.textContent = v;
       if (fresh && !reduced) { el.classList.remove("swr-fresh"); void el.offsetWidth; el.classList.add("swr-fresh"); }
     });
-    $$("[data-stars]").forEach((el) => { if (+el.dataset.stars !== d.rating || !el.firstChild) drawStars(el, d.rating); });
+    $$(".score-meta [data-stars]").forEach((el) => { if (+el.dataset.stars !== d.rating || !el.firstChild) drawStars(el, d.rating); });   // the place rating; each review keeps its own five
   }
   const cached = store.get(PLACE_KEY);
   const revalidate = () => fetchPlace().then((d) => { store.set(PLACE_KEY, { data: d, at: Date.now() }); renderPlace(d, true); }).catch(() => {});
