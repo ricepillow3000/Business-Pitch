@@ -268,6 +268,9 @@ section { padding: clamp(56px, 5.2vw, 76px) 0; }
   box-shadow: inset 0 0 0 1px rgb(223 182 119 / .55); z-index: 2;
 }
 .arch-glow { position: relative; }
+/* her lit arched mirror as a quiet gold hairline: only where a column would otherwise stand empty; never on phones */
+.arch-line { width: 180px; aspect-ratio: 3 / 4; margin-top: 56px; border-radius: 999px 999px 0 0; box-shadow: inset 0 0 0 1px rgb(223 182 119 / .55); }
+@media (max-width: 900px) { .arch-line { display: none; } }
 .arch-glow::before { /* the LED halo around her mirrors, kept faint */
   content: ""; position: absolute; inset: -1px; border-radius: 999px 999px var(--r-sm) var(--r-sm); opacity: var(--glow, 1);
   box-shadow: 0 0 0 1px rgb(223 182 119 / .35);
@@ -459,6 +462,14 @@ form .btn { width: 100%; margin-top: 8px; }
 @media (max-width: 820px) {
   .visit .wrap { grid-template-columns: 1fr; }   /* phones: the map under the details */
 }
+@media (min-width: 821px) {
+  .visit .wrap { align-items: stretch; }
+  .visit .wrap > div:first-child { display: contents; }          /* heading, details and map share one grid */
+  .visit h2 { grid-column: 1 / -1; }
+  .map-frame { grid-column: 2; grid-row: 2; position: relative; margin-top: 28px; }   /* level with the details */
+  .map-link { position: absolute; inset: 0; }
+  .map-link img { height: 100%; object-fit: cover; object-position: 50% 100%; }
+}
 
 footer.site { padding: 28px 0 32px; font-size: .85rem; }
 
@@ -602,8 +613,15 @@ dialog.dragging::backdrop { transition: none; }
 }
 .rail figcaption { margin-top: 16px; display: grid; gap: 2px; }
 .rail figcaption b { font-family: var(--serif); font-weight: 400; font-size: 1.25rem; line-height: 1.2; }
-/* laptops: one row of eleven that slides with the arrows, about five in view (BP-17: more photos, the page does not grow) */
+/* tablets and laptops: the row keeps to the page's own left and right edges, like every heading (John 2026-11-21:
+   no empty space on one side); 8px either side is room for a photo to grow on hover, nothing shows there at rest */
+@media (min-width: 641px) {
+  .rail { width: calc(var(--wrap) + 16px); margin-inline: auto; padding-inline: 8px; scroll-padding-inline: 8px; }
+}
+/* laptops: one row of eleven that slides with the arrows, exactly five in view (BP-17: more photos, the page does not grow) */
 @media (min-width: 1024px) {
+  .rail { --gap: clamp(20px, 2.6vw, 32px); gap: var(--gap); grid-auto-columns: calc((100% - 4 * var(--gap)) / 5); }
+  .rail li { width: auto; }
   .rail figcaption b { font-size: clamp(1.05rem, 1.25vw, 1.25rem); white-space: nowrap; }   /* one line each: the row stays even */
 }
 @media (max-width: 640px) {
